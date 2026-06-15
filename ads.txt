@@ -1,0 +1,2 @@
+# 本番ではCloudflare Pages FunctionがこのURLを生成します。
+# AdSense承認後にADSENSE_PUBLISHER_IDを設定してください。

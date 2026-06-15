@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>記事を作成 | ボクシング速報</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="config.js" defer></script>
+    <script src="data.js" defer></script>
+    <script src="editor.js" defer></script>
+  </head>
+  <body class="editor-page">
+    <header class="editor-header">
+      <a class="brand" href="admin.html">
+        <span class="brand-mark">速</span>
+        <span class="brand-copy"><strong>ボクシング速報</strong><small>EDITOR</small></span>
+      </a>
+      <div>
+        <span class="draft-state">新規作成</span>
+        <a href="admin.html">管理画面へ戻る</a>
+        <a href="index.html" target="_blank" rel="noopener">サイトを見る</a>
+      </div>
+    </header>
+
+    <main class="editor-layout">
+      <form class="editor-form" id="article-form">
+        <div class="editor-intro">
+          <span class="eyebrow">NEW STORY</span>
+          <h1 id="editor-heading">記事を作成</h1>
+          <p>記事本文、画像、SNS投稿、広告表記を設定できます。</p>
+        </div>
+
+        <label class="field">
+          <span>タイトル</span>
+          <input
+            id="title"
+            type="text"
+            placeholder="記事タイトルを入力"
+            maxlength="120"
+            required
+          />
+          <small><b id="title-count">0</b> / 120</small>
+        </label>
+
+        <label class="field">
+          <span>記事URL（半角英数字とハイフン）</span>
+          <input id="slug" type="text" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required />
+        </label>
+
+        <label class="field">
+          <span>要約</span>
+          <textarea
+            id="summary"
+            rows="3"
+            maxlength="500"
+            placeholder="一覧と検索結果に表示する短い要約"
+            required
+          ></textarea>
+        </label>
+
+        <div class="editor-field-grid">
+          <label class="field">
+            <span>公開状態</span>
+            <select id="status">
+              <option value="draft">下書き</option>
+              <option value="published">公開</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>画像アクセント</span>
+            <select id="accent">
+              <option value="red">レッド</option>
+              <option value="blue">ブルー</option>
+              <option value="gold">ゴールド</option>
+              <option value="mono">モノクロ</option>
+            </select>
+          </label>
+        </div>
+
+        <section class="article-image-editor">
+          <div><span>ARTICLE IMAGE</span><h2>記事画像</h2></div>
+          <p>アップロード画像は最大1600×1200pxのWebPへ変換して保存します。</p>
+          <label class="image-url-field">
+            <span>外部画像URL</span>
+            <input id="image-url" type="url" placeholder="https://boxsoku.com/images/boxing.jpg" />
+          </label>
+          <div class="image-file-row">
+            <label class="image-file-button">
+              画像ファイルを選択
+              <input id="image-file" type="file" accept="image/jpeg,image/png,image/webp" />
+            </label>
+            <button id="image-reset" type="button">画像を外す</button>
+          </div>
+          <small id="image-status">画像未設定</small>
+        </section>
+
+        <label class="field">
+          <span>本文</span>
+          <textarea
+            id="body"
+            rows="16"
+            placeholder="段落ごとに空行を入れてください。"
+            required
+          ></textarea>
+        </label>
+
+        <section class="affiliate-editor">
+          <label class="checkbox-field">
+            <input id="is-advertorial" type="checkbox" />
+            <span>この記事に配信サービスのアフィリエイトリンクを含む</span>
+          </label>
+          <label class="field">
+            <span>記事冒頭のPR表記（空欄なら定型文）</span>
+            <textarea
+              id="affiliate-disclosure"
+              rows="2"
+              placeholder="この記事には配信サービスのアフィリエイトリンクが含まれています。"
+            ></textarea>
+          </label>
+          <label class="field affiliate-link-field">
+            <span>配信サイトのアフィリエイトリンク</span>
+            <textarea
+              id="affiliate-links"
+              rows="4"
+              placeholder="配信サイトで視聴する | https://..."
+            ></textarea>
+            <small>1行につき「表示名 | https://URL」。最大5件です。</small>
+          </label>
+        </section>
+
+        <section class="tweet-editor">
+          <div class="tweet-editor-heading">
+            <div><span>X POST EMBED</span><h2>X投稿</h2></div>
+          </div>
+          <p>1行につき1つの投稿URLを入力してください。</p>
+          <textarea id="tweet-urls" rows="4" placeholder="https://x.com/account/status/..."></textarea>
+        </section>
+
+        <section class="tweet-editor media-editor">
+          <div class="tweet-editor-heading">
+            <div><span>YOUTUBE EMBED</span><h2>YouTube動画</h2></div>
+          </div>
+          <p>1行につき1つの動画URLを入力してください。</p>
+          <textarea id="youtube-urls" rows="4" placeholder="https://www.youtube.com/watch?v=..."></textarea>
+        </section>
+
+        <section class="tweet-editor media-editor">
+          <div class="tweet-editor-heading">
+            <div><span>INSTAGRAM EMBED</span><h2>Instagram投稿</h2></div>
+          </div>
+          <p>1行につき1つの投稿・リールURLを入力してください。</p>
+          <textarea id="instagram-urls" rows="4" placeholder="https://www.instagram.com/p/..."></textarea>
+        </section>
+
+        <div class="editor-submit">
+          <p>公開を選ぶと、保存直後からサイトへ表示されます。</p>
+          <button class="publish-button" id="publish-button" type="submit">
+            記事を保存する <span>→</span>
+          </button>
+        </div>
+      </form>
+
+      <aside class="editor-preview">
+        <div class="preview-bar"><span>LIVE PREVIEW</span><i></i></div>
+        <article class="preview-paper">
+          <h2 id="preview-title">記事タイトルがここに入ります</h2>
+          <p class="preview-summary" id="preview-summary">
+            記事の要約がここに表示されます。
+          </p>
+          <div id="preview-image" class="preview-image"></div>
+          <div class="preview-body" id="preview-body">
+            <p>本文を入力すると、ここで仕上がりを確認できます。</p>
+          </div>
+          <aside id="preview-affiliate-disclosure" class="affiliate-disclosure" hidden>
+            <span class="affiliate-disclosure-badge">PR</span>
+            <span id="preview-affiliate-disclosure-text"></span>
+          </aside>
+          <aside id="preview-affiliate-links" class="affiliate-links" hidden>
+            <strong>この試合を配信サイトで見る</strong>
+            <div id="preview-affiliate-link-list"></div>
+            <p class="affiliate-links-note">
+              料金・配信内容・視聴条件はリンク先の公式ページでご確認ください。
+            </p>
+          </aside>
+        </article>
+      </aside>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+debug.log
+gpu-tweak-osd-registry-backup.reg
+.dev.vars
+.wrangler/
+node_modules/
+npm-debug.log*

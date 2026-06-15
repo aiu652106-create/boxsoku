@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>管理画面 | ボクシング速報</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="config.js" defer></script>
+    <script src="data.js" defer></script>
+    <script src="admin.js" defer></script>
+  </head>
+  <body class="admin-page">
+    <header class="admin-header">
+      <a class="admin-brand" href="admin.html">
+        <span>速</span>
+        <div>
+          <strong>ボクシング速報</strong>
+          <small>ADMIN PANEL</small>
+        </div>
+      </a>
+      <a class="admin-view-site" href="index.html" target="_blank" rel="noopener">
+        公開サイトを見る
+      </a>
+    </header>
+
+    <section id="login-panel" class="admin-login-shell">
+      <form id="login-form" class="admin-login-card">
+        <span>ADMIN LOGIN</span>
+        <h1>管理画面へログイン</h1>
+        <p id="admin-setup-notice" class="admin-setup-notice" hidden>
+          Supabaseが未設定です。README_DEPLOY.mdに沿って設定してください。
+        </p>
+        <label>
+          メールアドレス
+          <input id="login-email" type="email" autocomplete="username" required />
+        </label>
+        <label>
+          パスワード
+          <input
+            id="login-password"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+        </label>
+        <p id="login-error" class="form-error" role="alert"></p>
+        <button type="submit">ログイン</button>
+      </form>
+    </section>
+
+    <div id="admin-dashboard" class="admin-layout" hidden>
+      <aside class="admin-sidebar">
+        <nav>
+          <a class="is-active" href="admin.html">記事管理</a>
+          <a href="#comments">コメント管理</a>
+          <a id="sidebar-new-article" href="editor.html">新規記事</a>
+          <button id="logout-button" type="button">ログアウト</button>
+        </nav>
+      </aside>
+
+      <main class="admin-main">
+        <p id="admin-preview-notice" class="admin-preview-notice" hidden>
+          現在はローカル確認モードです。このブラウザの記事画面から実際に投稿した
+          コメントだけを表示します。
+        </p>
+        <div class="admin-page-heading">
+          <div>
+            <span>ARTICLES</span>
+            <h1>記事管理</h1>
+            <p>公開記事と下書きを編集・削除できます。</p>
+          </div>
+          <a id="new-article-button" class="admin-new-button" href="editor.html">
+            ＋ 新しい記事を書く
+          </a>
+        </div>
+
+        <section class="admin-stats" aria-label="記事数">
+          <div><span>公開記事</span><strong id="published-count">0</strong></div>
+          <div><span>下書き</span><strong id="draft-count">0</strong></div>
+          <div><span>コメント</span><strong id="comment-count">0</strong></div>
+        </section>
+
+        <section class="admin-list-panel">
+          <div class="admin-list-heading">
+            <h2>記事一覧</h2>
+            <span id="admin-list-count"></span>
+          </div>
+          <div class="admin-article-list" id="admin-article-list"></div>
+          <p class="admin-empty" id="admin-empty" hidden>記事はまだありません。</p>
+        </section>
+
+        <section id="comments" class="admin-list-panel admin-comment-panel">
+          <div class="admin-list-heading">
+            <div>
+              <span>COMMENTS</span>
+              <h2>コメント管理</h2>
+            </div>
+            <span id="admin-comment-count"></span>
+          </div>
+          <div id="admin-comment-list" class="admin-comment-list"></div>
+          <p id="admin-comment-empty" class="admin-empty" hidden>
+            コメントはまだありません。
+          </p>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
