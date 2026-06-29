@@ -4,21 +4,13 @@ const statusMessage = document.querySelector("#site-status");
 function createArticle(article) {
   const post = document.createElement("article");
   post.className = "retro-post";
-  const hasAffiliateLinks =
-    Array.isArray(article.affiliateLinks) && article.affiliateLinks.length > 0;
 
-  if (article.isAdvertorial || hasAffiliateLinks) {
+  if (article.isAdvertorial) {
     const disclosure = document.createElement("aside");
     disclosure.className = "affiliate-disclosure";
-    const badge = document.createElement("span");
-    badge.className = "affiliate-disclosure-badge";
-    badge.textContent = "PR";
-    const text = document.createElement("span");
-    text.textContent =
+    disclosure.textContent =
       article.affiliateDisclosure ||
-      window.BOXING_CONFIG?.affiliate?.disclosure ||
-      "この記事には配信サービスのアフィリエイトリンクが含まれています。";
-    disclosure.append(badge, text);
+      "この記事には広告・アフィリエイトリンクが含まれています。";
     post.appendChild(disclosure);
   }
 
@@ -101,3 +93,5 @@ async function initialize() {
 }
 
 initialize();
+
+                                                                                                                                                                                                            
