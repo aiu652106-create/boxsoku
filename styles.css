@@ -2272,7 +2272,10 @@ button {
 }
 
 .retro-detail-image {
-  height: 420px;
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  overflow: hidden;
 }
 
 .retro-detail-body {
