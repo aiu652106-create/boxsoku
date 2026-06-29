@@ -4192,3 +4192,175 @@ button {
     height: min(56vw, 240px);
   }
 }
+
+/* Stronger 2ch-matome / Hamusoku direction */
+.retro-blog {
+  background: #f2f2f2;
+  font-family: Arial, "Meiryo", "MS PGothic", sans-serif;
+}
+
+.retro-top {
+  height: 24px;
+  background: #f7f7f7;
+  font-size: 11px;
+}
+
+.retro-header {
+  width: min(1040px, calc(100% - 20px));
+  height: 64px;
+  padding: 10px 14px;
+  border: 1px solid #cfcfcf;
+  border-top: 0;
+  background: #fff !important;
+}
+
+.retro-logo strong {
+  color: #e60012;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.retro-logo span {
+  display: none;
+}
+
+.retro-top > div,
+.retro-page-layout,
+.retro-footer {
+  width: min(1040px, calc(100% - 20px));
+}
+
+.retro-page-layout {
+  grid-template-columns: minmax(0, 720px) 300px;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+}
+
+.retro-sidebar-popular {
+  display: none;
+}
+
+.retro-feed {
+  padding: 16px 18px 40px;
+  border: 1px solid #d3d3d3;
+  background: #fff;
+}
+
+.retro-sidebar-latest {
+  border: 1px solid #d3d3d3;
+  background: #fff;
+}
+
+.retro-sidebar-panel {
+  position: static;
+  border: 0;
+}
+
+.retro-sidebar-panel h2 {
+  padding: 7px 9px;
+  border-bottom: 2px solid #e60012;
+  background: #333;
+  font-size: 13px;
+}
+
+.retro-post {
+  margin: 0 0 28px;
+  padding: 0 0 24px;
+  border-bottom: 1px dotted #aaa;
+}
+
+.retro-title-row {
+  display: block;
+  margin: 0 0 4px;
+}
+
+.retro-title-row h1,
+.retro-detail .retro-title-row h1 {
+  margin: 0;
+  color: #075db3;
+  font-family: Arial, "Meiryo", "MS PGothic", sans-serif;
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 1.45;
+  text-decoration: underline;
+}
+
+.retro-title-row h1 a {
+  color: #075db3;
+  text-decoration: underline;
+}
+
+.retro-category {
+  margin: 0 0 10px;
+  padding: 5px 8px;
+  border: 1px solid #e0e0e0;
+  background: #fafafa;
+  color: #555;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.retro-tweet-link {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 1px 5px;
+  font-size: 10px;
+}
+
+.retro-post-image {
+  width: min(560px, 100%);
+  height: 315px;
+  margin: 10px auto 12px;
+}
+
+.retro-continue {
+  width: min(560px, 100%);
+  margin: 0 auto 12px;
+  text-align: right;
+  font-size: 13px;
+}
+
+.retro-continue a {
+  color: #075db3;
+  font-weight: bold;
+}
+
+.retro-tags {
+  margin: 8px 0 6px;
+  padding: 4px 7px;
+  border: 1px solid #ddd;
+  background: #f7f7f7;
+  color: #438119;
+  font-size: 12px;
+}
+
+.retro-meta {
+  display: block;
+  color: #777;
+  font-size: 11px;
+  text-align: right;
+}
+
+.retro-detail-body {
+  width: min(620px, 100%);
+  margin: 12px auto 28px;
+}
+
+.retro-detail-body > p {
+  margin: 0 0 18px;
+  font-family: Arial, "Meiryo", "MS PGothic", sans-serif;
+  font-size: 15px;
+  line-height: 1.95;
+}
+
+@media (max-width: 980px) {
+  .retro-page-layout {
+    display: block;
+  }
+
+  .retro-sidebar-latest {
+    margin-top: 10px;
+  }
+}

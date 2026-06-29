@@ -214,6 +214,10 @@ function renderArticle(article) {
   tweet.textContent = "Tweet";
   titleRow.append(heading, tweet);
 
+  const category = document.createElement("p");
+  category.className = "retro-category";
+  category.textContent = "カテゴリ：ボクシング";
+
   const image = document.createElement("div");
   image.className = "retro-post-image retro-detail-image";
   image.setAttribute("role", "img");
@@ -258,7 +262,7 @@ function renderArticle(article) {
   commentsMount.className = "retro-comments-mount";
 
   const affiliateLinks = createAffiliateLinks(article);
-  container.append(titleRow, image, topAd, body);
+  container.append(titleRow, category, image, topAd, body);
   if (affiliateLinks) container.appendChild(affiliateLinks);
   container.append(tags, meta, commentsMount, back);
   window.BoxingAds?.render(container);

@@ -280,6 +280,7 @@ export async function onRequestGet(context) {
         )}</h1><a class="retro-tweet-link" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(
           article.title
         )}&url=${encodeURIComponent(canonical)}" target="_blank" rel="noopener noreferrer">Tweet</a></div>
+        <p class="retro-category">カテゴリ：ボクシング</p>
         <div class="retro-post-image retro-detail-image" role="img" aria-label="${escapeHtml(
           article.title
         )}の記事画像" style="background-image:${escapeHtml(cssUrl(image))}"></div>

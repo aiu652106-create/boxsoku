@@ -36,6 +36,10 @@ function createArticle(article) {
 
   titleRow.append(heading, tweet);
 
+  const category = document.createElement("p");
+  category.className = "retro-category";
+  category.textContent = "カテゴリ：ボクシング";
+
   const image = document.createElement("a");
   image.className = "retro-post-image";
   image.href = window.BoxingData.articleUrl(article);
@@ -46,7 +50,7 @@ function createArticle(article) {
   continueLink.className = "retro-continue";
   const link = document.createElement("a");
   link.href = window.BoxingData.articleUrl(article);
-  link.textContent = `≫ ${article.title}の続きを読む`;
+  link.textContent = "[続きを読む]";
   continueLink.appendChild(link);
 
   const tags = document.createElement("p");
@@ -57,9 +61,9 @@ function createArticle(article) {
   meta.className = "retro-meta";
   const time = document.createElement("time");
   time.textContent = window.BoxingData.articleDate(article);
-  meta.append(time, document.createTextNode(" | "));
+  meta.append(time, document.createTextNode("｜カテゴリ：ボクシング"));
 
-  post.append(titleRow, image, continueLink, tags, meta);
+  post.append(titleRow, category, image, continueLink, tags, meta);
   return post;
 }
 
