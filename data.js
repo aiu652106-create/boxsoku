@@ -427,7 +427,7 @@
   }
 
   function isTweetUrl(value) {
-    return /^https?:\/\/(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d+(?:\?.*)?$/i.test(
+    return /^https?:\/\/(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d+(?:\/photo\/\d+)?(?:\?.*)?$/i.test(
       String(value || "").trim()
     );
   }

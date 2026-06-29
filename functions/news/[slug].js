@@ -40,6 +40,16 @@ const safeImageUrl = (value, fallback = "/assets/boxing-arena.png") => {
 const cssUrl = (value, fallback) =>
   `url(${JSON.stringify(safeImageUrl(value, fallback))})`;
 
+const isTweetUrl = (value) =>
+  /^https?:\/\/(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d+(?:\/photo\/\d+)?(?:\?.*)?$/i.test(
+    String(value || "").trim()
+  );
+
+const tweetEmbedHtml = (url) =>
+  `<div class="retro-tweet"><blockquote class="twitter-tweet" data-lang="ja" data-dnt="true"><a href="${escapeHtml(
+    safeUrl(url, "#")
+  )}">Xで投稿を見る</a></blockquote></div>`;
+
 const articleBodyHtml = (body) => {
   const paragraphs = String(body || "")
     .split(/\n\s*\n/)
@@ -52,6 +62,17 @@ const articleBodyHtml = (body) => {
         index === middleAdIndex
           ? '<aside class="ad-slot" data-ad-slot-name="articleMiddle" aria-label="広告"></aside>'
           : "";
+      const lines = paragraph.split(/\n/);
+      const firstLine = String(lines[0] || "").trim();
+      if (isTweetUrl(firstLine)) {
+        const rest = lines.slice(1).join("\n").trim();
+        return `${tweetEmbedHtml(firstLine)}${
+          rest ? `<p>${escapeHtml(rest).replaceAll("\n", "<br>")}</p>` : ""
+        }${ad}`;
+      }
+      if (isTweetUrl(paragraph.trim())) {
+        return `${tweetEmbedHtml(paragraph.trim())}${ad}`;
+      }
       return `<p>${escapeHtml(paragraph).replaceAll("\n", "<br>")}</p>${ad}`;
     })
     .join("");
@@ -73,12 +94,7 @@ function youtubeId(value) {
 
 function embedsHtml(article) {
   const tweets = jsonArray(article.tweets)
-    .map(
-      (url) =>
-        `<div class="retro-tweet"><blockquote class="twitter-tweet" data-lang="ja" data-dnt="true"><a href="${escapeHtml(
-          safeUrl(url, "#")
-        )}">Xで投稿を見る</a></blockquote></div>`
-    )
+    .map((url) => tweetEmbedHtml(url))
     .join("");
 
   const videos = jsonArray(article.youtube_urls)

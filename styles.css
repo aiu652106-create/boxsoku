@@ -4364,3 +4364,61 @@ button {
     margin-top: 10px;
   }
 }
+
+/* Visible Hamusoku-style color and weight overrides */
+.retro-blog .retro-title-row h1,
+.retro-blog .retro-title-row h1 a,
+.retro-blog .retro-detail .retro-title-row h1 {
+  color: #0066cc !important;
+  font-family: Arial, "Meiryo", "MS PGothic", sans-serif !important;
+  font-size: 26px !important;
+  font-weight: 900 !important;
+  line-height: 1.45 !important;
+  text-decoration: underline !important;
+}
+
+.retro-blog .retro-title-row h1 a:visited {
+  color: #7b3fb2 !important;
+}
+
+.retro-blog .retro-title-row h1 a:hover,
+.retro-blog .retro-detail .retro-title-row h1:hover {
+  color: #e60012 !important;
+}
+
+.retro-blog .retro-category {
+  border: 1px solid #e6c8c8 !important;
+  border-left: 6px solid #e60012 !important;
+  background: #fff3f3 !important;
+  color: #d00000 !important;
+  font-weight: 900 !important;
+}
+
+.retro-blog .retro-tags {
+  border-color: #c9e0b8 !important;
+  background: #f3ffe9 !important;
+  color: #278000 !important;
+  font-weight: 900 !important;
+}
+
+.retro-blog .retro-continue a {
+  color: #0066cc !important;
+  font-weight: 900 !important;
+  text-decoration: underline !important;
+}
+
+.retro-blog .retro-detail-body > p {
+  color: #111 !important;
+  font-weight: 700 !important;
+}
+
+.retro-blog .retro-sidebar-panel h2 {
+  background: #222 !important;
+  color: #fff !important;
+  font-weight: 900 !important;
+}
+
+.retro-blog .retro-sidebar-rank {
+  background: #e60012 !important;
+  font-weight: 900 !important;
+}

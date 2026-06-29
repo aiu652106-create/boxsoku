@@ -234,9 +234,23 @@ function renderArticle(article) {
   const middleAdIndex =
     paragraphs.length >= 4 ? Math.ceil(paragraphs.length / 2) - 1 : -1;
   paragraphs.forEach((paragraph, index) => {
-    const text = document.createElement("p");
-    text.textContent = paragraph;
-    body.appendChild(text);
+    const lines = paragraph.split(/\n/);
+    const firstLine = String(lines[0] || "").trim();
+    if (window.BoxingData.isTweetUrl(firstLine)) {
+      appendTweet(body, firstLine);
+      const rest = lines.slice(1).join("\n").trim();
+      if (rest) {
+        const text = document.createElement("p");
+        text.textContent = rest;
+        body.appendChild(text);
+      }
+    } else if (window.BoxingData.isTweetUrl(paragraph.trim())) {
+      appendTweet(body, paragraph.trim());
+    } else {
+      const text = document.createElement("p");
+      text.textContent = paragraph;
+      body.appendChild(text);
+    }
     if (index < article.tweets.length) appendTweet(body, article.tweets[index]);
     if (index === middleAdIndex) body.appendChild(createAdSlot("articleMiddle"));
   });
