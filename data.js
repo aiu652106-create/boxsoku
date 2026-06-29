@@ -115,11 +115,17 @@
     return {
       slug: article.slug,
       title: article.title,
-      summary: article.summary,
+      summary:
+        article.summary ||
+        String(article.body || article.title || "Article")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 500) ||
+        "Article",
       body: article.body,
       image_url: article.image || null,
       image_path: article.imagePath || null,
-      accent: article.accent || "red",
+      accent: "red",
       status: article.status || "draft",
       is_advertorial: Boolean(article.isAdvertorial),
       affiliate_disclosure: article.affiliateDisclosure || "",

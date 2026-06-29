@@ -109,9 +109,7 @@ function sidebarHtml(articles, ranked = false) {
       (article, index) => `<li>
         <a href="/news/${encodeURIComponent(article.slug)}">
           ${ranked ? `<span class="retro-sidebar-rank">${index + 1}</span>` : ""}
-          <span class="retro-sidebar-thumbnail accent-${escapeHtml(
-            article.accent || "red"
-          )}" style="background-image:url('${escapeHtml(
+          <span class="retro-sidebar-thumbnail" style="background-image:url('${escapeHtml(
             safeUrl(article.image_url)
           )}')"></span>
           <span class="retro-sidebar-text">
@@ -258,9 +256,7 @@ export async function onRequestGet(context) {
         )}</h1><a class="retro-tweet-link" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(
           article.title
         )}&url=${encodeURIComponent(canonical)}" target="_blank" rel="noopener noreferrer">Tweet</a></div>
-        <div class="retro-post-image retro-detail-image accent-${escapeHtml(
-          article.accent || "red"
-        )}" role="img" aria-label="${escapeHtml(
+        <div class="retro-post-image retro-detail-image" role="img" aria-label="${escapeHtml(
           article.title
         )}の記事画像" style="background-image:url('${escapeHtml(image)}')"></div>
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>

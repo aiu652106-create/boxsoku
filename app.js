@@ -37,14 +37,10 @@ function createArticle(article) {
   titleRow.append(heading, tweet);
 
   const image = document.createElement("a");
-  image.className = `retro-post-image accent-${article.accent || "red"}`;
+  image.className = "retro-post-image";
   image.href = window.BoxingData.articleUrl(article);
   image.setAttribute("aria-label", `${article.title}の続きを読む`);
   window.BoxingUI.applyArticleImage(image, article);
-
-  const summary = document.createElement("p");
-  summary.className = "retro-summary";
-  summary.textContent = article.summary;
 
   const continueLink = document.createElement("p");
   continueLink.className = "retro-continue";
@@ -63,7 +59,7 @@ function createArticle(article) {
   time.textContent = window.BoxingData.articleDate(article);
   meta.append(time, document.createTextNode(" | "));
 
-  post.append(titleRow, image, summary, continueLink, tags, meta);
+  post.append(titleRow, image, continueLink, tags, meta);
   return post;
 }
 
@@ -93,5 +89,3 @@ async function initialize() {
 }
 
 initialize();
-
-                                                                                                                                                                                                            

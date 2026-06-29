@@ -24,6 +24,11 @@ let selectedFile = null;
 let previewObjectUrl = "";
 let imageCleared = false;
 
+function buildSummary(body, title) {
+  const source = String(body || title || "").replace(/\s+/g, " ").trim();
+  return source.slice(0, 500) || String(title || "Article").trim() || "Article";
+}
+
 function setPreviewImage(url) {
   if (previewObjectUrl) {
     URL.revokeObjectURL(previewObjectUrl);
@@ -40,13 +45,10 @@ function setPreviewImage(url) {
 
 function updatePreview() {
   const title = document.querySelector("#title").value.trim();
-  const summary = document.querySelector("#summary").value.trim();
   const body = document.querySelector("#body").value.trim();
   document.querySelector("#title-count").textContent = String(title.length);
   document.querySelector("#preview-title").textContent =
     title || "記事タイトルがここに入ります";
-  document.querySelector("#preview-summary").textContent =
-    summary || "記事の要約がここに表示されます。";
 
   const bodyPreview = document.querySelector("#preview-body");
   bodyPreview.replaceChildren();
@@ -157,7 +159,7 @@ document.querySelector("#title").addEventListener("input", (event) => {
 document.querySelector("#slug").addEventListener("input", (event) => {
   event.target.dataset.edited = "true";
 });
-["summary", "body"].forEach((id) => {
+["body"].forEach((id) => {
   document.querySelector(`#${id}`).addEventListener("input", updatePreview);
 });
 affiliateDisclosureInput.addEventListener("input", updatePreview);
@@ -199,11 +201,14 @@ form.addEventListener("submit", async (event) => {
       id: editingArticle?.id,
       slug: window.BoxingData.createSlug(document.querySelector("#slug").value),
       title: document.querySelector("#title").value.trim(),
-      summary: document.querySelector("#summary").value.trim(),
+      summary: buildSummary(
+        document.querySelector("#body").value,
+        document.querySelector("#title").value
+      ),
       body: document.querySelector("#body").value.trim(),
       image,
       imagePath,
-      accent: document.querySelector("#accent").value,
+      accent: "red",
       status,
       isAdvertorial:
         advertorialInput.checked || affiliateLinks.length > 0,
@@ -258,10 +263,8 @@ function fillForm(article) {
   document.querySelector("#title").value = article.title;
   document.querySelector("#slug").value = article.slug;
   document.querySelector("#slug").dataset.edited = "true";
-  document.querySelector("#summary").value = article.summary;
   document.querySelector("#body").value = article.body;
   document.querySelector("#status").value = article.status;
-  document.querySelector("#accent").value = article.accent;
   advertorialInput.checked =
     article.isAdvertorial || article.affiliateLinks.length > 0;
   affiliateDisclosureInput.value = article.affiliateDisclosure;

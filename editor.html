@@ -49,32 +49,12 @@
           <input id="slug" type="text" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required />
         </label>
 
-        <label class="field">
-          <span>要約</span>
-          <textarea
-            id="summary"
-            rows="3"
-            maxlength="500"
-            placeholder="一覧と検索結果に表示する短い要約"
-            required
-          ></textarea>
-        </label>
-
         <div class="editor-field-grid">
           <label class="field">
             <span>公開状態</span>
             <select id="status">
               <option value="draft">下書き</option>
               <option value="published">公開</option>
-            </select>
-          </label>
-          <label class="field">
-            <span>画像アクセント</span>
-            <select id="accent">
-              <option value="red">レッド</option>
-              <option value="blue">ブルー</option>
-              <option value="gold">ゴールド</option>
-              <option value="mono">モノクロ</option>
             </select>
           </label>
         </div>
@@ -166,9 +146,6 @@
         <div class="preview-bar"><span>LIVE PREVIEW</span><i></i></div>
         <article class="preview-paper">
           <h2 id="preview-title">記事タイトルがここに入ります</h2>
-          <p class="preview-summary" id="preview-summary">
-            記事の要約がここに表示されます。
-          </p>
           <div id="preview-image" class="preview-image"></div>
           <div class="preview-body" id="preview-body">
             <p>本文を入力すると、ここで仕上がりを確認できます。</p>

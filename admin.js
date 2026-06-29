@@ -33,9 +33,7 @@ function createArticleRow(article) {
   status.append(badge, time);
   const title = document.createElement("h3");
   title.textContent = article.title;
-  const summary = document.createElement("p");
-  summary.textContent = article.summary;
-  info.append(status, title, summary);
+  info.append(status, title);
 
   const actions = document.createElement("div");
   actions.className = "admin-article-actions";

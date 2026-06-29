@@ -207,9 +207,7 @@ function renderArticle(article) {
   titleRow.append(heading, tweet);
 
   const image = document.createElement("div");
-  image.className = `retro-post-image retro-detail-image accent-${
-    article.accent || "red"
-  }`;
+  image.className = "retro-post-image retro-detail-image";
   image.setAttribute("role", "img");
   image.setAttribute("aria-label", `${article.title}の記事画像`);
   window.BoxingUI.applyArticleImage(image, article);

@@ -18,7 +18,7 @@
     }
 
     const thumbnail = document.createElement("span");
-    thumbnail.className = `retro-sidebar-thumbnail accent-${article.accent || "red"}`;
+    thumbnail.className = "retro-sidebar-thumbnail";
     thumbnail.setAttribute("aria-hidden", "true");
     applyArticleImage(thumbnail, article);
 
