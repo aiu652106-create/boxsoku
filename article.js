@@ -136,8 +136,10 @@ function addExternalScript(src) {
 
 function updateMetadata(article) {
   const pageUrl = new URL(window.BoxingData.articleUrl(article), window.location.href).href;
-  const imageUrl = new URL(article.image || "assets/boxing-arena.png", window.location.href)
-    .href;
+  const imageUrl = new URL(
+    window.BoxingUI?.getArticleImageUrl(article) || "assets/boxing-arena.png",
+    window.location.href
+  ).href;
   const siteName = window.BOXING_CONFIG?.site?.name || "ボクシング速報";
   const configuredSiteUrl = String(window.BOXING_CONFIG?.site?.url || "");
   const siteUrl =

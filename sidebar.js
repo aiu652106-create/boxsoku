@@ -1,6 +1,25 @@
 (function () {
+  function isDirectImageUrl(value) {
+    try {
+      const url = new URL(String(value || ""), window.location.href);
+      const path = url.pathname.toLowerCase();
+      const format = String(url.searchParams.get("format") || "").toLowerCase();
+      return (
+        /\.(avif|gif|jpe?g|png|webp)$/.test(path) ||
+        ["avif", "gif", "jpg", "jpeg", "png", "webp"].includes(format)
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  function getArticleImageUrl(article) {
+    const image = String(article?.image || "").trim();
+    return image && isDirectImageUrl(image) ? image : "assets/boxing-arena.png";
+  }
+
   function applyArticleImage(element, article) {
-    const image = article?.image || "assets/boxing-arena.png";
+    const image = getArticleImageUrl(article);
     element.classList.add("has-custom-image");
     element.style.backgroundImage = `url(${JSON.stringify(image)}), url("assets/boxing-arena.png")`;
   }
@@ -67,6 +86,8 @@
 
   window.BoxingUI = {
     applyArticleImage,
+    getArticleImageUrl,
+    isDirectImageUrl,
     renderSidebars
   };
 })();

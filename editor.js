@@ -39,6 +39,20 @@ function cleanImageUrl(value) {
     .replaceAll("&amp;", "&");
 }
 
+function isDirectImageUrl(value) {
+  try {
+    const url = new URL(String(value || ""), window.location.href);
+    const path = url.pathname.toLowerCase();
+    const format = String(url.searchParams.get("format") || "").toLowerCase();
+    return (
+      /\.(avif|gif|jpe?g|png|webp)$/.test(path) ||
+      ["avif", "gif", "jpg", "jpeg", "png", "webp"].includes(format)
+    );
+  } catch {
+    return false;
+  }
+}
+
 function urlLines(value) {
   return String(value || "")
     .split(/\r?\n/)
@@ -94,9 +108,12 @@ function updatePreview() {
   });
 
   if (!selectedFile) {
+    const pastedImage = cleanImageUrl(imageUrlInput.value);
     const currentImage = imageCleared
       ? ""
-      : cleanImageUrl(imageUrlInput.value) || editingArticle?.image || "";
+      : pastedImage && isDirectImageUrl(pastedImage)
+        ? pastedImage
+        : editingArticle?.image || "";
     setPreviewImage(currentImage);
   }
 
@@ -185,8 +202,11 @@ imageUrlInput.addEventListener("input", () => {
   imageCleared = false;
   imageFileInput.value = "";
   updatePreview();
-  imageStatus.textContent = cleanImageUrl(imageUrlInput.value)
-    ? "外部画像URLを使用します。"
+  const pastedImage = cleanImageUrl(imageUrlInput.value);
+  imageStatus.textContent = pastedImage
+    ? isDirectImageUrl(pastedImage)
+      ? "外部画像URLを使用します。"
+      : "画像ファイルURLではありません。jpg/png/webp等の画像アドレスを貼ってください。"
     : "画像未設定";
 });
 
@@ -234,6 +254,11 @@ form.addEventListener("submit", async (event) => {
     }
 
     const pastedImage = cleanImageUrl(imageUrlInput.value);
+    if (pastedImage && !isDirectImageUrl(pastedImage)) {
+      throw new Error(
+        "画像URLはjpg/png/webp等の画像ファイルURLを貼ってください。Xの投稿URLや/photo URLは画像として使えません。"
+      );
+    }
     let image = pastedImage || editingArticle?.image || "";
     let imagePath = pastedImage ? "" : editingArticle?.imagePath || "";
 

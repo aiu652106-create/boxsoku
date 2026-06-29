@@ -19,7 +19,26 @@ const safeUrl = (value, fallback = "/assets/boxing-arena.png") => {
   return fallback;
 };
 
-const cssUrl = (value, fallback) => `url(${JSON.stringify(safeUrl(value, fallback))})`;
+const isDirectImageUrl = (value) => {
+  try {
+    const url = new URL(String(value || ""), "https://example.invalid");
+    const path = url.pathname.toLowerCase();
+    const format = String(url.searchParams.get("format") || "").toLowerCase();
+    return (
+      /\.(avif|gif|jpe?g|png|webp)$/.test(path) ||
+      ["avif", "gif", "jpg", "jpeg", "png", "webp"].includes(format)
+    );
+  } catch {}
+  return false;
+};
+
+const safeImageUrl = (value, fallback = "/assets/boxing-arena.png") => {
+  const url = safeUrl(value, fallback);
+  return isDirectImageUrl(url) ? url : fallback;
+};
+
+const cssUrl = (value, fallback) =>
+  `url(${JSON.stringify(safeImageUrl(value, fallback))})`;
 
 const articleBodyHtml = (body) => {
   const paragraphs = String(body || "")
@@ -181,7 +200,7 @@ export async function onRequestGet(context) {
   const siteName = String(env.SITE_NAME || "ボクシング速報");
   const canonical = `${siteUrl}/news/${encodeURIComponent(article.slug)}`;
   const image = new URL(
-    safeUrl(article.image_url, "/assets/boxing-arena.png"),
+    safeImageUrl(article.image_url, "/assets/boxing-arena.png"),
     `${siteUrl}/`
   ).href;
   const hasAffiliateLinks = jsonArray(article.affiliate_links).some(
