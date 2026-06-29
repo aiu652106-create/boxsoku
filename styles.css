@@ -4006,3 +4006,189 @@ button {
     gap: 0;
   }
 }
+
+/* Hamusoku-like compact news typography */
+.retro-blog {
+  background: #e9e9e9;
+  color: #222;
+  font-family: Arial, "Meiryo", "Yu Gothic", sans-serif;
+  font-size: 13px;
+}
+
+.retro-header {
+  width: min(1120px, calc(100% - 20px));
+  height: 86px;
+  padding: 12px 18px;
+  border: 1px solid #bbb;
+  border-top: 0;
+  background: #fff;
+}
+
+.retro-logo {
+  align-items: center;
+  gap: 12px;
+}
+
+.retro-logo strong {
+  color: #e60012;
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+.retro-logo span {
+  margin: 0;
+  background: #075db3;
+  color: #fff;
+  font: bold 12px Arial, "Meiryo", sans-serif;
+}
+
+.retro-top > div,
+.retro-page-layout,
+.retro-footer {
+  width: min(1120px, calc(100% - 20px));
+}
+
+.retro-page-layout {
+  grid-template-columns: 210px minmax(0, 1fr) 210px;
+  border-top: 3px solid #e60012;
+}
+
+.retro-feed {
+  padding: 14px 30px 46px;
+}
+
+.retro-post {
+  margin-bottom: 30px;
+  padding-bottom: 24px;
+}
+
+.retro-title-row {
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
+.retro-title-row h1 {
+  font-family: Arial, "Meiryo", "Yu Gothic", sans-serif;
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+
+.retro-title-row h1 a {
+  color: #075db3;
+  text-decoration: underline;
+}
+
+.retro-title-row h1 a:hover {
+  color: #e10000;
+}
+
+.retro-detail .retro-title-row h1 {
+  color: #075db3;
+  font-size: 24px;
+  line-height: 1.45;
+  text-decoration: underline;
+}
+
+.retro-post-image {
+  width: min(620px, 100%);
+  height: 330px;
+  margin: 12px auto 14px;
+}
+
+.retro-continue {
+  width: min(620px, 100%);
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+
+.retro-tags {
+  padding: 5px 7px;
+  font-size: 11px;
+}
+
+.retro-detail-body {
+  width: min(620px, 100%);
+}
+
+.retro-detail-body > p {
+  margin-bottom: 20px;
+  font-family: Arial, "Meiryo", "Yu Gothic", sans-serif;
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.retro-sidebar-panel h2 {
+  padding: 6px 8px;
+  font-size: 14px;
+}
+
+.retro-sidebar-list a {
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 7px;
+  padding: 8px 7px;
+}
+
+.retro-sidebar-thumbnail {
+  width: 56px;
+  height: 42px;
+}
+
+.retro-sidebar-text strong {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.preview-paper h2 {
+  color: #075db3;
+  font-family: Arial, "Meiryo", "Yu Gothic", sans-serif;
+  font-size: 24px;
+  letter-spacing: 0;
+  line-height: 1.5;
+  text-decoration: underline;
+}
+
+.preview-body p {
+  font-family: Arial, "Meiryo", "Yu Gothic", sans-serif;
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.tweet-preview-card {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-color: #cfcfcf;
+  background: #f7f7f7;
+}
+
+.tweet-preview-card strong {
+  min-width: 74px;
+  color: #075db3;
+  font: bold 14px Arial, "Meiryo", sans-serif;
+}
+
+.tweet-preview-card span {
+  overflow-wrap: anywhere;
+  color: #555;
+  font-size: 11px;
+}
+
+@media (max-width: 760px) {
+  .retro-logo strong {
+    font-size: 34px;
+  }
+
+  .retro-title-row h1,
+  .retro-detail .retro-title-row h1 {
+    font-size: 18px;
+  }
+
+  .retro-post-image {
+    height: min(56vw, 240px);
+  }
+}

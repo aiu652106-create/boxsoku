@@ -9,6 +9,9 @@ const submitButton = document.querySelector("#publish-button");
 const advertorialInput = document.querySelector("#is-advertorial");
 const affiliateDisclosureInput = document.querySelector("#affiliate-disclosure");
 const affiliateLinksInput = document.querySelector("#affiliate-links");
+const tweetUrlsInput = document.querySelector("#tweet-urls");
+const youtubeUrlsInput = document.querySelector("#youtube-urls");
+const instagramUrlsInput = document.querySelector("#instagram-urls");
 const previewAffiliateDisclosure = document.querySelector(
   "#preview-affiliate-disclosure"
 );
@@ -27,6 +30,35 @@ let imageCleared = false;
 function buildSummary(body, title) {
   const source = String(body || title || "").replace(/\s+/g, " ").trim();
   return source.slice(0, 500) || String(title || "Article").trim() || "Article";
+}
+
+function cleanImageUrl(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^url\((["']?)(.*)\1\)$/i, "$2")
+    .replaceAll("&amp;", "&");
+}
+
+function urlLines(value) {
+  return String(value || "")
+    .split(/\r?\n/)
+    .map((url) => url.trim())
+    .filter(Boolean);
+}
+
+function appendPreviewEmbed(parent, type, url) {
+  const item = document.createElement("div");
+  item.className = `tweet-preview-card preview-${type}`;
+
+  const label = document.createElement("strong");
+  label.textContent =
+    type === "youtube" ? "YouTube" : type === "instagram" ? "Instagram" : "X";
+
+  const text = document.createElement("span");
+  text.textContent = url;
+
+  item.append(label, text);
+  parent.appendChild(item);
 }
 
 function setPreviewImage(url) {
@@ -59,6 +91,23 @@ function updatePreview() {
     const paragraph = document.createElement("p");
     paragraph.textContent = value;
     bodyPreview.appendChild(paragraph);
+  });
+
+  if (!selectedFile) {
+    const currentImage = imageCleared
+      ? ""
+      : cleanImageUrl(imageUrlInput.value) || editingArticle?.image || "";
+    setPreviewImage(currentImage);
+  }
+
+  urlLines(tweetUrlsInput.value).forEach((url) => {
+    appendPreviewEmbed(bodyPreview, "tweet", url);
+  });
+  urlLines(youtubeUrlsInput.value).forEach((url) => {
+    appendPreviewEmbed(bodyPreview, "youtube", url);
+  });
+  urlLines(instagramUrlsInput.value).forEach((url) => {
+    appendPreviewEmbed(bodyPreview, "instagram", url);
   });
 
   const linkLabels = affiliateLinksInput.value
@@ -135,8 +184,8 @@ imageUrlInput.addEventListener("input", () => {
   selectedFile = null;
   imageCleared = false;
   imageFileInput.value = "";
-  setPreviewImage(imageUrlInput.value.trim());
-  imageStatus.textContent = imageUrlInput.value.trim()
+  updatePreview();
+  imageStatus.textContent = cleanImageUrl(imageUrlInput.value)
     ? "外部画像URLを使用します。"
     : "画像未設定";
 });
@@ -168,6 +217,9 @@ affiliateLinksInput.addEventListener("input", () => {
   if (affiliateLinksInput.value.trim()) advertorialInput.checked = true;
   updatePreview();
 });
+tweetUrlsInput.addEventListener("input", updatePreview);
+youtubeUrlsInput.addEventListener("input", updatePreview);
+instagramUrlsInput.addEventListener("input", updatePreview);
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -181,8 +233,9 @@ form.addEventListener("submit", async (event) => {
       throw new Error("管理者としてログインし直してください。");
     }
 
-    let image = imageUrlInput.value.trim() || editingArticle?.image || "";
-    let imagePath = imageUrlInput.value.trim() ? "" : editingArticle?.imagePath || "";
+    const pastedImage = cleanImageUrl(imageUrlInput.value);
+    let image = pastedImage || editingArticle?.image || "";
+    let imagePath = pastedImage ? "" : editingArticle?.imagePath || "";
 
     if (selectedFile) {
       uploaded = await window.BoxingData.uploadArticleImage(selectedFile, user.id);
@@ -220,15 +273,15 @@ form.addEventListener("submit", async (event) => {
           : ""),
       affiliateLinks,
       tweets: window.BoxingData.parseUrlList(
-        document.querySelector("#tweet-urls").value,
+        tweetUrlsInput.value,
         window.BoxingData.isTweetUrl
       ),
       youtubeUrls: window.BoxingData.parseUrlList(
-        document.querySelector("#youtube-urls").value,
+        youtubeUrlsInput.value,
         window.BoxingData.isYouTubeUrl
       ),
       instagramUrls: window.BoxingData.parseUrlList(
-        document.querySelector("#instagram-urls").value,
+        instagramUrlsInput.value,
         window.BoxingData.isInstagramUrl
       ),
       publishedAt:
@@ -271,9 +324,9 @@ function fillForm(article) {
   affiliateLinksInput.value = article.affiliateLinks
     .map((link) => `${link.label} | ${link.url}`)
     .join("\n");
-  document.querySelector("#tweet-urls").value = article.tweets.join("\n");
-  document.querySelector("#youtube-urls").value = article.youtubeUrls.join("\n");
-  document.querySelector("#instagram-urls").value = article.instagramUrls.join("\n");
+  tweetUrlsInput.value = article.tweets.join("\n");
+  youtubeUrlsInput.value = article.youtubeUrls.join("\n");
+  instagramUrlsInput.value = article.instagramUrls.join("\n");
   if (article.image) {
     imageUrlInput.value = article.imagePath ? "" : article.image;
     setPreviewImage(article.image);

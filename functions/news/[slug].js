@@ -19,6 +19,8 @@ const safeUrl = (value, fallback = "/assets/boxing-arena.png") => {
   return fallback;
 };
 
+const cssUrl = (value, fallback) => `url(${JSON.stringify(safeUrl(value, fallback))})`;
+
 const articleBodyHtml = (body) => {
   const paragraphs = String(body || "")
     .split(/\n\s*\n/)
@@ -109,9 +111,9 @@ function sidebarHtml(articles, ranked = false) {
       (article, index) => `<li>
         <a href="/news/${encodeURIComponent(article.slug)}">
           ${ranked ? `<span class="retro-sidebar-rank">${index + 1}</span>` : ""}
-          <span class="retro-sidebar-thumbnail" style="background-image:url('${escapeHtml(
-            safeUrl(article.image_url)
-          )}')"></span>
+          <span class="retro-sidebar-thumbnail" style="background-image:${escapeHtml(
+            cssUrl(article.image_url)
+          )}"></span>
           <span class="retro-sidebar-text">
             <strong>${escapeHtml(article.title)}</strong>
             <time>${escapeHtml(
@@ -230,6 +232,9 @@ export async function onRequestGet(context) {
     article.updated_at || article.published_at
   )}">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeHtml(article.title)}">
+  <meta name="twitter:description" content="${escapeHtml(article.summary)}">
+  <meta name="twitter:image" content="${escapeHtml(image)}">
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script type="application/ld+json">${structuredData}</script>
   <link rel="stylesheet" href="/styles.css">
@@ -258,7 +263,7 @@ export async function onRequestGet(context) {
         )}&url=${encodeURIComponent(canonical)}" target="_blank" rel="noopener noreferrer">Tweet</a></div>
         <div class="retro-post-image retro-detail-image" role="img" aria-label="${escapeHtml(
           article.title
-        )}の記事画像" style="background-image:url('${escapeHtml(image)}')"></div>
+        )}の記事画像" style="background-image:${escapeHtml(cssUrl(image))}"></div>
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         <div class="retro-detail-body">${articleBodyHtml(article.body)}${embedsHtml(article)}</div>
         ${affiliateLinksHtml(article)}

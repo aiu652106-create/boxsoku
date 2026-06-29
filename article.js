@@ -155,6 +155,12 @@ function updateMetadata(article) {
   );
   document.querySelector('meta[property="og:url"]')?.setAttribute("content", pageUrl);
   document.querySelector('meta[property="og:image"]')?.setAttribute("content", imageUrl);
+  document.querySelector('meta[name="twitter:title"]')?.setAttribute("content", article.title);
+  document.querySelector('meta[name="twitter:description"]')?.setAttribute(
+    "content",
+    article.summary
+  );
+  document.querySelector('meta[name="twitter:image"]')?.setAttribute("content", imageUrl);
 
   let structuredData = document.querySelector("#article-structured-data");
   if (!structuredData) {
