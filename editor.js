@@ -26,6 +26,7 @@ let editingArticle = null;
 let selectedFile = null;
 let previewObjectUrl = "";
 let imageCleared = false;
+let imageUrlRequestId = 0;
 
 function buildSummary(body, title) {
   const source = String(body || title || "").replace(/\s+/g, " ").trim();
@@ -51,6 +52,31 @@ function isDirectImageUrl(value) {
   } catch {
     return false;
   }
+}
+
+function xPhotoMatch(value) {
+  return String(value || "").match(
+    /^https?:\/\/(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/(\d+)(?:\/photo\/(\d+))?/i
+  );
+}
+
+async function resolveImageUrl(value) {
+  const url = cleanImageUrl(value);
+  if (!url) return "";
+  if (isDirectImageUrl(url)) return url;
+
+  const match = xPhotoMatch(url);
+  if (!match) return "";
+
+  const photoIndex = Math.max(0, Number(match[2] || 1) - 1);
+  const response = await fetch(`https://api.fxtwitter.com/status/${match[1]}`, {
+    headers: { Accept: "application/json" }
+  });
+  if (!response.ok) return "";
+  const payload = await response.json();
+  const photos = payload?.tweet?.media?.photos || payload?.tweet?.media?.all || [];
+  const photo = photos[photoIndex] || photos[0];
+  return isDirectImageUrl(photo?.url) ? photo.url : "";
 }
 
 function urlLines(value) {
@@ -99,9 +125,6 @@ function updatePreview() {
   const bodyPreview = document.querySelector("#preview-body");
   bodyPreview.replaceChildren();
   const pastedImage = cleanImageUrl(imageUrlInput.value);
-  if (window.BoxingData?.isTweetUrl?.(pastedImage)) {
-    appendPreviewEmbed(bodyPreview, "tweet", pastedImage);
-  }
   const paragraphs = body
     ? body.split(/\n\s*\n/).filter(Boolean)
     : ["本文を入力すると、ここで仕上がりを確認できます。"];
@@ -125,7 +148,9 @@ function updatePreview() {
   if (!selectedFile) {
     const currentImage = imageCleared
       ? ""
-      : pastedImage && isDirectImageUrl(pastedImage)
+      : imageUrlInput.dataset.resolvedImage
+        ? imageUrlInput.dataset.resolvedImage
+        : pastedImage && isDirectImageUrl(pastedImage)
         ? pastedImage
         : isDirectImageUrl(editingArticle?.image)
           ? editingArticle.image
@@ -213,19 +238,45 @@ imageFileInput.addEventListener("change", async () => {
   }
 });
 
-imageUrlInput.addEventListener("input", () => {
+imageUrlInput.addEventListener("input", async () => {
   selectedFile = null;
   imageCleared = false;
   imageFileInput.value = "";
+  delete imageUrlInput.dataset.resolvedImage;
   updatePreview();
   const pastedImage = cleanImageUrl(imageUrlInput.value);
-  imageStatus.textContent = pastedImage
-    ? isDirectImageUrl(pastedImage)
-      ? "外部画像URLを使用します。"
-      : window.BoxingData?.isTweetUrl?.(pastedImage)
-        ? "X投稿として記事内に表示します。"
-        : "画像ファイルURLではありません。jpg/png/webp等の画像アドレスを貼ってください。"
-    : "画像未設定";
+  if (!pastedImage) {
+    imageStatus.textContent = "画像未設定";
+    return;
+  }
+  if (isDirectImageUrl(pastedImage)) {
+    setPreviewImage(pastedImage);
+    imageStatus.textContent = "外部画像URLを使用します。";
+    return;
+  }
+  if (!xPhotoMatch(pastedImage)) {
+    imageStatus.textContent =
+      "画像ファイルURLではありません。jpg/png/webp等の画像アドレスを貼ってください。";
+    return;
+  }
+
+  const requestId = ++imageUrlRequestId;
+  imageStatus.textContent = "X画像を取得しています...";
+  try {
+    const resolved = await resolveImageUrl(pastedImage);
+    if (requestId !== imageUrlRequestId) return;
+    if (!resolved) {
+      imageStatus.textContent = "X画像を取得できませんでした。";
+      return;
+    }
+    imageUrlInput.dataset.resolvedImage = resolved;
+    setPreviewImage(resolved);
+    imageStatus.textContent = "X画像を取得して使用します。";
+  } catch {
+    if (requestId === imageUrlRequestId) {
+      imageStatus.textContent = "X画像を取得できませんでした。";
+    }
+  }
 });
 
 document.querySelector("#image-reset").addEventListener("click", () => {
@@ -272,20 +323,20 @@ form.addEventListener("submit", async (event) => {
     }
 
     const pastedImage = cleanImageUrl(imageUrlInput.value);
-    const imageTweet = window.BoxingData.isTweetUrl(pastedImage)
-      ? pastedImage
+    const resolvedPastedImage = pastedImage
+      ? imageUrlInput.dataset.resolvedImage || (await resolveImageUrl(pastedImage))
       : "";
-    if (pastedImage && !isDirectImageUrl(pastedImage) && !imageTweet) {
+    if (pastedImage && !resolvedPastedImage) {
       throw new Error(
-        "画像URLはjpg/png/webp等の画像ファイルURLを貼ってください。Xの投稿URLや/photo URLは画像として使えません。"
+        "画像URLを取得できませんでした。jpg/png/webp等の画像URL、または画像付きX投稿のURLを貼ってください。"
       );
     }
-    let image = isDirectImageUrl(pastedImage)
-      ? pastedImage
+    let image = resolvedPastedImage
+      ? resolvedPastedImage
       : isDirectImageUrl(editingArticle?.image)
         ? editingArticle.image
         : "";
-    let imagePath = isDirectImageUrl(pastedImage)
+    let imagePath = resolvedPastedImage
       ? ""
       : editingArticle?.imagePath || "";
 
@@ -302,14 +353,6 @@ form.addEventListener("submit", async (event) => {
     const affiliateLinks = window.BoxingData.parseAffiliateLinks(
       affiliateLinksInput.value
     );
-    const tweets = window.BoxingData.parseUrlList(
-      tweetUrlsInput.value,
-      window.BoxingData.isTweetUrl
-    );
-    if (imageTweet && !tweets.includes(imageTweet)) {
-      tweets.unshift(imageTweet);
-    }
-
     const article = {
       id: editingArticle?.id,
       slug: window.BoxingData.createSlug(document.querySelector("#slug").value),
@@ -332,7 +375,10 @@ form.addEventListener("submit", async (event) => {
             "この記事には配信サービスのアフィリエイトリンクが含まれています。"
           : ""),
       affiliateLinks,
-      tweets,
+      tweets: window.BoxingData.parseUrlList(
+        tweetUrlsInput.value,
+        window.BoxingData.isTweetUrl
+      ),
       youtubeUrls: window.BoxingData.parseUrlList(
         youtubeUrlsInput.value,
         window.BoxingData.isYouTubeUrl

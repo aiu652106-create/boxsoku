@@ -134,6 +134,19 @@ function addExternalScript(src) {
   document.body.appendChild(script);
 }
 
+function sameUrl(left, right) {
+  try {
+    return (
+      left &&
+      right &&
+      new URL(String(left), window.location.href).href ===
+        new URL(String(right), window.location.href).href
+    );
+  } catch {
+    return false;
+  }
+}
+
 function updateMetadata(article) {
   const pageUrl = new URL(window.BoxingData.articleUrl(article), window.location.href).href;
   const imageUrl = new URL(
@@ -236,7 +249,16 @@ function renderArticle(article) {
   paragraphs.forEach((paragraph, index) => {
     const lines = paragraph.split(/\n/);
     const firstLine = String(lines[0] || "").trim();
-    if (window.BoxingData.isTweetUrl(firstLine)) {
+    if (sameUrl(firstLine, article.image)) {
+      const rest = lines.slice(1).join("\n").trim();
+      if (rest) {
+        const text = document.createElement("p");
+        text.textContent = rest;
+        body.appendChild(text);
+      }
+    } else if (sameUrl(paragraph.trim(), article.image)) {
+      // Image URL is rendered above the article body.
+    } else if (window.BoxingData.isTweetUrl(firstLine)) {
       appendTweet(body, firstLine);
       const rest = lines.slice(1).join("\n").trim();
       if (rest) {

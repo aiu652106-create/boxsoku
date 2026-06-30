@@ -40,6 +40,33 @@ const safeImageUrl = (value, fallback = "/assets/boxing-arena.png") => {
 const cssUrl = (value, fallback) =>
   `url(${JSON.stringify(safeImageUrl(value, fallback))})`;
 
+const xPhotoMatch = (value) =>
+  String(value || "").match(
+    /^https?:\/\/(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/(\d+)(?:\/photo\/(\d+))?/i
+  );
+
+async function resolveArticleImage(value, fallback = "/assets/boxing-arena.png") {
+  const direct = safeImageUrl(value, "");
+  if (direct) return direct;
+
+  const match = xPhotoMatch(value);
+  if (!match) return fallback;
+
+  try {
+    const photoIndex = Math.max(0, Number(match[2] || 1) - 1);
+    const response = await fetch(`https://api.fxtwitter.com/status/${match[1]}`, {
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok) return fallback;
+    const payload = await response.json();
+    const photos = payload?.tweet?.media?.photos || payload?.tweet?.media?.all || [];
+    const photo = photos[photoIndex] || photos[0];
+    return isDirectImageUrl(photo?.url) ? photo.url : fallback;
+  } catch {}
+
+  return fallback;
+}
+
 const isTweetUrl = (value) =>
   /^https?:\/\/(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d+(?:\/photo\/\d+)?(?:\?.*)?$/i.test(
     String(value || "").trim()
@@ -50,7 +77,10 @@ const tweetEmbedHtml = (url) =>
     safeUrl(url, "#")
   )}">Xで投稿を見る</a></blockquote></div>`;
 
-const articleBodyHtml = (body) => {
+const sameUrl = (left, right) =>
+  safeUrl(left, "") && safeUrl(left, "") === safeUrl(right, "");
+
+const articleBodyHtml = (body, articleImageUrl = "") => {
   const paragraphs = String(body || "")
     .split(/\n\s*\n/)
     .filter(Boolean);
@@ -64,6 +94,13 @@ const articleBodyHtml = (body) => {
           : "";
       const lines = paragraph.split(/\n/);
       const firstLine = String(lines[0] || "").trim();
+      if (sameUrl(firstLine, articleImageUrl)) {
+        const rest = lines.slice(1).join("\n").trim();
+        return `${rest ? `<p>${escapeHtml(rest).replaceAll("\n", "<br>")}</p>` : ""}${ad}`;
+      }
+      if (sameUrl(paragraph.trim(), articleImageUrl)) {
+        return ad;
+      }
       if (isTweetUrl(firstLine)) {
         const rest = lines.slice(1).join("\n").trim();
         return `${tweetEmbedHtml(firstLine)}${
@@ -147,7 +184,7 @@ function sidebarHtml(articles, ranked = false) {
         <a href="/news/${encodeURIComponent(article.slug)}">
           ${ranked ? `<span class="retro-sidebar-rank">${index + 1}</span>` : ""}
           <span class="retro-sidebar-thumbnail" style="background-image:${escapeHtml(
-            cssUrl(article.image_url)
+            `url(${JSON.stringify(article.resolved_image_url || safeImageUrl(article.image_url))})`
           )}"></span>
           <span class="retro-sidebar-text">
             <strong>${escapeHtml(article.title)}</strong>
@@ -212,11 +249,28 @@ export async function onRequestGet(context) {
     return new Response("記事が見つかりません。", { status: 404 });
   }
 
+  const [resolvedArticleImage, latestWithImages, popularWithImages] =
+    await Promise.all([
+      resolveArticleImage(article.image_url),
+      Promise.all(
+        latest.map(async (item) => ({
+          ...item,
+          resolved_image_url: await resolveArticleImage(item.image_url)
+        }))
+      ),
+      Promise.all(
+        popular.map(async (item) => ({
+          ...item,
+          resolved_image_url: await resolveArticleImage(item.image_url)
+        }))
+      )
+    ]);
+
   const siteUrl = String(env.SITE_URL || new URL(request.url).origin).replace(/\/$/, "");
   const siteName = String(env.SITE_NAME || "ボクシング速報");
   const canonical = `${siteUrl}/news/${encodeURIComponent(article.slug)}`;
   const image = new URL(
-    safeImageUrl(article.image_url, "/assets/boxing-arena.png"),
+    resolvedArticleImage,
     `${siteUrl}/`
   ).href;
   const hasAffiliateLinks = jsonArray(article.affiliate_links).some(
@@ -285,7 +339,7 @@ export async function onRequestGet(context) {
   )}</strong><span>BOXING NEWS</span></a></header>
   <div class="retro-page-layout">
     <aside class="retro-sidebar retro-sidebar-popular"><section class="retro-sidebar-panel"><h2>人気記事</h2><ol class="retro-sidebar-list retro-ranking-list">${sidebarHtml(
-      popular,
+      popularWithImages,
       true
     )}</ol></section></aside>
     <main class="retro-feed">
@@ -301,7 +355,10 @@ export async function onRequestGet(context) {
           article.title
         )}の記事画像" style="background-image:${escapeHtml(cssUrl(image))}"></div>
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
-        <div class="retro-detail-body">${articleBodyHtml(article.body)}${embedsHtml(article)}</div>
+        <div class="retro-detail-body">${articleBodyHtml(
+          article.body,
+          article.image_url
+        )}${embedsHtml(article)}</div>
         ${affiliateLinksHtml(article)}
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>
         <p class="retro-tags">タグ：ボクシング　ニュース</p>
@@ -317,7 +374,7 @@ export async function onRequestGet(context) {
       </article>
     </main>
     <aside class="retro-sidebar retro-sidebar-latest"><section class="retro-sidebar-panel"><h2>最新記事</h2><ul class="retro-sidebar-list">${sidebarHtml(
-      latest
+      latestWithImages
     )}</ul><aside class="ad-slot sidebar-ad" data-ad-slot-name="sidebar" aria-label="広告"></aside></section></aside>
   </div>
   <footer class="retro-footer"><a href="/">TOP PAGEへ</a><nav><a href="/about.html">運営者情報</a><a href="/privacy.html">プライバシーポリシー</a><a href="/disclaimer.html">免責事項</a><a href="/contact.html">お問い合わせ</a></nav><small>copyright &copy; <span data-current-year></span> <span data-site-name>${escapeHtml(
