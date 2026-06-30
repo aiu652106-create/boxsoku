@@ -1,27 +1,29 @@
 (function () {
-  function isDirectImageUrl(value) {
-    try {
-      const url = new URL(String(value || ""), window.location.href);
-      const path = url.pathname.toLowerCase();
-      const format = String(url.searchParams.get("format") || "").toLowerCase();
-      return (
-        /\.(avif|gif|jpe?g|png|webp)$/.test(path) ||
-        ["avif", "gif", "jpg", "jpeg", "png", "webp"].includes(format)
-      );
-    } catch {
-      return false;
-    }
-  }
-
   function getArticleImageUrl(article) {
-    const image = String(article?.image || "").trim();
-    return image && isDirectImageUrl(image) ? image : "assets/boxing-arena.png";
+    return String(article?.image || "");
   }
 
   function applyArticleImage(element, article) {
     const image = getArticleImageUrl(article);
+    if (!image) {
+      element.style.removeProperty("background-image");
+      element.classList.remove("has-custom-image");
+      element.replaceChildren();
+      return false;
+    }
     element.classList.add("has-custom-image");
-    element.style.backgroundImage = `url(${JSON.stringify(image)}), url("assets/boxing-arena.png")`;
+    element.style.backgroundImage = `url(${JSON.stringify(image)})`;
+    if (element.tagName !== "IMG") {
+      element.replaceChildren();
+      const img = document.createElement("img");
+      img.src = image;
+      img.alt = "";
+      img.loading = "lazy";
+      element.appendChild(img);
+    } else {
+      element.src = image;
+    }
+    return true;
   }
 
   function createSidebarArticle(article, index, showRank) {
@@ -39,7 +41,7 @@
     const thumbnail = document.createElement("span");
     thumbnail.className = "retro-sidebar-thumbnail";
     thumbnail.setAttribute("aria-hidden", "true");
-    applyArticleImage(thumbnail, article);
+    const hasImage = applyArticleImage(thumbnail, article);
 
     const text = document.createElement("span");
     text.className = "retro-sidebar-text";
@@ -51,7 +53,12 @@
     date.textContent = window.BoxingData.articleDate(article);
 
     text.append(title, date);
-    link.append(thumbnail, text);
+    if (hasImage) {
+      link.append(thumbnail, text);
+    } else {
+      link.classList.add("is-text-only");
+      link.appendChild(text);
+    }
     item.appendChild(link);
     return item;
   }
@@ -87,7 +94,6 @@
   window.BoxingUI = {
     applyArticleImage,
     getArticleImageUrl,
-    isDirectImageUrl,
     renderSidebars
   };
 })();

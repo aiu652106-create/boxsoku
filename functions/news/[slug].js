@@ -6,7 +6,7 @@ const escapeHtml = (value = "") =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
-const safeUrl = (value, fallback = "/assets/boxing-arena.png") => {
+const safeUrl = (value, defaultValue = "#") => {
   try {
     const url = new URL(String(value || ""), "https://example.invalid");
     if (url.protocol === "https:" || url.protocol === "http:") {
@@ -16,71 +16,8 @@ const safeUrl = (value, fallback = "/assets/boxing-arena.png") => {
       return url.href;
     }
   } catch {}
-  return fallback;
+  return defaultValue;
 };
-
-const isDirectImageUrl = (value) => {
-  try {
-    const url = new URL(String(value || ""), "https://example.invalid");
-    const path = url.pathname.toLowerCase();
-    const format = String(url.searchParams.get("format") || "").toLowerCase();
-    return (
-      /\.(avif|gif|jpe?g|png|webp)$/.test(path) ||
-      ["avif", "gif", "jpg", "jpeg", "png", "webp"].includes(format)
-    );
-  } catch {}
-  return false;
-};
-
-const safeImageUrl = (value, fallback = "/assets/boxing-arena.png") => {
-  const url = safeUrl(value, fallback);
-  return isDirectImageUrl(url) ? url : fallback;
-};
-
-const cssUrl = (value, fallback) =>
-  `url(${JSON.stringify(safeImageUrl(value, fallback))})`;
-
-const xPhotoMatch = (value) =>
-  String(value || "").match(
-    /^https?:\/\/(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/(\d+)(?:\/photo\/(\d+))?/i
-  );
-
-async function resolveArticleImage(value, fallback = "/assets/boxing-arena.png") {
-  const direct = safeImageUrl(value, "");
-  if (direct) return direct;
-
-  const match = xPhotoMatch(value);
-  if (!match) return fallback;
-
-  const photoIndex = Math.max(0, Number(match[2] || 1) - 1);
-
-  try {
-    const response = await fetch(`https://api.fxtwitter.com/status/${match[1]}`, {
-      headers: { Accept: "application/json" }
-    });
-    if (response.ok) {
-      const payload = await response.json();
-      const photos = payload?.tweet?.media?.photos || payload?.tweet?.media?.all || [];
-      const photo = photos[photoIndex] || photos[0];
-      if (isDirectImageUrl(photo?.url)) return photo.url;
-    }
-  } catch {}
-
-  try {
-    const response = await fetch(`https://api.vxtwitter.com/status/${match[1]}`, {
-      headers: { Accept: "application/json" }
-    });
-    if (response.ok) {
-      const payload = await response.json();
-      const urls = payload?.mediaURLs || [];
-      const media = payload?.media_extended || [];
-      const url = urls[photoIndex] || media[photoIndex]?.url || urls[0] || media[0]?.url;
-      if (isDirectImageUrl(url)) return url;
-    }
-  } catch {}
-
-  return fallback;
-}
 
 const isTweetUrl = (value) =>
   /^https?:\/\/(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d+(?:\/photo\/\d+)?(?:\?.*)?$/i.test(
@@ -92,10 +29,7 @@ const tweetEmbedHtml = (url) =>
     safeUrl(url, "#")
   )}">Xで投稿を見る</a></blockquote></div>`;
 
-const sameUrl = (left, right) =>
-  safeUrl(left, "") && safeUrl(left, "") === safeUrl(right, "");
-
-const articleBodyHtml = (body, articleImageUrl = "") => {
+const articleBodyHtml = (body) => {
   const paragraphs = String(body || "")
     .split(/\n\s*\n/)
     .filter(Boolean);
@@ -109,13 +43,6 @@ const articleBodyHtml = (body, articleImageUrl = "") => {
           : "";
       const lines = paragraph.split(/\n/);
       const firstLine = String(lines[0] || "").trim();
-      if (sameUrl(firstLine, articleImageUrl)) {
-        const rest = lines.slice(1).join("\n").trim();
-        return `${rest ? `<p>${escapeHtml(rest).replaceAll("\n", "<br>")}</p>` : ""}${ad}`;
-      }
-      if (sameUrl(paragraph.trim(), articleImageUrl)) {
-        return ad;
-      }
       if (isTweetUrl(firstLine)) {
         const rest = lines.slice(1).join("\n").trim();
         return `${tweetEmbedHtml(firstLine)}${
@@ -196,11 +123,15 @@ function sidebarHtml(articles, ranked = false) {
   return articles
     .map(
       (article, index) => `<li>
-        <a href="/news/${encodeURIComponent(article.slug)}">
+        <a class="${article.image_url ? "" : "is-text-only"}" href="/news/${encodeURIComponent(article.slug)}">
           ${ranked ? `<span class="retro-sidebar-rank">${index + 1}</span>` : ""}
-          <span class="retro-sidebar-thumbnail" style="background-image:${escapeHtml(
-            `url(${JSON.stringify(article.resolved_image_url || safeImageUrl(article.image_url))})`
-          )}"></span>
+          ${
+            article.image_url
+              ? `<span class="retro-sidebar-thumbnail"><img src="${escapeHtml(
+                  article.image_url
+                )}" alt="" loading="lazy"></span>`
+              : ""
+          }
           <span class="retro-sidebar-text">
             <strong>${escapeHtml(article.title)}</strong>
             <time>${escapeHtml(
@@ -264,30 +195,10 @@ export async function onRequestGet(context) {
     return new Response("記事が見つかりません。", { status: 404 });
   }
 
-  const [resolvedArticleImage, latestWithImages, popularWithImages] =
-    await Promise.all([
-      resolveArticleImage(article.image_url),
-      Promise.all(
-        latest.map(async (item) => ({
-          ...item,
-          resolved_image_url: await resolveArticleImage(item.image_url)
-        }))
-      ),
-      Promise.all(
-        popular.map(async (item) => ({
-          ...item,
-          resolved_image_url: await resolveArticleImage(item.image_url)
-        }))
-      )
-    ]);
-
   const siteUrl = String(env.SITE_URL || new URL(request.url).origin).replace(/\/$/, "");
   const siteName = String(env.SITE_NAME || "ボクシング速報");
   const canonical = `${siteUrl}/news/${encodeURIComponent(article.slug)}`;
-  const image = new URL(
-    resolvedArticleImage,
-    `${siteUrl}/`
-  ).href;
+  const image = String(article.image_url || "");
   const hasAffiliateLinks = jsonArray(article.affiliate_links).some(
     (item) => item && item.label && item.url
   );
@@ -302,7 +213,7 @@ export async function onRequestGet(context) {
     "@type": "NewsArticle",
     headline: article.title,
     description: article.summary,
-    image: [image],
+    ...(image ? { image: [image] } : {}),
     datePublished: article.published_at,
     dateModified: article.updated_at || article.published_at,
     mainEntityOfPage: canonical,
@@ -329,7 +240,7 @@ export async function onRequestGet(context) {
   <meta property="og:title" content="${escapeHtml(article.title)}">
   <meta property="og:description" content="${escapeHtml(article.summary)}">
   <meta property="og:url" content="${escapeHtml(canonical)}">
-  <meta property="og:image" content="${escapeHtml(image)}">
+  ${image ? `<meta property="og:image" content="${escapeHtml(image)}">` : ""}
   <meta property="og:site_name" content="${escapeHtml(siteName)}">
   <meta property="article:published_time" content="${escapeHtml(article.published_at)}">
   <meta property="article:modified_time" content="${escapeHtml(
@@ -338,7 +249,7 @@ export async function onRequestGet(context) {
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(article.title)}">
   <meta name="twitter:description" content="${escapeHtml(article.summary)}">
-  <meta name="twitter:image" content="${escapeHtml(image)}">
+  ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ""}
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script type="application/ld+json">${structuredData}</script>
   <link rel="stylesheet" href="/styles.css">
@@ -354,7 +265,7 @@ export async function onRequestGet(context) {
   )}</strong><span>BOXING NEWS</span></a></header>
   <div class="retro-page-layout">
     <aside class="retro-sidebar retro-sidebar-popular"><section class="retro-sidebar-panel"><h2>人気記事</h2><ol class="retro-sidebar-list retro-ranking-list">${sidebarHtml(
-      popularWithImages,
+      popular,
       true
     )}</ol></section></aside>
     <main class="retro-feed">
@@ -366,14 +277,15 @@ export async function onRequestGet(context) {
           article.title
         )}&url=${encodeURIComponent(canonical)}" target="_blank" rel="noopener noreferrer">Tweet</a></div>
         <p class="retro-category">カテゴリ：ボクシング</p>
-        <div class="retro-post-image retro-detail-image" role="img" aria-label="${escapeHtml(
-          article.title
-        )}の記事画像" style="background-image:${escapeHtml(cssUrl(image))}"></div>
+        ${
+          image
+            ? `<img class="retro-post-image retro-detail-image" src="${escapeHtml(
+                image
+              )}" alt="${escapeHtml(article.title)}" loading="lazy">`
+            : ""
+        }
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
-        <div class="retro-detail-body">${articleBodyHtml(
-          article.body,
-          article.image_url
-        )}${embedsHtml(article)}</div>
+        <div class="retro-detail-body">${articleBodyHtml(article.body)}${embedsHtml(article)}</div>
         ${affiliateLinksHtml(article)}
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>
         <p class="retro-tags">タグ：ボクシング　ニュース</p>
@@ -389,7 +301,7 @@ export async function onRequestGet(context) {
       </article>
     </main>
     <aside class="retro-sidebar retro-sidebar-latest"><section class="retro-sidebar-panel"><h2>最新記事</h2><ul class="retro-sidebar-list">${sidebarHtml(
-      latestWithImages
+      latest
     )}</ul><aside class="ad-slot sidebar-ad" data-ad-slot-name="sidebar" aria-label="広告"></aside></section></aside>
   </div>
   <footer class="retro-footer"><a href="/">TOP PAGEへ</a><nav><a href="/about.html">運営者情報</a><a href="/privacy.html">プライバシーポリシー</a><a href="/disclaimer.html">免責事項</a><a href="/contact.html">お問い合わせ</a></nav><small>copyright &copy; <span data-current-year></span> <span data-site-name>${escapeHtml(

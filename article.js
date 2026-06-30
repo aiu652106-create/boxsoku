@@ -134,25 +134,9 @@ function addExternalScript(src) {
   document.body.appendChild(script);
 }
 
-function sameUrl(left, right) {
-  try {
-    return (
-      left &&
-      right &&
-      new URL(String(left), window.location.href).href ===
-        new URL(String(right), window.location.href).href
-    );
-  } catch {
-    return false;
-  }
-}
-
 function updateMetadata(article) {
   const pageUrl = new URL(window.BoxingData.articleUrl(article), window.location.href).href;
-  const imageUrl = new URL(
-    window.BoxingUI?.getArticleImageUrl(article) || "assets/boxing-arena.png",
-    window.location.href
-  ).href;
+  const imageUrl = String(article.image || "");
   const siteName = window.BOXING_CONFIG?.site?.name || "ボクシング速報";
   const configuredSiteUrl = String(window.BOXING_CONFIG?.site?.url || "");
   const siteUrl =
@@ -189,7 +173,7 @@ function updateMetadata(article) {
     "@type": "NewsArticle",
     headline: article.title,
     description: article.summary,
-    image: [imageUrl],
+    ...(imageUrl ? { image: [imageUrl] } : {}),
     datePublished: article.publishedAt || undefined,
     dateModified: article.updatedAt || article.publishedAt || undefined,
     mainEntityOfPage: pageUrl,
@@ -231,11 +215,11 @@ function renderArticle(article) {
   category.className = "retro-category";
   category.textContent = "カテゴリ：ボクシング";
 
-  const image = document.createElement("div");
+  const image = document.createElement("img");
   image.className = "retro-post-image retro-detail-image";
-  image.setAttribute("role", "img");
-  image.setAttribute("aria-label", `${article.title}の記事画像`);
-  window.BoxingUI.applyArticleImage(image, article);
+  image.src = article.image;
+  image.alt = article.title;
+  image.loading = "lazy";
 
   const topAd = createAdSlot("articleTop");
 
@@ -249,16 +233,7 @@ function renderArticle(article) {
   paragraphs.forEach((paragraph, index) => {
     const lines = paragraph.split(/\n/);
     const firstLine = String(lines[0] || "").trim();
-    if (sameUrl(firstLine, article.image)) {
-      const rest = lines.slice(1).join("\n").trim();
-      if (rest) {
-        const text = document.createElement("p");
-        text.textContent = rest;
-        body.appendChild(text);
-      }
-    } else if (sameUrl(paragraph.trim(), article.image)) {
-      // Image URL is rendered above the article body.
-    } else if (window.BoxingData.isTweetUrl(firstLine)) {
+    if (window.BoxingData.isTweetUrl(firstLine)) {
       appendTweet(body, firstLine);
       const rest = lines.slice(1).join("\n").trim();
       if (rest) {
@@ -298,7 +273,9 @@ function renderArticle(article) {
   commentsMount.className = "retro-comments-mount";
 
   const affiliateLinks = createAffiliateLinks(article);
-  container.append(titleRow, category, image, topAd, body);
+  container.append(titleRow, category);
+  if (article.image) container.appendChild(image);
+  container.append(topAd, body);
   if (affiliateLinks) container.appendChild(affiliateLinks);
   container.append(tags, meta, commentsMount, back);
   window.BoxingAds?.render(container);

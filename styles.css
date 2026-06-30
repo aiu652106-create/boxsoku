@@ -4139,6 +4139,22 @@ button {
   height: 42px;
 }
 
+.retro-post-image > img,
+.retro-sidebar-thumbnail > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.retro-post-image.retro-detail-image {
+  object-fit: cover;
+}
+
+.retro-sidebar-list a.is-text-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .retro-sidebar-text strong {
   font-size: 11px;
   line-height: 1.4;

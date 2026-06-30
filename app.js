@@ -44,7 +44,7 @@ function createArticle(article) {
   image.className = "retro-post-image";
   image.href = window.BoxingData.articleUrl(article);
   image.setAttribute("aria-label", `${article.title}の続きを読む`);
-  window.BoxingUI.applyArticleImage(image, article);
+  const hasImage = window.BoxingUI.applyArticleImage(image, article);
 
   const continueLink = document.createElement("p");
   continueLink.className = "retro-continue";
@@ -63,7 +63,9 @@ function createArticle(article) {
   time.textContent = window.BoxingData.articleDate(article);
   meta.append(time, document.createTextNode("｜カテゴリ：ボクシング"));
 
-  post.append(titleRow, category, image, continueLink, tags, meta);
+  post.append(titleRow, category);
+  if (hasImage) post.appendChild(image);
+  post.append(continueLink, tags, meta);
   return post;
 }
 

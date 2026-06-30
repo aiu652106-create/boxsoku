@@ -26,75 +26,10 @@ let editingArticle = null;
 let selectedFile = null;
 let previewObjectUrl = "";
 let imageCleared = false;
-let imageUrlRequestId = 0;
 
 function buildSummary(body, title) {
   const source = String(body || title || "").replace(/\s+/g, " ").trim();
   return source.slice(0, 500) || String(title || "Article").trim() || "Article";
-}
-
-function cleanImageUrl(value) {
-  return String(value || "")
-    .trim()
-    .replace(/^url\((["']?)(.*)\1\)$/i, "$2")
-    .replaceAll("&amp;", "&");
-}
-
-function isDirectImageUrl(value) {
-  try {
-    const url = new URL(String(value || ""), window.location.href);
-    const path = url.pathname.toLowerCase();
-    const format = String(url.searchParams.get("format") || "").toLowerCase();
-    return (
-      /\.(avif|gif|jpe?g|png|webp)$/.test(path) ||
-      ["avif", "gif", "jpg", "jpeg", "png", "webp"].includes(format)
-    );
-  } catch {
-    return false;
-  }
-}
-
-function xPhotoMatch(value) {
-  return String(value || "").match(
-    /^https?:\/\/(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/(\d+)(?:\/photo\/(\d+))?/i
-  );
-}
-
-async function resolveImageUrl(value) {
-  const url = cleanImageUrl(value);
-  if (!url) return "";
-  if (isDirectImageUrl(url)) return url;
-
-  const match = xPhotoMatch(url);
-  if (!match) return "";
-
-  const photoIndex = Math.max(0, Number(match[2] || 1) - 1);
-  try {
-    const response = await fetch(`https://api.fxtwitter.com/status/${match[1]}`, {
-      headers: { Accept: "application/json" }
-    });
-    if (response.ok) {
-      const payload = await response.json();
-      const photos = payload?.tweet?.media?.photos || payload?.tweet?.media?.all || [];
-      const photo = photos[photoIndex] || photos[0];
-      if (isDirectImageUrl(photo?.url)) return photo.url;
-    }
-  } catch {}
-
-  try {
-    const response = await fetch(`https://api.vxtwitter.com/status/${match[1]}`, {
-      headers: { Accept: "application/json" }
-    });
-    if (response.ok) {
-      const payload = await response.json();
-      const urls = payload?.mediaURLs || [];
-      const media = payload?.media_extended || [];
-      const imageUrl = urls[photoIndex] || media[photoIndex]?.url || urls[0] || media[0]?.url;
-      if (isDirectImageUrl(imageUrl)) return imageUrl;
-    }
-  } catch {}
-
-  return "";
 }
 
 function urlLines(value) {
@@ -127,7 +62,7 @@ function setPreviewImage(url) {
   if (url) {
     previewImage.style.backgroundImage = `url(${JSON.stringify(
       url
-    )}), url("assets/boxing-arena.png")`;
+    )})`;
   } else {
     previewImage.style.removeProperty("background-image");
   }
@@ -142,7 +77,6 @@ function updatePreview() {
 
   const bodyPreview = document.querySelector("#preview-body");
   bodyPreview.replaceChildren();
-  const pastedImage = cleanImageUrl(imageUrlInput.value);
   const paragraphs = body
     ? body.split(/\n\s*\n/).filter(Boolean)
     : ["本文を入力すると、ここで仕上がりを確認できます。"];
@@ -164,16 +98,7 @@ function updatePreview() {
   });
 
   if (!selectedFile) {
-    const currentImage = imageCleared
-      ? ""
-      : imageUrlInput.dataset.resolvedImage
-        ? imageUrlInput.dataset.resolvedImage
-        : pastedImage && isDirectImageUrl(pastedImage)
-        ? pastedImage
-        : isDirectImageUrl(editingArticle?.image)
-          ? editingArticle.image
-          : "";
-    setPreviewImage(currentImage);
+    setPreviewImage(imageCleared ? "" : imageUrlInput.value);
   }
 
   urlLines(tweetUrlsInput.value).forEach((url) => {
@@ -246,7 +171,7 @@ imageFileInput.addEventListener("change", async () => {
     previewObjectUrl = URL.createObjectURL(selectedFile);
     previewImage.style.backgroundImage = `url(${JSON.stringify(
       previewObjectUrl
-    )}), url("assets/boxing-arena.png")`;
+    )})`;
     imageUrlInput.value = "";
     imageStatus.textContent = "選択した画像を保存時にアップロードします。";
   } catch (error) {
@@ -256,45 +181,17 @@ imageFileInput.addEventListener("change", async () => {
   }
 });
 
-imageUrlInput.addEventListener("input", async () => {
+imageUrlInput.addEventListener("input", () => {
   selectedFile = null;
   imageCleared = false;
   imageFileInput.value = "";
-  delete imageUrlInput.dataset.resolvedImage;
   updatePreview();
-  const pastedImage = cleanImageUrl(imageUrlInput.value);
-  if (!pastedImage) {
+  if (!imageUrlInput.value) {
     imageStatus.textContent = "画像未設定";
     return;
   }
-  if (isDirectImageUrl(pastedImage)) {
-    setPreviewImage(pastedImage);
-    imageStatus.textContent = "外部画像URLを使用します。";
-    return;
-  }
-  if (!xPhotoMatch(pastedImage)) {
-    imageStatus.textContent =
-      "画像ファイルURLではありません。jpg/png/webp等の画像アドレスを貼ってください。";
-    return;
-  }
-
-  const requestId = ++imageUrlRequestId;
-  imageStatus.textContent = "X画像を取得しています...";
-  try {
-    const resolved = await resolveImageUrl(pastedImage);
-    if (requestId !== imageUrlRequestId) return;
-    if (!resolved) {
-      imageStatus.textContent = "X画像を取得できませんでした。";
-      return;
-    }
-    imageUrlInput.dataset.resolvedImage = resolved;
-    setPreviewImage(resolved);
-    imageStatus.textContent = "X画像を取得して使用します。";
-  } catch {
-    if (requestId === imageUrlRequestId) {
-      imageStatus.textContent = "X画像を取得できませんでした。";
-    }
-  }
+  setPreviewImage(imageUrlInput.value);
+  imageStatus.textContent = "記事画像URLを使用します。";
 });
 
 document.querySelector("#image-reset").addEventListener("click", () => {
@@ -340,23 +237,8 @@ form.addEventListener("submit", async (event) => {
       throw new Error("管理者としてログインし直してください。");
     }
 
-    const pastedImage = cleanImageUrl(imageUrlInput.value);
-    const resolvedPastedImage = pastedImage
-      ? imageUrlInput.dataset.resolvedImage || (await resolveImageUrl(pastedImage))
-      : "";
-    if (pastedImage && !resolvedPastedImage) {
-      throw new Error(
-        "画像URLを取得できませんでした。jpg/png/webp等の画像URL、または画像付きX投稿のURLを貼ってください。"
-      );
-    }
-    let image = resolvedPastedImage
-      ? resolvedPastedImage
-      : isDirectImageUrl(editingArticle?.image)
-        ? editingArticle.image
-        : "";
-    let imagePath = resolvedPastedImage
-      ? ""
-      : editingArticle?.imagePath || "";
+    let image = imageUrlInput.value;
+    let imagePath = imageUrlInput.value ? "" : editingArticle?.imagePath || "";
 
     if (selectedFile) {
       uploaded = await window.BoxingData.uploadArticleImage(selectedFile, user.id);
