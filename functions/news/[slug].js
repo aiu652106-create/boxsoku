@@ -52,16 +52,31 @@ async function resolveArticleImage(value, fallback = "/assets/boxing-arena.png")
   const match = xPhotoMatch(value);
   if (!match) return fallback;
 
+  const photoIndex = Math.max(0, Number(match[2] || 1) - 1);
+
   try {
-    const photoIndex = Math.max(0, Number(match[2] || 1) - 1);
     const response = await fetch(`https://api.fxtwitter.com/status/${match[1]}`, {
       headers: { Accept: "application/json" }
     });
-    if (!response.ok) return fallback;
-    const payload = await response.json();
-    const photos = payload?.tweet?.media?.photos || payload?.tweet?.media?.all || [];
-    const photo = photos[photoIndex] || photos[0];
-    return isDirectImageUrl(photo?.url) ? photo.url : fallback;
+    if (response.ok) {
+      const payload = await response.json();
+      const photos = payload?.tweet?.media?.photos || payload?.tweet?.media?.all || [];
+      const photo = photos[photoIndex] || photos[0];
+      if (isDirectImageUrl(photo?.url)) return photo.url;
+    }
+  } catch {}
+
+  try {
+    const response = await fetch(`https://api.vxtwitter.com/status/${match[1]}`, {
+      headers: { Accept: "application/json" }
+    });
+    if (response.ok) {
+      const payload = await response.json();
+      const urls = payload?.mediaURLs || [];
+      const media = payload?.media_extended || [];
+      const url = urls[photoIndex] || media[photoIndex]?.url || urls[0] || media[0]?.url;
+      if (isDirectImageUrl(url)) return url;
+    }
   } catch {}
 
   return fallback;
