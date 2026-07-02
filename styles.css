@@ -4537,3 +4537,76 @@ button {
     font-size: 9px !important;
   }
 }
+
+/* Restore the popular ranking sidebar. */
+.retro-blog .retro-page-layout {
+  display: grid !important;
+  width: min(1400px, calc(100% - 24px)) !important;
+  margin-inline: auto !important;
+  grid-template-columns: 220px minmax(0, 1fr) 220px !important;
+  gap: 0 !important;
+  border-top: 5px solid #e60012 !important;
+  background: #fff !important;
+}
+
+.retro-blog .retro-sidebar-popular {
+  display: block !important;
+  border-left: 1px solid #bbb !important;
+}
+
+.retro-blog .retro-sidebar-latest {
+  border-right: 1px solid #bbb !important;
+}
+
+@media (max-width: 1080px) {
+  .retro-blog .retro-page-layout {
+    grid-template-columns: minmax(0, 1fr) 230px !important;
+  }
+
+  .retro-blog .retro-feed {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    border-left: 1px solid #bbb !important;
+  }
+
+  .retro-blog .retro-sidebar {
+    grid-column: 2 !important;
+  }
+
+  .retro-blog .retro-sidebar-popular {
+    grid-row: 1 !important;
+    border-bottom: 0 !important;
+    border-left: 0 !important;
+  }
+
+  .retro-blog .retro-sidebar-latest {
+    grid-row: 2 !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .retro-blog .retro-page-layout {
+    display: flex !important;
+    border-inline: 0 !important;
+    flex-direction: column !important;
+  }
+
+  .retro-blog .retro-feed {
+    order: 1 !important;
+    border-inline: 0 !important;
+  }
+
+  .retro-blog .retro-sidebar {
+    grid-column: auto !important;
+    border: 0 !important;
+    border-top: 1px solid #bbb !important;
+  }
+
+  .retro-blog .retro-sidebar-popular {
+    order: 2 !important;
+  }
+
+  .retro-blog .retro-sidebar-latest {
+    order: 3 !important;
+  }
+}
