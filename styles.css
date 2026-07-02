@@ -4439,6 +4439,23 @@ button {
   font-weight: 900 !important;
 }
 
+.retro-blog .retro-ranking-list a {
+  grid-template-columns: 28px 56px minmax(0, 1fr) !important;
+  align-items: start !important;
+  padding-left: 7px !important;
+}
+
+.retro-blog .retro-ranking-list a.is-text-only {
+  grid-template-columns: 28px minmax(0, 1fr) !important;
+}
+
+.retro-blog .retro-ranking-list .retro-sidebar-rank {
+  position: static !important;
+  z-index: auto !important;
+  align-self: start !important;
+  margin-top: 1px !important;
+}
+
 /* Restore header design from the pre-typography-change state. */
 .retro-blog .retro-top {
   height: 28px !important;
