@@ -4438,3 +4438,102 @@ button {
   background: #e60012 !important;
   font-weight: 900 !important;
 }
+
+/* Restore header design from the pre-typography-change state. */
+.retro-blog .retro-top {
+  height: 28px !important;
+  border-bottom: 1px solid #ccc !important;
+  background: #f9f9f9 !important;
+  color: #888 !important;
+  font-size: 11px !important;
+}
+
+.retro-blog .retro-top > div {
+  display: flex !important;
+  width: min(1000px, calc(100% - 24px)) !important;
+  height: 100% !important;
+  margin-inline: auto !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.retro-blog .retro-top a {
+  font-weight: bold !important;
+}
+
+.retro-blog .retro-header {
+  display: flex !important;
+  width: min(1400px, calc(100% - 24px)) !important;
+  height: 132px !important;
+  margin-inline: auto !important;
+  padding: 14px 30px !important;
+  border-right: 1px solid #bbb !important;
+  border-left: 1px solid #bbb !important;
+  align-items: center !important;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.66)),
+    url("assets/boxing-arena.png") 70% 44% / cover no-repeat !important;
+}
+
+.retro-blog .retro-logo {
+  display: inline-flex !important;
+  align-items: flex-end !important;
+  gap: 18px !important;
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+.retro-blog .retro-logo strong {
+  color: #e60012 !important;
+  font-size: 54px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.12em !important;
+  line-height: 1 !important;
+  -webkit-text-stroke: 2px #111 !important;
+  text-shadow: 3px 3px 0 #ffd800 !important;
+}
+
+.retro-blog .retro-logo span {
+  display: inline-block !important;
+  margin-bottom: 7px !important;
+  padding: 4px 7px !important;
+  background: #111 !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: bold !important;
+}
+
+@media (max-width: 720px) {
+  .retro-blog .retro-top > div,
+  .retro-blog .retro-header {
+    width: 100% !important;
+  }
+
+  .retro-blog .retro-top > div {
+    padding-inline: 10px !important;
+  }
+
+  .retro-blog .retro-header {
+    height: 94px !important;
+    padding: 10px 16px !important;
+    border-inline: 0 !important;
+  }
+
+  .retro-blog .retro-logo {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+
+  .retro-blog .retro-logo strong {
+    font-size: clamp(30px, 10vw, 38px) !important;
+    -webkit-text-stroke-width: 1px !important;
+    text-shadow: 2px 2px 0 #ffd800 !important;
+  }
+
+  .retro-blog .retro-logo span {
+    margin: 0 !important;
+    padding: 2px 5px !important;
+    font-size: 9px !important;
+  }
+}
