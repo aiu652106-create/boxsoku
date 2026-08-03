@@ -162,6 +162,7 @@
     }
     return text
       .replace(/https?:\/\/\S+/gi, " ")
+      .replace(/(?:公式情報|U-NEXT BOXING)\s*[:：]\s*/gi, " ")
       .replace(/\s+/g, " ")
       .trim()
       .slice(0, 500);

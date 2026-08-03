@@ -138,6 +138,7 @@ function updateMetadata(article) {
   const pageUrl = new URL(window.BoxingData.articleUrl(article), window.location.href).href;
   const imageUrl = window.BoxingUI?.getArticleImageUrl(article) || "";
   const summary = window.BoxingData.articleSummary(article);
+  const metaDescription = summary.slice(0, 160);
   const siteName = window.BOXING_CONFIG?.site?.name || "ボクシング速報";
   const configuredSiteUrl = String(window.BOXING_CONFIG?.site?.url || "");
   const siteUrl =
@@ -146,19 +147,19 @@ function updateMetadata(article) {
       ? configuredSiteUrl
       : window.location.origin;
   document.title = `${article.title} | ${siteName}`;
-  document.querySelector('meta[name="description"]')?.setAttribute("content", summary);
+  document.querySelector('meta[name="description"]')?.setAttribute("content", metaDescription);
   document.querySelector('link[rel="canonical"]')?.setAttribute("href", pageUrl);
   document.querySelector('meta[property="og:title"]')?.setAttribute("content", article.title);
   document.querySelector('meta[property="og:description"]')?.setAttribute(
     "content",
-    summary
+    metaDescription
   );
   document.querySelector('meta[property="og:url"]')?.setAttribute("content", pageUrl);
   document.querySelector('meta[property="og:image"]')?.setAttribute("content", imageUrl);
   document.querySelector('meta[name="twitter:title"]')?.setAttribute("content", article.title);
   document.querySelector('meta[name="twitter:description"]')?.setAttribute(
     "content",
-    summary
+    metaDescription
   );
   document.querySelector('meta[name="twitter:image"]')?.setAttribute("content", imageUrl);
 

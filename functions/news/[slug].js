@@ -75,9 +75,10 @@ function articleSummary(article) {
       text = text.slice(common).replace(/^[\s|｜:：\-–—]+/, "").trim();
     }
   }
-  return text
-    .replace(/https?:\/\/\S+/gi, " ")
-    .replace(/\s+/g, " ")
+ return text
+   .replace(/https?:\/\/\S+/gi, " ")
+    .replace(/(?:公式情報|U-NEXT BOXING)\s*[:：]\s*/gi, " ")
+   .replace(/\s+/g, " ")
     .trim()
     .slice(0, 500);
 }
@@ -221,8 +222,9 @@ export async function onRequestGet(context) {
   const siteUrl = String(env.SITE_URL || new URL(request.url).origin).replace(/\/$/, "");
   const siteName = String(env.SITE_NAME || "ボクシング速報");
   const canonical = `${siteUrl}/news/${encodeURIComponent(article.slug)}`;
-  const image = String(article.image_url || siteUrl + "/assets/boxing-arena.png");
-  const summary = articleSummary(article);
+ const image = String(article.image_url || siteUrl + "/assets/boxing-arena.png");
+ const summary = articleSummary(article);
+  const metaDescription = summary.slice(0, 160);
   const hasAffiliateLinks = jsonArray(article.affiliate_links).some(
     (item) => item && item.label && item.url
   );
@@ -258,11 +260,11 @@ export async function onRequestGet(context) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="${escapeHtml(summary)}">
+  <meta name="description" content="${escapeHtml(metaDescription)}">
   <link rel="canonical" href="${escapeHtml(canonical)}">
   <meta property="og:type" content="article">
   <meta property="og:title" content="${escapeHtml(article.title)}">
-  <meta property="og:description" content="${escapeHtml(summary)}">
+  <meta property="og:description" content="${escapeHtml(metaDescription)}">
   <meta property="og:url" content="${escapeHtml(canonical)}">
   ${image ? `<meta property="og:image" content="${escapeHtml(image)}">` : ""}
   <meta property="og:site_name" content="${escapeHtml(siteName)}">
@@ -272,7 +274,7 @@ export async function onRequestGet(context) {
   )}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(article.title)}">
-  <meta name="twitter:description" content="${escapeHtml(summary)}">
+  <meta name="twitter:description" content="${escapeHtml(metaDescription)}">
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ""}
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script type="application/ld+json">${structuredData}</script>
