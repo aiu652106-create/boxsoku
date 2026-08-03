@@ -137,6 +137,7 @@ function addExternalScript(src) {
 function updateMetadata(article) {
   const pageUrl = new URL(window.BoxingData.articleUrl(article), window.location.href).href;
   const imageUrl = window.BoxingUI?.getArticleImageUrl(article) || "";
+  const summary = window.BoxingData.articleSummary(article);
   const siteName = window.BOXING_CONFIG?.site?.name || "ボクシング速報";
   const configuredSiteUrl = String(window.BOXING_CONFIG?.site?.url || "");
   const siteUrl =
@@ -145,19 +146,19 @@ function updateMetadata(article) {
       ? configuredSiteUrl
       : window.location.origin;
   document.title = `${article.title} | ${siteName}`;
-  document.querySelector('meta[name="description"]')?.setAttribute("content", article.summary);
+  document.querySelector('meta[name="description"]')?.setAttribute("content", summary);
   document.querySelector('link[rel="canonical"]')?.setAttribute("href", pageUrl);
   document.querySelector('meta[property="og:title"]')?.setAttribute("content", article.title);
   document.querySelector('meta[property="og:description"]')?.setAttribute(
     "content",
-    article.summary
+    summary
   );
   document.querySelector('meta[property="og:url"]')?.setAttribute("content", pageUrl);
   document.querySelector('meta[property="og:image"]')?.setAttribute("content", imageUrl);
   document.querySelector('meta[name="twitter:title"]')?.setAttribute("content", article.title);
   document.querySelector('meta[name="twitter:description"]')?.setAttribute(
     "content",
-    article.summary
+    summary
   );
   document.querySelector('meta[name="twitter:image"]')?.setAttribute("content", imageUrl);
 
@@ -172,7 +173,7 @@ function updateMetadata(article) {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
     headline: article.title,
-    description: article.summary,
+    description: summary,
     ...(imageUrl ? { image: [imageUrl] } : {}),
     datePublished: article.publishedAt || undefined,
     dateModified: article.updatedAt || article.publishedAt || undefined,
@@ -273,7 +274,7 @@ function renderArticle(article) {
   const affiliateLinks = createAffiliateLinks(article);
   const lead = document.createElement("p");
   lead.className = "retro-article-lead";
-  lead.textContent = article.summary || "";
+  lead.textContent = window.BoxingData.articleSummary(article);
   container.append(titleRow, category);
   container.appendChild(image);
   container.appendChild(topAd);

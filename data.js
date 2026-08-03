@@ -140,6 +140,17 @@
     };
   }
 
+  function articleSummary(article) {
+    let text = String(article?.summary || article?.body || "")
+      .replace(/\s+/g, " ")
+      .trim();
+    const title = String(article?.title || "").trim();
+    if (title && text.startsWith(title)) {
+      text = text.slice(title.length).replace(/^[\s|｜:：\-–—]+/, "").trim();
+    }
+    return text.slice(0, 500);
+  }
+
   async function getArticles({ includeDrafts = false, force = false } = {}) {
     if (!client) {
       return includeDrafts ? [] : [...sampleArticles];
@@ -495,6 +506,7 @@
     incrementView,
     articleUrl,
     articleDate,
+    articleSummary,
     createSlug,
     parseUrlList,
     parseAffiliateLinks,
