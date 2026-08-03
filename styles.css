@@ -5737,6 +5737,12 @@ body.retro-blog .retro-sidebar-thumbnail.is-image-fallback > img {
 }
 
 /* Keep article metadata away from the post edges on every viewport. */
+body.retro-blog .retro-detail .retro-title-row h1 {
+  box-sizing: border-box !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
 body.retro-blog .retro-detail .retro-tags,
 body.retro-blog .retro-detail .retro-meta {
   box-sizing: border-box !important;

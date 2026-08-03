@@ -311,7 +311,7 @@ export async function onRequestGet(context) {
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ""}
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script type="application/ld+json">${structuredData}</script>
-  <link rel="stylesheet" href="/styles.css?v=20260804-affiliate-layout7">
+  <link rel="stylesheet" href="/styles.css?v=20260804-affiliate-layout8">
   <script src="/config.js" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
