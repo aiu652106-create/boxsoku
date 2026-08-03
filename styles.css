@@ -5659,10 +5659,26 @@ body.retro-blog .retro-tags {
 body.retro-blog .retro-post-image > img,
 body.retro-blog .retro-sidebar-thumbnail > img {
   display: block !important;
+  max-width: 100% !important;
   width: 100% !important;
   height: 100% !important;
   border: 0 !important;
   object-fit: cover !important;
+}
+
+body.retro-blog .retro-post-image {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+body.retro-blog img.retro-post-image {
+  display: block !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  height: clamp(230px, 36vw, 380px) !important;
+  object-fit: contain !important;
+  background: #1a1917 !important;
 }
 
 body.retro-blog .retro-post-image.is-image-fallback > img,
