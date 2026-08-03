@@ -31,7 +31,7 @@ function createArticle(article) {
   const titleRow = document.createElement("div");
   titleRow.className = "retro-title-row";
 
-  const heading = document.createElement("h1");
+  const heading = document.createElement("h2");
   const titleLink = document.createElement("a");
   titleLink.href = window.BoxingData.articleUrl(article);
   titleLink.textContent = article.title;
@@ -54,6 +54,16 @@ function createArticle(article) {
   category.className = "retro-category";
   category.textContent = "カテゴリ：ボクシング";
 
+  const summaryText = String(
+    article.summary || article.body || ""
+  )
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 170);
+  const summary = document.createElement("p");
+  summary.className = "retro-summary";
+  summary.textContent = summaryText;
+
   const image = document.createElement("a");
   image.className = "retro-post-image";
   image.href = window.BoxingData.articleUrl(article);
@@ -69,7 +79,10 @@ function createArticle(article) {
     teaserLabel.textContent = "公式配信をチェック";
     const teaserTitle = document.createElement("strong");
     teaserTitle.textContent = links[0].label;
-    teaserCopy.append(teaserLabel, teaserTitle);
+    const teaserNote = document.createElement("span");
+    teaserNote.className = "affiliate-teaser-note";
+    teaserNote.textContent = "料金・配信条件は公式ページで確認";
+    teaserCopy.append(teaserLabel, teaserTitle, teaserNote);
 
     const teaserLink = document.createElement("a");
     teaserLink.href = links[0].url;
@@ -99,6 +112,7 @@ function createArticle(article) {
 
   post.append(titleRow, category);
   if (hasImage) post.appendChild(image);
+  if (summaryText) post.appendChild(summary);
   post.append(continueLink, tags, meta);
   return post;
 }

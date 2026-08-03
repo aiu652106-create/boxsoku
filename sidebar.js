@@ -1,27 +1,46 @@
 (function () {
+  const FALLBACK_IMAGE = "/assets/boxing-arena.png";
+
   function getArticleImageUrl(article) {
-    return String(article?.image || "");
+    const value = String(article?.image || "").trim();
+    if (!value) return FALLBACK_IMAGE;
+    if (/^https?:\/\/(?:www\.)?(?:x|twitter)\.com\//i.test(value)) {
+      return FALLBACK_IMAGE;
+    }
+    if (/^https?:\/\//i.test(value)) return value;
+    return new URL(`/${value.replace(/^\/+/, "")}`, window.location.origin).href;
+  }
+
+  function setImageFallback(element, image, article) {
+    if (image.dataset.fallbackApplied === "true") return;
+    image.dataset.fallbackApplied = "true";
+    image.src = FALLBACK_IMAGE;
+    element.style.backgroundImage = `url(${JSON.stringify(FALLBACK_IMAGE)})`;
+    element.classList.add("is-image-fallback");
+    image.alt = `${article?.title || "ボクシング記事"}のアイキャッチ画像`;
   }
 
   function applyArticleImage(element, article) {
     const image = getArticleImageUrl(article);
-    if (!image) {
-      element.style.removeProperty("background-image");
-      element.classList.remove("has-custom-image");
-      element.replaceChildren();
-      return false;
-    }
-    element.classList.add("has-custom-image");
+    element.classList.toggle("has-custom-image", image !== FALLBACK_IMAGE);
     element.style.backgroundImage = `url(${JSON.stringify(image)})`;
-    if (element.tagName !== "IMG") {
+    if (element.tagName === "IMG") {
+      element.alt = `${article?.title || "ボクシング記事"}のアイキャッチ画像`;
+      element.loading = "lazy";
+      element.addEventListener("error", () => setImageFallback(element, element, article), {
+        once: true
+      });
+      element.src = image;
+    } else {
       element.replaceChildren();
       const img = document.createElement("img");
       img.src = image;
-      img.alt = "";
+      img.alt = `${article?.title || "ボクシング記事"}のアイキャッチ画像`;
       img.loading = "lazy";
+      img.addEventListener("error", () => setImageFallback(element, img, article), {
+        once: true
+      });
       element.appendChild(img);
-    } else {
-      element.src = image;
     }
     return true;
   }
@@ -40,7 +59,6 @@
 
     const thumbnail = document.createElement("span");
     thumbnail.className = "retro-sidebar-thumbnail";
-    thumbnail.setAttribute("aria-hidden", "true");
     const hasImage = applyArticleImage(thumbnail, article);
 
     const text = document.createElement("span");

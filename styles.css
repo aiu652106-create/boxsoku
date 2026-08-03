@@ -5498,3 +5498,212 @@ body.retro-blog .retro-detail-body > p {
     order: 3 !important;
   }
 }
+
+/* Final public content polish. */
+body.retro-blog .feed-heading {
+  margin: 0 0 18px !important;
+  color: #121212 !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.4 !important;
+}
+
+body.retro-blog .retro-title-row h2,
+body.retro-blog .retro-title-row h2 a {
+  min-width: 0 !important;
+  margin: 0 !important;
+  color: #121212 !important;
+  font-family: var(--body) !important;
+  font-size: clamp(21px, 3vw, 30px) !important;
+  font-weight: 900 !important;
+  line-height: 1.45 !important;
+  text-decoration: none !important;
+}
+
+body.retro-blog .retro-title-row h2 a:visited {
+  color: #121212 !important;
+}
+
+body.retro-blog .retro-title-row h2 a:hover {
+  color: var(--red) !important;
+}
+
+body.retro-blog .retro-summary {
+  width: 100% !important;
+  max-width: 760px !important;
+  margin: 0 0 16px !important;
+  color: #645f58 !important;
+  font-size: 14px !important;
+  line-height: 1.85 !important;
+}
+
+body.retro-blog .retro-article-lead {
+  max-width: 700px !important;
+  margin: 26px auto 0 !important;
+  padding: 14px 16px !important;
+  border-left: 4px solid var(--red) !important;
+  background: #f8f5ee !important;
+  color: #4e4942 !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  line-height: 1.9 !important;
+}
+
+/* Psychology-tuned hierarchy: authority, urgency, then monetization. */
+body.retro-blog .retro-page-layout {
+  grid-template-columns: 210px minmax(0, 1fr) 230px !important;
+  gap: 24px !important;
+}
+
+body.retro-blog .retro-feed {
+  min-width: 0 !important;
+}
+
+body.retro-blog .retro-post-image {
+  width: 100% !important;
+  height: clamp(190px, 25vw, 280px) !important;
+  margin: 0 0 18px !important;
+  border: 1px solid #e1dbd0 !important;
+  background-color: #e8e2d8 !important;
+}
+
+body.retro-blog .retro-detail-image {
+  height: clamp(230px, 36vw, 380px) !important;
+}
+
+body.retro-blog .retro-post {
+  margin-bottom: 32px !important;
+  padding-bottom: 28px !important;
+  border-bottom: 1px solid #d8d1c7 !important;
+}
+
+body.retro-blog .retro-post:first-of-type {
+  padding-top: 2px !important;
+  border-top: 3px solid var(--red) !important;
+}
+
+body.retro-blog .retro-summary {
+  color: #514b45 !important;
+  font-size: 15px !important;
+  line-height: 1.8 !important;
+}
+
+body.retro-blog .retro-continue a {
+  min-height: 42px !important;
+  padding: 11px 16px !important;
+  border: 0 !important;
+  background: #171615 !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  letter-spacing: 0.03em !important;
+}
+
+body.retro-blog .retro-continue a:hover {
+  background: var(--red) !important;
+  color: #fff !important;
+}
+
+body.retro-blog .affiliate-teaser {
+  border-color: #e4d4ab !important;
+  border-left-color: var(--gold) !important;
+  background: #fff9e8 !important;
+}
+
+body.retro-blog .affiliate-teaser-label {
+  color: #88631d !important;
+}
+
+body.retro-blog .affiliate-teaser-note {
+  display: block !important;
+  margin-top: 5px !important;
+  color: #766b5b !important;
+  font-size: 11px !important;
+  line-height: 1.5 !important;
+}
+
+body.retro-blog .affiliate-teaser > a,
+body.retro-blog .affiliate-links > a {
+  min-height: 44px !important;
+  padding: 11px 16px !important;
+  background: var(--red) !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+body.retro-blog .affiliate-teaser > a:hover,
+body.retro-blog .affiliate-links > a:hover {
+  background: var(--red-dark) !important;
+}
+
+body.retro-blog .retro-sidebar-panel {
+  border-top-width: 3px !important;
+}
+
+body.retro-blog .retro-sidebar-panel h2 {
+  color: #171615 !important;
+  font-size: 14px !important;
+}
+
+body.retro-blog .retro-sidebar-text strong {
+  font-size: 12px !important;
+  line-height: 1.55 !important;
+}
+
+body.retro-blog .retro-meta,
+body.retro-blog .retro-tags {
+  font-size: 11px !important;
+}
+
+body.retro-blog .retro-post-image > img,
+body.retro-blog .retro-sidebar-thumbnail > img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  object-fit: cover !important;
+}
+
+body.retro-blog .retro-post-image.is-image-fallback > img,
+body.retro-blog .retro-sidebar-thumbnail.is-image-fallback > img {
+  filter: saturate(0.76) contrast(0.96) !important;
+}
+
+@media (max-width: 720px) {
+  body.retro-blog .feed-heading {
+    margin-bottom: 14px !important;
+    font-size: 14px !important;
+  }
+
+  body.retro-blog .retro-title-row h2,
+  body.retro-blog .retro-title-row h2 a {
+    font-size: 22px !important;
+  }
+
+  body.retro-blog .retro-summary {
+    font-size: 13px !important;
+  }
+
+  body.retro-blog .retro-article-lead {
+    margin-top: 20px !important;
+    font-size: 14px !important;
+  }
+
+  body.retro-blog .retro-page-layout {
+    grid-template-columns: 1fr !important;
+    gap: 22px !important;
+  }
+
+  body.retro-blog .retro-post-image {
+    height: 210px !important;
+  }
+
+  body.retro-blog .retro-detail-image {
+    height: 250px !important;
+  }
+
+  body.retro-blog .retro-summary {
+    font-size: 14px !important;
+  }
+}

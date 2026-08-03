@@ -136,7 +136,7 @@ function addExternalScript(src) {
 
 function updateMetadata(article) {
   const pageUrl = new URL(window.BoxingData.articleUrl(article), window.location.href).href;
-  const imageUrl = String(article.image || "");
+  const imageUrl = window.BoxingUI?.getArticleImageUrl(article) || "";
   const siteName = window.BOXING_CONFIG?.site?.name || "ボクシング速報";
   const configuredSiteUrl = String(window.BOXING_CONFIG?.site?.url || "");
   const siteUrl =
@@ -217,9 +217,7 @@ function renderArticle(article) {
 
   const image = document.createElement("img");
   image.className = "retro-post-image retro-detail-image";
-  image.src = article.image;
-  image.alt = article.title;
-  image.loading = "lazy";
+  window.BoxingUI?.applyArticleImage(image, article);
 
   const topAd = createAdSlot("articleTop");
 
@@ -273,10 +271,14 @@ function renderArticle(article) {
   commentsMount.className = "retro-comments-mount";
 
   const affiliateLinks = createAffiliateLinks(article);
+  const lead = document.createElement("p");
+  lead.className = "retro-article-lead";
+  lead.textContent = article.summary || "";
   container.append(titleRow, category);
-  if (article.image) container.appendChild(image);
+  container.appendChild(image);
   container.appendChild(topAd);
   if (affiliateLinks) container.appendChild(affiliateLinks);
+  if (lead.textContent) container.appendChild(lead);
   container.appendChild(body);
   container.append(tags, meta, commentsMount, back);
   window.BoxingAds?.render(container);
