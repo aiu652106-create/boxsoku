@@ -141,14 +141,18 @@
   }
 
   function articleSummary(article) {
-    const rawSummary = String(article?.summary || "").trim();
-    let text = String(rawSummary || article?.body || "")
-      .replace(/\s+/g, " ")
-      .trim();
-    if (/^(?:https?:\/\/\S+\s*)+$/.test(text) && article?.body) {
-      text = String(article.body).replace(/\s+/g, " ").trim();
-    }
     const title = String(article?.title || "").trim();
+    const rawSummary = String(article?.summary || "").trim();
+    const body = String(article?.body || "").trim();
+    let source = rawSummary || body;
+    if (
+      body &&
+      (source.length > 220 ||
+        /大会概要|全対戦カード|視聴方法|情報源と確認日/.test(source))
+    ) {
+      source = body;
+    }
+    let text = source.replace(/\r\n?/g, "\n").trim();
     if (title && text.startsWith(title)) {
       text = text.slice(title.length).replace(/^[\s|｜:：\-–—]+/, "").trim();
     } else if (title) {
@@ -159,6 +163,14 @@
       if (common >= 16 && common >= title.length * 0.45) {
         text = text.slice(common).replace(/^[\s|｜:：\-–—]+/, "").trim();
       }
+    }
+    const paragraphs = text
+      .split(/\n\s*\n/)
+      .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+      .filter(Boolean);
+    text = paragraphs[0] || text.replace(/\s+/g, " ").trim();
+    if (text.length < 70 && paragraphs[1]) {
+      text = text + " " + paragraphs[1];
     }
     return text
       .replace(/https?:\/\/\S+/gi, " ")

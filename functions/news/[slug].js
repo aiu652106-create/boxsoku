@@ -60,10 +60,18 @@ const articleBodyHtml = (body) => {
 const jsonArray = (value) => (Array.isArray(value) ? value : []);
 
 function articleSummary(article) {
-  let text = String(article?.summary || article?.body || "")
-    .replace(/\s+/g, " ")
-    .trim();
   const title = String(article?.title || "").trim();
+  const rawSummary = String(article?.summary || "").trim();
+  const body = String(article?.body || "").trim();
+  let source = rawSummary || body;
+  if (
+    body &&
+    (source.length > 220 ||
+      /大会概要|全対戦カード|視聴方法|情報源と確認日/.test(source))
+  ) {
+    source = body;
+  }
+  let text = source.replace(/\r\n?/g, "\n").trim();
   if (title && text.startsWith(title)) {
     text = text.slice(title.length).replace(/^[\s|｜:：\-–—]+/, "").trim();
   } else if (title) {
@@ -75,8 +83,16 @@ function articleSummary(article) {
       text = text.slice(common).replace(/^[\s|｜:：\-–—]+/, "").trim();
     }
   }
- return text
-   .replace(/https?:\/\/\S+/gi, " ")
+  const paragraphs = text
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+  text = paragraphs[0] || text.replace(/\s+/g, " ").trim();
+  if (text.length < 70 && paragraphs[1]) {
+    text = text + " " + paragraphs[1];
+  }
+  return text
+    .replace(/https?:\/\/\S+/gi, " ")
     .replace(/(?:公式情報|U-NEXT BOXING)\s*[:：]\s*/gi, " ")
    .replace(/\s+/g, " ")
     .trim()
