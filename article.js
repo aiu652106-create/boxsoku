@@ -227,6 +227,10 @@ function renderArticle(article) {
   body.className = "retro-detail-body";
   const paragraphs = String(article.body || "")
     .split(/\n\s*\n/)
+    .filter(
+      (paragraph, index) =>
+        !(index === 0 && paragraph.trim() === String(article.title || "").trim())
+    )
     .filter(Boolean);
   const middleAdIndex =
     paragraphs.length >= 4 ? Math.ceil(paragraphs.length / 2) - 1 : -1;

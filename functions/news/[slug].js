@@ -29,9 +29,13 @@ const tweetEmbedHtml = (url) =>
     safeUrl(url, "#")
   )}">Xで投稿を見る</a></blockquote></div>`;
 
-const articleBodyHtml = (body) => {
+const articleBodyHtml = (body, title = "") => {
   const paragraphs = String(body || "")
     .split(/\n\s*\n/)
+    .filter(
+      (paragraph, index) =>
+        !(index === 0 && paragraph.trim() === String(title || "").trim())
+    )
     .filter(Boolean);
   const middleAdIndex =
     paragraphs.length >= 4 ? Math.ceil(paragraphs.length / 2) - 1 : -1;
@@ -337,7 +341,7 @@ export async function onRequestGet(context) {
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         ${affiliateLinksHtml(article)}
         ${summary ? `<p class="retro-article-lead">${escapeHtml(summary)}</p>` : ""}
-        <div class="retro-detail-body">${articleBodyHtml(article.body)}${embedsHtml(article)}</div>
+        <div class="retro-detail-body">${articleBodyHtml(article.body, article.title)}${embedsHtml(article)}</div>
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>
         <p class="retro-tags">タグ：ボクシング　ニュース</p>
         <div class="retro-meta"><time>${escapeHtml(
