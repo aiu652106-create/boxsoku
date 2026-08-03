@@ -275,8 +275,9 @@ function renderArticle(article) {
   const affiliateLinks = createAffiliateLinks(article);
   container.append(titleRow, category);
   if (article.image) container.appendChild(image);
-  container.append(topAd, body);
+  container.appendChild(topAd);
   if (affiliateLinks) container.appendChild(affiliateLinks);
+  container.appendChild(body);
   container.append(tags, meta, commentsMount, back);
   window.BoxingAds?.render(container);
   window.BoxingComments?.mount(commentsMount, article);

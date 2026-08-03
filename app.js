@@ -1,11 +1,25 @@
 const feed = document.querySelector("#article-feed");
 const statusMessage = document.querySelector("#site-status");
 
+function affiliateItems(article) {
+  return (Array.isArray(article.affiliateLinks) ? article.affiliateLinks : [])
+    .map((item) => {
+      try {
+        const url = new URL(String(item?.url || ""));
+        return { ...item, url: url.protocol === "https:" ? url.href : "" };
+      } catch {
+        return { ...item, url: "" };
+      }
+    })
+    .filter((item) => item.label && item.url);
+}
+
 function createArticle(article) {
   const post = document.createElement("article");
   post.className = "retro-post";
+  const links = affiliateItems(article);
 
-  if (article.isAdvertorial) {
+  if (article.isAdvertorial || links.length) {
     const disclosure = document.createElement("aside");
     disclosure.className = "affiliate-disclosure";
     disclosure.textContent =
@@ -45,6 +59,26 @@ function createArticle(article) {
   image.href = window.BoxingData.articleUrl(article);
   image.setAttribute("aria-label", `${article.title}の続きを読む`);
   const hasImage = window.BoxingUI.applyArticleImage(image, article);
+
+  if (links.length) {
+    const teaser = document.createElement("aside");
+    teaser.className = "affiliate-teaser";
+    const teaserCopy = document.createElement("div");
+    const teaserLabel = document.createElement("span");
+    teaserLabel.className = "affiliate-teaser-label";
+    teaserLabel.textContent = "公式配信をチェック";
+    const teaserTitle = document.createElement("strong");
+    teaserTitle.textContent = links[0].label;
+    teaserCopy.append(teaserLabel, teaserTitle);
+
+    const teaserLink = document.createElement("a");
+    teaserLink.href = links[0].url;
+    teaserLink.target = "_blank";
+    teaserLink.rel = "sponsored noopener noreferrer";
+    teaserLink.textContent = "配信ページを見る";
+    teaser.append(teaserCopy, teaserLink);
+    post.appendChild(teaser);
+  }
 
   const continueLink = document.createElement("p");
   continueLink.className = "retro-continue";
