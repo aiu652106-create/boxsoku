@@ -4944,9 +4944,17 @@ body.retro-blog .retro-detail .retro-title-row h1 {
   text-decoration: none !important;
 }
 
+body.retro-blog .retro-title-row h1 a:visited {
+  color: #121212 !important;
+}
+
 body.retro-blog .retro-title-row h1 a:hover,
 body.retro-blog .retro-continue a:hover {
   color: var(--red) !important;
+}
+
+body.retro-blog .retro-continue a {
+  color: #1d1b19 !important;
 }
 
 body.retro-blog .retro-post-image {
