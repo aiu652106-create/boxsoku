@@ -91,6 +91,14 @@ function articleSummary(article) {
   if (text.length < 70 && paragraphs[1]) {
     text = text + " " + paragraphs[1];
   }
+  const maxLength = 500;
+  if (text.length > maxLength) {
+    const sentenceEnd = text.lastIndexOf("。", maxLength);
+    text =
+      sentenceEnd >= 80
+        ? text.slice(0, sentenceEnd + 1)
+        : text.slice(0, maxLength);
+  }
   return text
     .replace(/https?:\/\/\S+/gi, " ")
     .replace(/(?:公式情報|U-NEXT BOXING)\s*[:：]\s*/gi, " ")

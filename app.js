@@ -54,7 +54,7 @@ function createArticle(article) {
   category.className = "retro-category";
   category.textContent = "カテゴリ：ボクシング";
 
-  const summaryText = window.BoxingData.articleSummary(article).slice(0, 170);
+  const summaryText = window.BoxingData.articleSummary(article);
   const summary = document.createElement("p");
   summary.className = "retro-summary";
   summary.textContent = summaryText;
