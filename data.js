@@ -141,12 +141,24 @@
   }
 
   function articleSummary(article) {
-    let text = String(article?.summary || article?.body || "")
+    const rawSummary = String(article?.summary || "").trim();
+    let text = String(rawSummary || article?.body || "")
       .replace(/\s+/g, " ")
       .trim();
+    if (/^(?:https?:\/\/\S+\s*)+$/.test(text) && article?.body) {
+      text = String(article.body).replace(/\s+/g, " ").trim();
+    }
     const title = String(article?.title || "").trim();
     if (title && text.startsWith(title)) {
       text = text.slice(title.length).replace(/^[\s|｜:：\-–—]+/, "").trim();
+    } else if (title) {
+      let common = 0;
+      while (common < title.length && common < text.length && title[common] === text[common]) {
+        common += 1;
+      }
+      if (common >= 16 && common >= title.length * 0.45) {
+        text = text.slice(common).replace(/^[\s|｜:：\-–—]+/, "").trim();
+      }
     }
     return text.slice(0, 500);
   }
