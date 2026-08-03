@@ -29,12 +29,17 @@ const tweetEmbedHtml = (url) =>
     safeUrl(url, "#")
   )}">Xで投稿を見る</a></blockquote></div>`;
 
-const articleBodyHtml = (body, title = "") => {
+const articleBodyHtml = (body, title = "", lead = "") => {
   const paragraphs = String(body || "")
     .split(/\n\s*\n/)
     .filter(
-      (paragraph, index) =>
-        !(index === 0 && paragraph.trim() === String(title || "").trim())
+      (paragraph, index) => {
+        const text = paragraph.trim();
+        if (index === 0 && text === String(title || "").trim()) {
+          return false;
+        }
+        return !(index <= 1 && lead && text === String(lead).trim());
+      }
     )
     .filter(Boolean);
   const middleAdIndex =
@@ -341,7 +346,7 @@ export async function onRequestGet(context) {
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         ${affiliateLinksHtml(article)}
         ${summary ? `<p class="retro-article-lead">${escapeHtml(summary)}</p>` : ""}
-        <div class="retro-detail-body">${articleBodyHtml(article.body, article.title)}${embedsHtml(article)}</div>
+        <div class="retro-detail-body">${articleBodyHtml(article.body, article.title, summary)}${embedsHtml(article)}</div>
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>
         <p class="retro-tags">タグ：ボクシング　ニュース</p>
         <div class="retro-meta"><time>${escapeHtml(

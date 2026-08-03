@@ -225,11 +225,17 @@ function renderArticle(article) {
 
   const body = document.createElement("div");
   body.className = "retro-detail-body";
+  const leadText = window.BoxingData.articleSummary(article).trim();
   const paragraphs = String(article.body || "")
     .split(/\n\s*\n/)
     .filter(
-      (paragraph, index) =>
-        !(index === 0 && paragraph.trim() === String(article.title || "").trim())
+      (paragraph, index) => {
+        const text = paragraph.trim();
+        if (index === 0 && text === String(article.title || "").trim()) {
+          return false;
+        }
+        return !(index <= 1 && leadText && text === leadText);
+      }
     )
     .filter(Boolean);
   const middleAdIndex =
@@ -279,7 +285,7 @@ function renderArticle(article) {
   const affiliateLinks = createAffiliateLinks(article);
   const lead = document.createElement("p");
   lead.className = "retro-article-lead";
-  lead.textContent = window.BoxingData.articleSummary(article);
+  lead.textContent = leadText;
   container.append(titleRow, category);
   container.appendChild(image);
   container.appendChild(topAd);
