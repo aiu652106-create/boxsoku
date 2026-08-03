@@ -92,7 +92,7 @@ function createArticle(article) {
   continueLink.className = "retro-continue";
   const link = document.createElement("a");
   link.href = window.BoxingData.articleUrl(article);
-  link.textContent = "[続きを読む]";
+  link.textContent = "記事の詳細を見る";
   continueLink.appendChild(link);
 
   const tags = document.createElement("p");

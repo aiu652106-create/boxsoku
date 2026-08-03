@@ -59,6 +59,29 @@ const articleBodyHtml = (body) => {
 
 const jsonArray = (value) => (Array.isArray(value) ? value : []);
 
+function articleSummary(article) {
+  let text = String(article?.summary || article?.body || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const title = String(article?.title || "").trim();
+  if (title && text.startsWith(title)) {
+    text = text.slice(title.length).replace(/^[\s|｜:：\-–—]+/, "").trim();
+  } else if (title) {
+    let common = 0;
+    while (common < title.length && common < text.length && title[common] === text[common]) {
+      common += 1;
+    }
+    if (common >= 16 && common >= title.length * 0.45) {
+      text = text.slice(common).replace(/^[\s|｜:：\-–—]+/, "").trim();
+    }
+  }
+  return text
+    .replace(/https?:\/\/\S+/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 500);
+}
+
 function youtubeId(value) {
   try {
     const url = new URL(value);
@@ -129,7 +152,7 @@ function sidebarHtml(articles, ranked = false) {
             article.image_url
               ? `<span class="retro-sidebar-thumbnail"><img src="${escapeHtml(
                   article.image_url
-                )}" alt="" loading="lazy"></span>`
+                )}" alt="${escapeHtml(article.title)}のアイキャッチ画像" loading="lazy"></span>`
               : ""
           }
           <span class="retro-sidebar-text">
@@ -198,7 +221,8 @@ export async function onRequestGet(context) {
   const siteUrl = String(env.SITE_URL || new URL(request.url).origin).replace(/\/$/, "");
   const siteName = String(env.SITE_NAME || "ボクシング速報");
   const canonical = `${siteUrl}/news/${encodeURIComponent(article.slug)}`;
-  const image = String(article.image_url || "");
+  const image = String(article.image_url || siteUrl + "/assets/boxing-arena.png");
+  const summary = articleSummary(article);
   const hasAffiliateLinks = jsonArray(article.affiliate_links).some(
     (item) => item && item.label && item.url
   );
@@ -212,7 +236,7 @@ export async function onRequestGet(context) {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
     headline: article.title,
-    description: article.summary,
+    description: summary,
     ...(image ? { image: [image] } : {}),
     datePublished: article.published_at,
     dateModified: article.updated_at || article.published_at,
@@ -234,11 +258,11 @@ export async function onRequestGet(context) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="${escapeHtml(article.summary)}">
+  <meta name="description" content="${escapeHtml(summary)}">
   <link rel="canonical" href="${escapeHtml(canonical)}">
   <meta property="og:type" content="article">
   <meta property="og:title" content="${escapeHtml(article.title)}">
-  <meta property="og:description" content="${escapeHtml(article.summary)}">
+  <meta property="og:description" content="${escapeHtml(summary)}">
   <meta property="og:url" content="${escapeHtml(canonical)}">
   ${image ? `<meta property="og:image" content="${escapeHtml(image)}">` : ""}
   <meta property="og:site_name" content="${escapeHtml(siteName)}">
@@ -248,11 +272,11 @@ export async function onRequestGet(context) {
   )}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(article.title)}">
-  <meta name="twitter:description" content="${escapeHtml(article.summary)}">
+  <meta name="twitter:description" content="${escapeHtml(summary)}">
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ""}
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script type="application/ld+json">${structuredData}</script>
-  <link rel="stylesheet" href="/styles.css?v=20260703-ranking2">
+  <link rel="stylesheet" href="/styles.css?v=20260804-affiliate-layout5">
   <script src="/config.js" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
@@ -281,12 +305,13 @@ export async function onRequestGet(context) {
           image
             ? `<img class="retro-post-image retro-detail-image" src="${escapeHtml(
                 image
-              )}" alt="${escapeHtml(article.title)}" loading="lazy">`
+              )}" alt="${escapeHtml(article.title)}のアイキャッチ画像" loading="lazy">`
             : ""
         }
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
-        <div class="retro-detail-body">${articleBodyHtml(article.body)}${embedsHtml(article)}</div>
         ${affiliateLinksHtml(article)}
+        ${summary ? `<p class="retro-article-lead">${escapeHtml(summary)}</p>` : ""}
+        <div class="retro-detail-body">${articleBodyHtml(article.body)}${embedsHtml(article)}</div>
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>
         <p class="retro-tags">タグ：ボクシング　ニュース</p>
         <div class="retro-meta"><time>${escapeHtml(

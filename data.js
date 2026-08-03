@@ -160,7 +160,11 @@
         text = text.slice(common).replace(/^[\s|｜:：\-–—]+/, "").trim();
       }
     }
-    return text.slice(0, 500);
+    return text
+      .replace(/https?:\/\/\S+/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 500);
   }
 
   async function getArticles({ includeDrafts = false, force = false } = {}) {
