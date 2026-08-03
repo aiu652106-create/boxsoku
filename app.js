@@ -65,8 +65,9 @@ function createArticle(article) {
   image.setAttribute("aria-label", `${article.title}の続きを読む`);
   const hasImage = window.BoxingUI.applyArticleImage(image, article);
 
+  let teaser = null;
   if (links.length) {
-    const teaser = document.createElement("aside");
+    teaser = document.createElement("aside");
     teaser.className = "affiliate-teaser";
     const teaserCopy = document.createElement("div");
     const teaserLabel = document.createElement("span");
@@ -85,7 +86,6 @@ function createArticle(article) {
     teaserLink.rel = "sponsored noopener noreferrer";
     teaserLink.textContent = "配信ページを見る";
     teaser.append(teaserCopy, teaserLink);
-    post.appendChild(teaser);
   }
 
   const continueLink = document.createElement("p");
@@ -108,6 +108,7 @@ function createArticle(article) {
   post.append(titleRow, category);
   if (hasImage) post.appendChild(image);
   if (summaryText) post.appendChild(summary);
+  if (teaser) post.appendChild(teaser);
   post.append(continueLink, tags, meta);
   return post;
 }
