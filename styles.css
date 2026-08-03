@@ -4795,6 +4795,243 @@ body.retro-blog a {
   text-decoration: underline;
 }
 
+/* Keep the public editorial layout ahead of legacy visual overrides. */
+body.retro-blog {
+  background: #f5f3ee !important;
+  color: #141414 !important;
+  font-family: var(--body) !important;
+}
+
+body.retro-blog .retro-top {
+  min-height: 34px !important;
+  height: auto !important;
+  border-bottom: 0 !important;
+  background: #121212 !important;
+  color: #d9d3c8 !important;
+}
+
+body.retro-blog .retro-top > div {
+  width: min(1240px, calc(100% - 48px)) !important;
+  min-height: 34px !important;
+  height: auto !important;
+  padding: 0 !important;
+}
+
+body.retro-blog .retro-header {
+  width: 100% !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 22px 0 18px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #dedbd4 !important;
+  background: #fff !important;
+}
+
+body.retro-blog .retro-logo {
+  width: min(1240px, calc(100% - 48px)) !important;
+  margin: 0 auto !important;
+  align-items: baseline !important;
+  flex-direction: row !important;
+  gap: 13px !important;
+}
+
+body.retro-blog .retro-logo strong {
+  color: #121212 !important;
+  font-family: var(--body) !important;
+  font-size: clamp(25px, 4vw, 39px) !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1 !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+}
+
+body.retro-blog .retro-logo span {
+  display: inline-block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  color: var(--red) !important;
+  font: 800 12px var(--display) !important;
+  letter-spacing: 0.15em !important;
+}
+
+body.retro-blog .retro-page-layout {
+  display: grid !important;
+  width: min(1240px, calc(100% - 48px)) !important;
+  margin: 0 auto !important;
+  padding: 34px 0 72px !important;
+  grid-template-columns: 220px minmax(0, 1fr) 245px !important;
+  gap: 28px !important;
+  border-top: 0 !important;
+  background: transparent !important;
+}
+
+body.retro-blog .retro-feed {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+body.retro-blog .retro-sidebar {
+  position: sticky !important;
+  top: 18px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+body.retro-blog .retro-sidebar-panel {
+  margin-bottom: 22px !important;
+  padding: 18px !important;
+  border: 1px solid #dedbd4 !important;
+  border-top: 4px solid var(--red) !important;
+  background: #fff !important;
+}
+
+body.retro-blog .retro-sidebar-panel h2 {
+  margin: 0 0 16px !important;
+  padding: 0 0 12px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #e8e4dc !important;
+  background: transparent !important;
+  color: #121212 !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+}
+
+body.retro-blog .retro-sidebar-list li {
+  border-bottom: 1px solid #eeeae3 !important;
+}
+
+body.retro-blog .retro-sidebar-list a {
+  grid-template-columns: 52px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  padding: 12px 0 !important;
+}
+
+body.retro-blog .retro-sidebar-list a.is-text-only {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+body.retro-blog .retro-sidebar-rank {
+  position: static !important;
+  margin: 0 !important;
+  background: transparent !important;
+  color: var(--red) !important;
+  font-size: 23px !important;
+}
+
+body.retro-blog .retro-post {
+  margin-bottom: 28px !important;
+  padding: 0 0 30px !important;
+  border-bottom: 1px solid #d8d4cc !important;
+}
+
+body.retro-blog .retro-title-row {
+  margin-bottom: 16px !important;
+  gap: 14px !important;
+}
+
+body.retro-blog .retro-title-row h1,
+body.retro-blog .retro-title-row h1 a,
+body.retro-blog .retro-detail .retro-title-row h1 {
+  color: #121212 !important;
+  font-family: var(--body) !important;
+  font-size: clamp(21px, 3vw, 30px) !important;
+  font-weight: 900 !important;
+  line-height: 1.45 !important;
+  text-decoration: none !important;
+}
+
+body.retro-blog .retro-title-row h1 a:hover,
+body.retro-blog .retro-continue a:hover {
+  color: var(--red) !important;
+}
+
+body.retro-blog .retro-post-image {
+  width: 100% !important;
+  height: clamp(205px, 33vw, 325px) !important;
+  margin: 0 0 17px !important;
+}
+
+body.retro-blog .retro-continue {
+  width: auto !important;
+  margin: 14px 0 0 !important;
+}
+
+body.retro-blog .retro-tags {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #9b9388 !important;
+  font-size: 10px !important;
+}
+
+body.retro-blog .retro-detail-body {
+  width: auto !important;
+  max-width: 700px !important;
+}
+
+body.retro-blog .retro-detail-body > p {
+  color: #2d2a27 !important;
+  font-family: var(--body) !important;
+  font-size: 16px !important;
+  line-height: 2.15 !important;
+}
+
+@media (max-width: 720px) {
+  body.retro-blog .retro-top > div,
+  body.retro-blog .retro-logo,
+  body.retro-blog .retro-page-layout {
+    width: calc(100% - 28px) !important;
+  }
+
+  body.retro-blog .retro-header {
+    padding: 17px 0 15px !important;
+  }
+
+  body.retro-blog .retro-logo {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 5px !important;
+  }
+
+  body.retro-blog .retro-page-layout {
+    display: flex !important;
+    padding: 22px 0 56px !important;
+    flex-direction: column !important;
+    gap: 22px !important;
+  }
+
+  body.retro-blog .retro-feed {
+    order: 1 !important;
+    width: 100% !important;
+  }
+
+  body.retro-blog .retro-sidebar {
+    position: static !important;
+    width: 100% !important;
+  }
+
+  body.retro-blog .retro-sidebar-popular {
+    order: 2 !important;
+  }
+
+  body.retro-blog .retro-sidebar-latest {
+    order: 3 !important;
+  }
+
+  body.retro-blog .retro-title-row h1,
+  body.retro-blog .retro-title-row h1 a {
+    font-size: 22px !important;
+  }
+
+  body.retro-blog .retro-post-image {
+    height: 220px !important;
+  }
+}
+
 .preview-body p {
   font-family: Arial, "Meiryo", "Yu Gothic", sans-serif;
   font-size: 15px;
