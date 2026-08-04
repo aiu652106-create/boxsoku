@@ -125,7 +125,7 @@ const jsonArray = (value) => (Array.isArray(value) ? value : []);
 const articleTagText = (article) => {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
   if (/試合結果|結果速報|勝敗|判定|KO勝ち|TKO/.test(source)) {
-    return "試合結果　ニュース";
+    return "試合日程";
   }
   const hasFightCards = jsonArray(article?.affiliate_links).some(
     (item) =>
@@ -135,12 +135,12 @@ const articleTagText = (article) => {
       item.cards.length
   );
   if (hasFightCards || /試合予定|試合日程|放送予定|対戦カード/.test(source)) {
-    return "試合日程　ニュース";
+    return "試合日程";
   }
   if (/選手|ボクサー|戦績|プロフィール/.test(source)) {
-    return "選手情報　ニュース";
+    return "試合日程";
   }
-  return "ニュース";
+  return "試合日程";
 };
 
 const featuredFightCards = {
