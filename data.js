@@ -471,6 +471,13 @@
 
   async function getAdminUniqueVisitorCount() {
     requireConfigured();
+    const { error: articleSchemaError } = await client
+      .from("articles")
+      .select("unique_view_count", { count: "exact", head: true });
+    if (articleSchemaError) {
+      console.warn("Unique visitor article field unavailable:", articleSchemaError.message);
+      return null;
+    }
     const { count, error } = await client
       .from("site_visitors")
       .select("visitor_hash", { count: "exact", head: true });
