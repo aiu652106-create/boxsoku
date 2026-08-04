@@ -189,6 +189,20 @@
       .filter((card) => card.weight || card.left.name || card.right.name);
   }
 
+  function normalizeProductCards(value) {
+    if (!Array.isArray(value)) return [];
+    return value
+      .map((card) => ({
+        title: String(card?.title || "").trim().slice(0, 160),
+        image: String(card?.image || "").trim(),
+        url: String(card?.url || "").trim(),
+        price: String(card?.price || "").trim().slice(0, 80),
+        checkedAt: String(card?.checkedAt || "").trim().slice(0, 40)
+      }))
+      .filter((card) => card.title && card.image && card.url)
+      .slice(0, 4);
+  }
+
   function getDefaultFightCards(slug) {
     return normalizeFightCards(defaultFightCardsBySlug[slug]).map((card) => ({
       ...card,
@@ -209,6 +223,9 @@
     const storedFightCards = storedAffiliateLinks.find(
       (item) => item && item.type === "fight_cards" && Array.isArray(item.cards)
     );
+    const storedProductCards = storedAffiliateLinks.find(
+      (item) => item && item.type === "product_cards" && Array.isArray(item.cards)
+    );
     return {
       id: row.id,
       slug: row.slug,
@@ -219,6 +236,7 @@
       imagePath: row.image_path || "",
       boxrecUrl: row.boxrec_url || legacyBoxRecLink?.url || "",
       fightCards: normalizeFightCards(storedFightCards?.cards),
+      productCards: normalizeProductCards(storedProductCards?.cards),
       accent: row.accent || "red",
       status: row.status || "draft",
       isAdvertorial: Boolean(row.is_advertorial),
@@ -252,6 +270,10 @@
         type: "fight_cards",
         cards: normalizeFightCards(article.fightCards)
       });
+    }
+    const productCards = normalizeProductCards(article.productCards);
+    if (productCards.length) {
+      affiliateLinks.push({ type: "product_cards", cards: productCards });
     }
     return {
       slug: article.slug,

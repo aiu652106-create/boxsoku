@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex,nofollow" />
     <title>記事を作成 | ボクシング速報</title>
-    <link rel="stylesheet" href="styles.css?v=20260804-editor-preview5" />
+    <link rel="stylesheet" href="styles.css?v=20260805-affiliate-products1" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="config.js" defer></script>
-    <script src="data.js?v=20260804-visitstats2" defer></script>
-    <script src="editor.js?v=20260804-editor-preview5" defer></script>
+    <script src="data.js?v=20260805-product-cards1" defer></script>
+    <script src="editor.js?v=20260805-affiliate-products1" defer></script>
   </head>
   <body class="editor-page">
     <header class="editor-header">
@@ -128,6 +128,19 @@
           </label>
         </section>
 
+        <section class="product-editor">
+          <div class="product-editor-heading">
+            <div>
+              <span>RAKUTEN PRODUCT CARDS</span>
+              <h2>&#21830;&#21697;&#12459;&#12540;&#12489;</h2>
+            </div>
+          </div>
+          <p>&#37197;&#20449;&#24773;&#22577;&#12398;&#19979;&#12395;&#12289;&#38360;&#35239;&#32773;&#12364;&#36984;&#12403;&#12420;&#12377;&#12356;&#21830;&#21697;&#12434;&#26368;&#22823;4&#20214;&#34920;&#31034;&#12375;&#12414;&#12377;&#12290;&#20844;&#24335;&#12398;&#21830;&#21697;&#30011;&#20687;&#12392;&#27010;&#35201;&#12434;&#20351;&#29992;&#12375;&#12390;&#12367;&#12384;&#12373;&#12356;&#12290;</p>
+          <div id="product-card-list" class="product-card-list"></div>
+          <button id="add-product-card" class="editor-secondary-button" type="button">＋ &#21830;&#21697;&#12434;&#36861;&#21152;</button>
+          <p class="product-editor-note">&#20385;&#26684;&#12539;&#22312;&#24235;&#12539;&#36865;&#26009;&#12399;&#22793;&#21270;&#12377;&#12427;&#12383;&#12417;&#12289;&#25522;&#36617;&#26178;&#28857;&#12398;&#24773;&#22577;&#12434;&#34920;&#31034;&#12375;&#12414;&#12377;&#12290;</p>
+        </section>
+
         <section class="tweet-editor">
           <div class="tweet-editor-heading">
             <div><span>X POST EMBED</span><h2>X投稿</h2></div>
@@ -181,6 +194,7 @@
               料金・配信内容・視聴条件はリンク先の公式ページでご確認ください。
             </p>
           </aside>
+          <section id="preview-product-cards" class="affiliate-products" hidden aria-label="&#12362;&#12377;&#12377;&#12417;&#21830;&#21697;"></section>
         </article>
       </aside>
     </main>

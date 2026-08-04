@@ -26,7 +26,8 @@ function createAdSlot(name) {
 function hasAffiliatePromotion(article) {
   return (
     article.isAdvertorial ||
-    (Array.isArray(article.affiliateLinks) && article.affiliateLinks.length > 0)
+    (Array.isArray(article.affiliateLinks) && article.affiliateLinks.length > 0) ||
+    (Array.isArray(article.productCards) && article.productCards.length > 0)
   );
 }
 
@@ -47,9 +48,12 @@ function createAffiliateDisclosure(article) {
   badge.className = "affiliate-disclosure-badge";
   badge.textContent = "PR";
   const text = document.createElement("span");
+  const hasProducts = Array.isArray(article.productCards) && article.productCards.length > 0;
   text.textContent =
     article.affiliateDisclosure ||
-    affiliateConfig.disclosure ||
+    (hasProducts
+      ? "\u3053\u306e\u30da\u30fc\u30b8\u306b\u306f\u30a2\u30d5\u30a3\u30ea\u30a8\u30a4\u30c8\u30ea\u30f3\u30af\u304c\u542b\u307e\u308c\u3066\u3044\u307e\u3059\u3002"
+      : affiliateConfig.disclosure) ||
     "この記事には配信サービスのアフィリエイトリンクが含まれています。";
   disclosure.append(badge, text);
   return disclosure;
@@ -135,6 +139,60 @@ function createAffiliateLinks(article) {
     affiliateConfig.note ||
     "料金・配信内容・視聴条件はリンク先の公式ページでご確認ください。";
   section.appendChild(note);
+  return section;
+}
+
+function createProductCards(article) {
+  const cards = (Array.isArray(article.productCards) ? article.productCards : [])
+    .map((item) => ({
+      ...item,
+      url: safeAffiliateUrl(item?.url),
+      image: safeAffiliateUrl(item?.image)
+    }))
+    .filter((item) => item.title && item.url && item.image)
+    .slice(0, 4);
+  if (!cards.length) return null;
+
+  const section = document.createElement("section");
+  section.className = "affiliate-products";
+  section.setAttribute("aria-label", "\u304a\u3059\u3059\u3081\u5546\u54c1");
+  cards.forEach((item) => {
+    const card = document.createElement("a");
+    card.className = "affiliate-product-card";
+    card.href = item.url;
+    card.target = "_blank";
+    card.rel = "sponsored nofollow noopener";
+
+    const image = document.createElement("img");
+    image.src = item.image;
+    image.alt = `${item.title}\u306e\u5546\u54c1\u753b\u50cf`;
+    image.loading = "lazy";
+    image.referrerPolicy = "no-referrer";
+
+    const content = document.createElement("span");
+    content.className = "affiliate-product-card-content";
+    const title = document.createElement("strong");
+    title.textContent = item.title;
+    content.appendChild(title);
+    if (item.price) {
+      const price = document.createElement("span");
+      price.className = "affiliate-product-price";
+      price.textContent = item.price;
+      content.appendChild(price);
+    }
+    if (item.checkedAt) {
+      const checkedAt = document.createElement("small");
+      checkedAt.className = "affiliate-product-checked-at";
+      checkedAt.textContent = `${item.checkedAt}\u6642\u70b9`;
+      content.appendChild(checkedAt);
+    }
+    const action = document.createElement("span");
+    action.className = "affiliate-product-action";
+    action.textContent = "\u5546\u54c1\u3092\u898b\u308b";
+    content.appendChild(action);
+    card.append(image, content);
+    section.appendChild(card);
+  });
   return section;
 }
 
@@ -426,11 +484,13 @@ function renderArticle(article) {
   commentsMount.className = "retro-comments-mount";
 
   const affiliateLinks = createAffiliateLinks(article);
+  const productCards = createProductCards(article);
   const fightCards = createFightCards(article);
   container.append(titleRow, category);
   container.appendChild(imageContent);
   container.appendChild(topAd);
   if (affiliateLinks) container.appendChild(affiliateLinks);
+  if (productCards) container.appendChild(productCards);
   container.appendChild(body);
   if (fightCards) container.appendChild(fightCards);
   if (videoEmbeds.childElementCount) container.appendChild(videoEmbeds);

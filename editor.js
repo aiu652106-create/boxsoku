@@ -28,6 +28,9 @@ const previewAffiliateLinkList = document.querySelector(
 );
 const previewFightCards = document.querySelector("#preview-fight-cards");
 const previewMedia = document.querySelector("#preview-media");
+const productCardList = document.querySelector("#product-card-list");
+const addProductCardButton = document.querySelector("#add-product-card");
+const previewProductCards = document.querySelector("#preview-product-cards");
 let editingArticle = null;
 let selectedFile = null;
 let previewObjectUrl = "";
@@ -158,6 +161,172 @@ function collectFightCards() {
   });
   return window.BoxingData.normalizeFightCards(cards);
 }
+
+const productFieldLabels = {
+  title: "\u5546\u54c1\u540d",
+  price: "\u4fa1\u683c\u8868\u8a18",
+  checkedAt: "\u78ba\u8a8d\u65e5",
+  image: "\u5546\u54c1\u753b\u50cfURL",
+  url: "\u30a2\u30d5\u30a3\u30ea\u30a8\u30a4\u30c8URL"
+};
+
+function createProductField(field, value, type = "text") {
+  const label = document.createElement("label");
+  label.className = "product-card-field";
+  const labelText = document.createElement("span");
+  labelText.textContent = productFieldLabels[field];
+  const input = document.createElement("input");
+  input.type = type;
+  input.dataset.field = field;
+  input.value = value || "";
+  input.placeholder = type === "url" ? "https://..." : "";
+  label.append(labelText, input);
+  return label;
+}
+
+function createProductCardRow(card = {}, index = 0) {
+  const row = document.createElement("article");
+  row.className = "product-card-editor-row";
+
+  const heading = document.createElement("div");
+  heading.className = "product-card-row-heading";
+  const title = document.createElement("strong");
+  title.textContent = `${"\u5546\u54c1"} ${index + 1}`;
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "product-card-remove";
+  remove.textContent = "\u524a\u9664";
+  remove.addEventListener("click", () => {
+    row.remove();
+    updatePreview();
+  });
+  heading.append(title, remove);
+
+  const grid = document.createElement("div");
+  grid.className = "product-card-field-grid";
+  grid.append(
+    createProductField("title", card.title),
+    createProductField("price", card.price),
+    createProductField("checkedAt", card.checkedAt),
+    createProductField("image", card.image, "url"),
+    createProductField("url", card.url, "url")
+  );
+  row.append(heading, grid);
+  return row;
+}
+
+function renderProductCards(cards) {
+  productCardList.replaceChildren(
+    ...cards.slice(0, 4).map((card, index) => createProductCardRow(card, index))
+  );
+}
+
+function parseHttpsUrl(value, label) {
+  const raw = String(value || "").trim();
+  if (!raw) throw new Error(`${label}\u306f\u5fc5\u9808\u3067\u3059\u3002`);
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:") throw new Error();
+    return url.href;
+  } catch {
+    throw new Error(`${label}\u306fhttps://\u304b\u3089\u59cb\u307e\u308bURL\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002`);
+  }
+}
+
+function collectProductCards() {
+  const rows = [...productCardList.querySelectorAll(".product-card-editor-row")];
+  const cards = rows
+    .map((row, index) => {
+      const value = (field) =>
+        row.querySelector(`input[data-field="${field}"]`)?.value.trim() || "";
+      const raw = {
+        title: value("title"),
+        price: value("price"),
+        checkedAt: value("checkedAt"),
+        image: value("image"),
+        url: value("url")
+      };
+      if (!Object.values(raw).some(Boolean)) return null;
+      if (!raw.title || !raw.image || !raw.url) {
+        throw new Error(`${"\u5546\u54c1"} ${index + 1}\u306e\u5546\u54c1\u540d\u30fb\u753b\u50cfURL\u30fb\u30a2\u30d5\u30a3\u30ea\u30a8\u30a4\u30c8URL\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002`);
+      }
+      return {
+        title: raw.title,
+        image: parseHttpsUrl(raw.image, productFieldLabels.image),
+        url: parseHttpsUrl(raw.url, productFieldLabels.url),
+        price: raw.price,
+        checkedAt: raw.checkedAt
+      };
+    })
+    .filter(Boolean);
+  if (cards.length > 4) {
+    throw new Error("\u5546\u54c1\u30ab\u30fc\u30c9\u306f1\u8a18\u4e8b\u306b4\u4ef6\u307e\u3067\u3067\u3059\u3002");
+  }
+  return cards;
+}
+
+function collectPreviewProductCards() {
+  return [...productCardList.querySelectorAll(".product-card-editor-row")]
+    .map((row) => {
+      const value = (field) =>
+        row.querySelector(`input[data-field="${field}"]`)?.value.trim() || "";
+      return {
+        title: value("title"),
+        image: value("image"),
+        url: value("url"),
+        price: value("price"),
+        checkedAt: value("checkedAt")
+      };
+    })
+    .filter((card) => card.title && card.image && card.url)
+    .slice(0, 4);
+}
+
+function renderPreviewProductCards(cards) {
+  previewProductCards.replaceChildren();
+  previewProductCards.hidden = cards.length === 0;
+  cards.forEach((product) => {
+    const card = document.createElement("a");
+    card.className = "affiliate-product-card";
+    card.href = product.url;
+    card.target = "_blank";
+    card.rel = "sponsored nofollow noopener";
+
+    const image = document.createElement("img");
+    image.src = product.image;
+    image.alt = `${product.title}\u306e\u5546\u54c1\u753b\u50cf`;
+    image.loading = "lazy";
+    image.referrerPolicy = "no-referrer";
+
+    const content = document.createElement("span");
+    content.className = "affiliate-product-card-content";
+    const productTitle = document.createElement("strong");
+    productTitle.textContent = product.title;
+    content.appendChild(productTitle);
+    if (product.price) {
+      const price = document.createElement("span");
+      price.className = "affiliate-product-price";
+      price.textContent = product.price;
+      content.appendChild(price);
+    }
+    const action = document.createElement("span");
+    action.className = "affiliate-product-action";
+    action.textContent = "\u5546\u54c1\u3092\u898b\u308b";
+    content.appendChild(action);
+    card.append(image, content);
+    previewProductCards.appendChild(card);
+  });
+}
+
+addProductCardButton.addEventListener("click", () => {
+  const count = productCardList.children.length;
+  if (count >= 4) return;
+  productCardList.appendChild(createProductCardRow({}, count));
+  updatePreview();
+  productCardList.lastElementChild.scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
+productCardList.addEventListener("input", updatePreview);
 
 addFightCardButton.addEventListener("click", () => {
   fightCardList.appendChild(createFightCardRow());
@@ -372,13 +541,16 @@ function updatePreview() {
   });
 
   renderPreviewFightCards(collectPreviewFightCards());
+  const previewProducts = collectPreviewProductCards();
+  renderPreviewProductCards(previewProducts);
 
   const linkLabels = affiliateLinksInput.value
     .split(/\r?\n/)
     .map((line) => line.split("|")[0].trim())
     .filter(Boolean)
     .slice(0, 5);
-  const showAffiliate = advertorialInput.checked || linkLabels.length > 0;
+  const showAffiliate =
+    advertorialInput.checked || linkLabels.length > 0 || previewProducts.length > 0;
   previewAffiliateDisclosure.hidden = !showAffiliate;
   previewAffiliateLinks.hidden = linkLabels.length === 0;
   previewAffiliateDisclosureText.textContent =
@@ -516,6 +688,7 @@ form.addEventListener("submit", async (event) => {
       affiliateLinksInput.value
     );
     const fightCards = collectFightCards();
+    const productCards = collectProductCards();
     const article = {
       id: editingArticle?.id,
       slug: window.BoxingData.createSlug(document.querySelector("#slug").value),
@@ -531,7 +704,7 @@ form.addEventListener("submit", async (event) => {
       accent: "red",
       status,
       isAdvertorial:
-        advertorialInput.checked || affiliateLinks.length > 0,
+        advertorialInput.checked || affiliateLinks.length > 0 || productCards.length > 0,
       affiliateDisclosure:
         affiliateDisclosureInput.value.trim() ||
         (affiliateLinks.length > 0
@@ -540,6 +713,7 @@ form.addEventListener("submit", async (event) => {
           : ""),
       affiliateLinks,
       fightCards,
+      productCards,
       tweets: window.BoxingData.parseUrlList(
         tweetUrlsInput.value,
         window.BoxingData.isTweetUrl
@@ -601,6 +775,7 @@ function fillForm(article) {
     imageStatus.textContent = "現在の記事画像";
   }
   boxrecUrlInput.value = article.boxrecUrl || "";
+  renderProductCards(article.productCards || []);
   renderFightCards(
     article.fightCards?.length
       ? article.fightCards
