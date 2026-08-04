@@ -6280,3 +6280,59 @@ body.retro-blog .retro-fight-vs {
     font-size: 13px;
   }
 }
+
+body.retro-blog .retro-category-nav {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  margin-right: 12px;
+}
+
+body.retro-blog .retro-category-nav a {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  padding: 3px 8px;
+  border: 1px solid #cfcfcf;
+  background: #fff;
+  color: #3b3834;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+body.retro-blog .retro-category-nav a:hover,
+body.retro-blog .retro-category-nav a.is-active {
+  border-color: #d00000;
+  background: #d00000;
+  color: #fff;
+}
+
+@media (max-width: 720px) {
+  body.retro-blog .retro-top {
+    min-height: 34px !important;
+    height: auto !important;
+  }
+
+  body.retro-blog .retro-top > div {
+    flex-wrap: wrap !important;
+    gap: 5px 8px;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+  }
+
+  body.retro-blog .retro-top > div > span {
+    max-width: 100%;
+    flex: 1 1 100%;
+  }
+
+  body.retro-blog .retro-category-nav {
+    order: 3;
+    width: 100%;
+    margin: 0;
+    overflow-x: auto;
+  }
+}

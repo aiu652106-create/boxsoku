@@ -122,32 +122,11 @@ const articleBodyHtml = (body, title = "", lead = "") => {
 
 const jsonArray = (value) => (Array.isArray(value) ? value : []);
 
-const articleTagText = (article) => {
-  const source = `${article?.title || ""}\n${article?.body || ""}`;
-  if (/試合結果|結果速報|勝敗|判定|KO勝ち|TKO/.test(source)) {
-    return "試合日程";
-  }
-  const hasFightCards = jsonArray(article?.affiliate_links).some(
-    (item) =>
-      item &&
-      item.type === "fight_cards" &&
-      Array.isArray(item.cards) &&
-      item.cards.length
-  );
-  if (hasFightCards || /試合予定|試合日程|放送予定|対戦カード/.test(source)) {
-    return "試合日程";
-  }
-  if (/選手|ボクサー|戦績|プロフィール/.test(source)) {
-    return "試合日程";
-  }
-  return "試合日程";
-};
-
 const articleCategoryText = (article) => {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
   return /WOWOW|エキサイトマッチ/i.test(source)
     ? "WOWOWエキサイトマッチ"
-    : "ボクシング";
+    : "試合日程";
 };
 
 const featuredFightCards = {
@@ -579,14 +558,14 @@ export async function onRequestGet(context) {
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ""}
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script type="application/ld+json">${structuredData}</script>
-  <link rel="stylesheet" href="/styles.css?v=20260804-carddetails2">
+   <link rel="stylesheet" href="/styles.css?v=20260804-category-nav1">
   <script src="/config.js" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
   <script src="/ads.js" defer></script>
 </head>
 <body class="retro-blog">
-  <div class="retro-top"><div><span data-site-tagline>ボクシングのニュースと話題</span><a href="/about.html">運営者情報</a></div></div>
+  <div class="retro-top"><div><span data-site-tagline>ボクシングのニュースと話題</span><nav class="retro-category-nav" aria-label="記事カテゴリー"><a href="/?category=schedule" data-category-filter="schedule">試合日程</a><a href="/?category=wowow" data-category-filter="wowow">WOWOWエキサイトマッチ</a></nav><a href="/about.html">運営者情報</a></div></div>
   <header class="retro-header"><a class="retro-logo" href="/"><strong data-site-name>${escapeHtml(
     siteName
   )}</strong><span>BOXING NEWS</span></a></header>
@@ -619,7 +598,6 @@ export async function onRequestGet(context) {
         ${fightCardsHtml(article)}
         ${videosHtml(article)}
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>
-        <p class="retro-tags">タグ：${escapeHtml(articleTagText(article))}</p>
         <div class="retro-meta"><time>${escapeHtml(
           new Date(article.published_at).toLocaleDateString("ja-JP")
         )}</time></div>

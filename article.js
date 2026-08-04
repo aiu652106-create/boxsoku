@@ -3,28 +3,11 @@ const params = new URLSearchParams(window.location.search);
 const identifier = params.get("slug") || params.get("id");
 const affiliateConfig = window.BOXING_CONFIG?.affiliate || {};
 
-function articleTagText(article) {
-  const source = `${article?.title || ""}\n${article?.body || ""}`;
-  if (/試合結果|結果速報|勝敗|判定|KO勝ち|TKO/.test(source)) {
-    return "試合日程";
-  }
-  if (
-    article?.fightCards?.length ||
-    /試合予定|試合日程|放送予定|対戦カード/.test(source)
-  ) {
-    return "試合日程";
-  }
-  if (/選手|ボクサー|戦績|プロフィール/.test(source)) {
-    return "試合日程";
-  }
-  return "試合日程";
-}
-
 function articleCategoryText(article) {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
   return /WOWOW|エキサイトマッチ/i.test(source)
     ? "WOWOWエキサイトマッチ"
-    : "ボクシング";
+    : "試合日程";
 }
 
 function createAdSlot(name) {
@@ -423,9 +406,6 @@ function renderArticle(article) {
   article.youtubeUrls.forEach((url) => appendYouTube(videoEmbeds, url));
   article.instagramUrls.forEach((url) => appendInstagram(body, url));
 
-  const tags = document.createElement("p");
-  tags.className = "retro-tags";
-  tags.textContent = `タグ：${articleTagText(article)}`;
   const meta = document.createElement("div");
   meta.className = "retro-meta";
   const time = document.createElement("time");
@@ -449,7 +429,7 @@ function renderArticle(article) {
   container.appendChild(body);
   if (fightCards) container.appendChild(fightCards);
   if (videoEmbeds.childElementCount) container.appendChild(videoEmbeds);
-  container.append(tags, meta, commentsMount, back);
+  container.append(meta, commentsMount, back);
   window.BoxingAds?.render(container);
   window.BoxingComments?.mount(commentsMount, article);
 

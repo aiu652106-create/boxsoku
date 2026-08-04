@@ -1,28 +1,25 @@
 const feed = document.querySelector("#article-feed");
 const statusMessage = document.querySelector("#site-status");
 
-function articleTagText(article) {
-  const source = `${article?.title || ""}\n${article?.body || ""}`;
-  if (/試合結果|結果速報|勝敗|判定|KO勝ち|TKO/.test(source)) {
-    return "試合日程";
-  }
-  if (
-    article?.fightCards?.length ||
-    /試合予定|試合日程|放送予定|対戦カード/.test(source)
-  ) {
-    return "試合日程";
-  }
-  if (/選手|ボクサー|戦績|プロフィール/.test(source)) {
-    return "試合日程";
-  }
-  return "試合日程";
-}
-
 function articleCategoryText(article) {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
   return /WOWOW|エキサイトマッチ/i.test(source)
     ? "WOWOWエキサイトマッチ"
-    : "ボクシング";
+    : "試合日程";
+}
+
+function articleCategoryKey(article) {
+  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  return /WOWOW|エキサイトマッチ/i.test(source) ? "wowow" : "schedule";
+}
+
+function updateCategoryNav(activeCategory) {
+  document.querySelectorAll("[data-category-filter]").forEach((link) => {
+    const isActive = link.dataset.categoryFilter === activeCategory;
+    link.classList.toggle("is-active", isActive);
+    if (isActive) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  });
 }
 
 function affiliateItems(article) {
@@ -123,10 +120,6 @@ function createArticle(article) {
   link.textContent = "記事の詳細を見る";
   continueLink.appendChild(link);
 
-  const tags = document.createElement("p");
-  tags.className = "retro-tags";
-  tags.textContent = `タグ：${articleTagText(article)}`;
-
   const meta = document.createElement("div");
   meta.className = "retro-meta";
   const time = document.createElement("time");
@@ -137,14 +130,22 @@ function createArticle(article) {
   if (hasImage) post.appendChild(image);
   if (summaryText) post.appendChild(summary);
   if (teaser) post.appendChild(teaser);
-  post.append(continueLink, tags, meta);
+  post.append(continueLink, meta);
   return post;
 }
 
 async function initialize() {
   try {
     const articles = await window.BoxingData.getArticles();
-    feed.replaceChildren(...articles.map(createArticle));
+    const requestedCategory = new URLSearchParams(window.location.search).get("category");
+    const activeCategory = ["wowow", "schedule"].includes(requestedCategory)
+      ? requestedCategory
+      : null;
+    updateCategoryNav(activeCategory);
+    const visibleArticles = activeCategory
+      ? articles.filter((article) => articleCategoryKey(article) === activeCategory)
+      : articles;
+    feed.replaceChildren(...visibleArticles.map(createArticle));
     await window.BoxingUI.renderSidebars(articles);
 
     if (!window.BoxingData.configured && statusMessage) {
