@@ -524,11 +524,7 @@ export async function onRequestGet(context) {
   const siteName = String(env.SITE_NAME || "ボクシング速報");
   const canonical = `${siteUrl}/news/${encodeURIComponent(article.slug)}`;
  const image = String(article.image_url || siteUrl + "/assets/boxing-arena.png");
- const legacyBoxRecUrl = jsonArray(article.affiliate_links).find(
-   (item) => item && item.type === "boxrec_image" && item.url
- )?.url;
- const boxrecUrl = safeBoxRecUrl(article.boxrec_url || legacyBoxRecUrl);
- const summary = articleSummary(article);
+  const summary = articleSummary(article);
   const metaDescription = summary.slice(0, 160);
   const hasAffiliateLinks = jsonArray(article.affiliate_links).some(
     (item) => item && item.label && item.url
@@ -653,7 +649,7 @@ export async function onRequestGet(context) {
       : ""
   }
   ${
-    boxrecUrl
+    false
       ? `<script>(function(){const image=document.querySelector(".retro-detail-image");if(!image||!image.parentNode)return;const link=document.createElement("a");link.className="retro-image-link";link.href=${JSON.stringify(
           boxrecUrl
         )};link.target="_blank";link.rel="noopener noreferrer";link.setAttribute("aria-label","BoxRecで選手情報を開く");image.parentNode.insertBefore(link,image);link.appendChild(image);})();</script>`

@@ -373,17 +373,9 @@ function renderArticle(article) {
   const image = document.createElement("img");
   image.className = "retro-post-image retro-detail-image";
   window.BoxingUI?.applyArticleImage(image, article);
-  let imageContent = image;
-  if (article.boxrecUrl) {
-    const imageLink = document.createElement("a");
-    imageLink.className = "retro-image-link";
-    imageLink.href = article.boxrecUrl;
-    imageLink.target = "_blank";
-    imageLink.rel = "noopener noreferrer";
-    imageLink.setAttribute("aria-label", "BoxRecで選手情報を開く");
-    imageLink.appendChild(image);
-    imageContent = imageLink;
-  }
+  // BoxRec links belong to fighter images and names in the fight cards.
+  // The article's lead image is the event/program image, so it stays unlinked.
+  const imageContent = image;
 
   const topAd = createAdSlot("articleTop");
 
