@@ -205,16 +205,11 @@ function fightCardsHtml(article) {
           image
         )}" alt="${escapeHtml(fighter.name)}のプロフィール画像" loading="lazy" referrerpolicy="no-referrer"></a>`
       : "";
-    const sourceLabel = fighter.imageSource
-      ? `写真: ${fighter.imageSource}`
-      : "BoxRec";
     return `<div class="retro-fighter-card">${imageHtml}<a class="retro-fighter-name retro-fighter-name-${side}" href="${escapeHtml(
       profile
     )}" target="_blank" rel="noopener noreferrer">${escapeHtml(
       fighter.name
-    )}</a><span class="retro-fighter-source">${escapeHtml(
-      sourceLabel
-    )}</span></div>`;
+    )}</a></div>`;
   };
   return `<section class="retro-fight-cards" aria-labelledby="fight-card-heading"><div class="retro-fight-cards-heading"><span>FIGHT CARD</span><h2 id="fight-card-heading">対戦カード</h2></div>${fights
     .map(

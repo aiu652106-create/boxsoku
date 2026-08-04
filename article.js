@@ -211,12 +211,6 @@ function createFightCards(article) {
         name.textContent = fighter.name;
         fighterCard.appendChild(name);
       }
-      const source = document.createElement("span");
-      source.className = "retro-fighter-source";
-      source.textContent = fighter.imageSource
-        ? `写真: ${fighter.imageSource}`
-        : "BoxRec";
-      fighterCard.appendChild(source);
       grid.appendChild(fighterCard);
     });
     card.append(weight, grid);
