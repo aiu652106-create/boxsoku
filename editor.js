@@ -152,9 +152,6 @@ function collectFightCards() {
     if (!card.weight || !card.left.name || !card.right.name) {
       throw new Error(`対戦カード${index + 1}は階級・選手A・選手Bを入力してください。`);
     }
-    if (!card.left.profile || !card.right.profile) {
-      throw new Error(`対戦カード${index + 1}は両選手のBoxRec URLを入力してください。`);
-    }
   });
   return window.BoxingData.normalizeFightCards(cards);
 }

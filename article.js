@@ -191,12 +191,16 @@ function createFightCards(article) {
         profile = window.BoxingData.parseBoxRecUrl(fighter.profile);
       } catch {}
       const image = fightImageUrl(fighter.image);
-      if (profile && image) {
+      if (image) {
         const photo = document.createElement("a");
         photo.className = `retro-fighter-photo retro-fighter-photo-${side}`;
-        photo.href = profile;
-        photo.target = "_blank";
-        photo.rel = "noopener noreferrer";
+        if (profile) {
+          photo.href = profile;
+          photo.target = "_blank";
+          photo.rel = "noopener noreferrer";
+        } else {
+          photo.removeAttribute("href");
+        }
         const imageElement = document.createElement("img");
         imageElement.src = image;
         imageElement.alt = `${fighter.name}のプロフィール画像`;
@@ -211,14 +215,21 @@ function createFightCards(article) {
         ranking.textContent = fighter.ranking;
         fighterCard.appendChild(ranking);
       }
-      if (profile) {
+      if (fighter.name) {
         const name = document.createElement("a");
         name.className = `retro-fighter-name retro-fighter-name-${side}`;
-        name.href = profile;
-        name.target = "_blank";
-        name.rel = "noopener noreferrer";
         name.textContent = fighter.name;
-        fighterCard.appendChild(name);
+        if (profile) {
+          name.href = profile;
+          name.target = "_blank";
+          name.rel = "noopener noreferrer";
+          fighterCard.appendChild(name);
+        } else {
+          const plainName = document.createElement("span");
+          plainName.className = name.className;
+          plainName.textContent = name.textContent;
+          fighterCard.appendChild(plainName);
+        }
       }
       grid.appendChild(fighterCard);
     });

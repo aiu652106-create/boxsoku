@@ -194,25 +194,29 @@ function fightCardsHtml(article) {
   if (!fights.length) return "";
   const fighterHtml = (fighter, side) => {
     const profile = safeBoxRecUrl(fighter.profile);
-    if (!profile) return "";
     const image = fightImageUrl(fighter.image);
     const imageHtml = image
-      ? `<a class="retro-fighter-photo retro-fighter-photo-${side}" href="${escapeHtml(
+      ? `<${profile ? `a class="retro-fighter-photo retro-fighter-photo-${side}" href="${escapeHtml(
           profile
-        )}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(
+        )}" target="_blank" rel="noopener noreferrer"` : `div class="retro-fighter-photo retro-fighter-photo-${side}"`} aria-label="${escapeHtml(
           fighter.name
-        )}のBoxRecプロフィールを開く"><img src="${escapeHtml(
+        )}のプロフィール画像"><img src="${escapeHtml(
           image
-        )}" alt="${escapeHtml(fighter.name)}のプロフィール画像" loading="lazy" referrerpolicy="no-referrer"></a>`
+        )}" alt="${escapeHtml(fighter.name)}のプロフィール画像" loading="lazy" referrerpolicy="no-referrer"></${profile ? "a" : "div"}>`
       : "";
     const rankingHtml = fighter.ranking
       ? `<p class="retro-fighter-ranking">${escapeHtml(fighter.ranking)}</p>`
       : "";
-    return `<div class="retro-fighter-card">${imageHtml}${rankingHtml}<a class="retro-fighter-name retro-fighter-name-${side}" href="${escapeHtml(
-      profile
-    )}" target="_blank" rel="noopener noreferrer">${escapeHtml(
-      fighter.name
-    )}</a></div>`;
+    const nameHtml = profile
+      ? `<a class="retro-fighter-name retro-fighter-name-${side}" href="${escapeHtml(
+          profile
+        )}" target="_blank" rel="noopener noreferrer">${escapeHtml(
+          fighter.name
+        )}</a>`
+      : `<span class="retro-fighter-name retro-fighter-name-${side}">${escapeHtml(
+          fighter.name
+        )}</span>`;
+    return `<div class="retro-fighter-card">${imageHtml}${rankingHtml}${nameHtml}</div>`;
   };
   return `<section class="retro-fight-cards" aria-labelledby="fight-card-heading"><div class="retro-fight-cards-heading"><span>FIGHT CARD</span><h2 id="fight-card-heading">対戦カード</h2></div>${fights
     .map(
