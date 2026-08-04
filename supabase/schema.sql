@@ -46,12 +46,38 @@ create table if not exists public.site_visitors (
   last_seen timestamptz not null default now()
 );
 
+alter table public.site_visitors
+  add column if not exists first_seen timestamptz;
+
+alter table public.site_visitors
+  add column if not exists last_seen timestamptz;
+
+update public.site_visitors
+set first_seen = coalesce(first_seen, now()),
+    last_seen = coalesce(last_seen, first_seen, now());
+
+alter table public.site_visitors
+  alter column first_seen set default now(),
+  alter column first_seen set not null,
+  alter column last_seen set default now(),
+  alter column last_seen set not null;
+
 create table if not exists public.article_unique_views (
   article_id uuid not null references public.articles(id) on delete cascade,
   visitor_hash text not null references public.site_visitors(visitor_hash) on delete cascade,
   first_seen timestamptz not null default now(),
   primary key (article_id, visitor_hash)
 );
+
+alter table public.article_unique_views
+  add column if not exists first_seen timestamptz;
+
+update public.article_unique_views
+set first_seen = coalesce(first_seen, now());
+
+alter table public.article_unique_views
+  alter column first_seen set default now(),
+  alter column first_seen set not null;
 
 alter table public.articles
   add column if not exists affiliate_links jsonb not null default '[]'::jsonb;
@@ -61,6 +87,13 @@ alter table public.articles
 
 alter table public.articles
   add column if not exists unique_view_count bigint not null default 0;
+
+update public.articles
+set unique_view_count = coalesce(unique_view_count, 0);
+
+alter table public.articles
+  alter column unique_view_count set default 0,
+  alter column unique_view_count set not null;
 
 create index if not exists articles_public_order_idx
   on public.articles (status, published_at desc);
