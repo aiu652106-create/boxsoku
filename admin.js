@@ -39,9 +39,15 @@ function createArticleRow(article) {
     ? `対戦カード ${article.fightCards.length}件`
     : "対戦カードなし";
   const viewCount = document.createElement("p");
+  const uniqueViewCount = document.createElement("p");
+  uniqueViewCount.className = "admin-article-unique-view-count";
+  uniqueViewCount.textContent =
+    article.uniqueViewCount == null
+      ? "ユニーク訪問者 未設定"
+      : `ユニーク訪問者 ${Number(article.uniqueViewCount).toLocaleString("ja-JP")}人`;
   viewCount.className = "admin-article-view-count";
   viewCount.textContent = `閲覧数 ${Number(article.viewCount || 0).toLocaleString("ja-JP")} PV`;
-  info.append(status, title, fightCardCount, viewCount);
+  info.append(status, title, fightCardCount, viewCount, uniqueViewCount);
 
   const actions = document.createElement("div");
   actions.className = "admin-article-actions";
@@ -199,6 +205,16 @@ async function loadComments(previewItems = null) {
   renderComments(comments);
 }
 
+async function loadUniqueVisitorCount() {
+  const element = document.querySelector("#unique-visitor-count");
+  if (previewMode) {
+    element.textContent = "未設定";
+    return;
+  }
+  const count = await window.BoxingData.getAdminUniqueVisitorCount();
+  element.textContent = count == null ? "未設定" : count.toLocaleString("ja-JP");
+}
+
 function getLocalAdminComments() {
   const articleMap = new Map(
     window.BoxingData.sampleArticles.map((article) => [article.slug, article])
@@ -247,7 +263,7 @@ async function showDashboard() {
   }
   loginPanel.hidden = true;
   dashboard.hidden = false;
-  await Promise.all([loadArticles(), loadComments()]);
+  await Promise.all([loadArticles(), loadComments(), loadUniqueVisitorCount()]);
 }
 
 loginForm.addEventListener("submit", async (event) => {
@@ -289,7 +305,8 @@ async function initialize() {
     });
     await Promise.all([
       loadArticles(window.BoxingData.sampleArticles),
-      loadComments()
+      loadComments(),
+      loadUniqueVisitorCount()
     ]);
     return;
   }

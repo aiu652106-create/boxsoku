@@ -25,6 +25,7 @@ create table if not exists public.articles (
   instagram_urls jsonb not null default '[]'::jsonb,
   published_at timestamptz,
   view_count bigint not null default 0,
+  unique_view_count bigint not null default 0,
   created_by uuid references auth.users(id) on delete set null default auth.uid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -39,11 +40,27 @@ create table if not exists public.comments (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.site_visitors (
+  visitor_hash text primary key check (visitor_hash ~ '^[a-f0-9]{64}$'),
+  first_seen timestamptz not null default now(),
+  last_seen timestamptz not null default now()
+);
+
+create table if not exists public.article_unique_views (
+  article_id uuid not null references public.articles(id) on delete cascade,
+  visitor_hash text not null references public.site_visitors(visitor_hash) on delete cascade,
+  first_seen timestamptz not null default now(),
+  primary key (article_id, visitor_hash)
+);
+
 alter table public.articles
   add column if not exists affiliate_links jsonb not null default '[]'::jsonb;
 
 alter table public.articles
   add column if not exists boxrec_url text not null default '';
+
+alter table public.articles
+  add column if not exists unique_view_count bigint not null default 0;
 
 create index if not exists articles_public_order_idx
   on public.articles (status, published_at desc);
@@ -56,6 +73,9 @@ create index if not exists comments_article_order_idx
 
 create index if not exists comments_rate_limit_idx
   on public.comments (article_id, visitor_id, created_at desc);
+
+create index if not exists article_unique_views_visitor_idx
+  on public.article_unique_views (visitor_hash);
 
 create or replace function public.is_admin()
 returns boolean
@@ -99,9 +119,63 @@ as $$
     and published_at <= now();
 $$;
 
+create or replace function public.record_article_view(
+  p_article_slug text,
+  p_visitor_hash text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  target_article_id uuid;
+  inserted_unique integer;
+begin
+  if p_visitor_hash is null or p_visitor_hash !~ '^[a-f0-9]{64}$' then
+    return;
+  end if;
+
+  select a.id
+    into target_article_id
+  from public.articles as a
+  where a.slug = p_article_slug
+    and a.status = 'published'
+    and a.published_at is not null
+    and a.published_at <= now()
+  limit 1;
+
+  if target_article_id is null then
+    return;
+  end if;
+
+  insert into public.site_visitors (visitor_hash)
+  values (p_visitor_hash)
+  on conflict (visitor_hash)
+  do update set last_seen = now();
+
+  insert into public.article_unique_views (article_id, visitor_hash)
+  values (target_article_id, p_visitor_hash)
+  on conflict (article_id, visitor_hash) do nothing;
+
+  get diagnostics inserted_unique = row_count;
+  if inserted_unique > 0 then
+    update public.articles
+    set unique_view_count = unique_view_count + 1
+    where id = target_article_id;
+  end if;
+
+  update public.articles
+  set view_count = view_count + 1
+  where id = target_article_id;
+end;
+$$;
+
 alter table public.admin_users enable row level security;
 alter table public.articles enable row level security;
 alter table public.comments enable row level security;
+alter table public.site_visitors enable row level security;
+alter table public.article_unique_views enable row level security;
 
 drop policy if exists "Admins can read own membership" on public.admin_users;
 create policy "Admins can read own membership"
@@ -171,6 +245,18 @@ on public.comments for delete
 to authenticated
 using (public.is_admin());
 
+drop policy if exists "Admins can read visitor stats" on public.site_visitors;
+create policy "Admins can read visitor stats"
+on public.site_visitors for select
+to authenticated
+using (public.is_admin());
+
+drop policy if exists "Admins can read article visitor stats" on public.article_unique_views;
+create policy "Admins can read article visitor stats"
+on public.article_unique_views for select
+to authenticated
+using (public.is_admin());
+
 grant usage on schema public to anon, authenticated;
 grant select on public.articles to anon, authenticated;
 grant insert, update, delete on public.articles to authenticated;
@@ -180,6 +266,8 @@ grant usage, select on sequence public.comments_id_seq to anon, authenticated;
 grant select on public.admin_users to authenticated;
 grant execute on function public.is_admin() to anon, authenticated;
 grant execute on function public.increment_article_view(text) to anon, authenticated;
+grant execute on function public.record_article_view(text, text) to anon, authenticated;
+grant select on public.site_visitors, public.article_unique_views to authenticated;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (

@@ -62,6 +62,7 @@ Do not treat a correction as learned merely because the current output was fixed
 - When changing a cached static asset, bump its version key and verify the production HTML loads the new CSS/JS URL; a stale cached page is not a reflection check.
 - Live previews must render the complete saved body unless truncation is an explicit requirement; compare preview paragraph count and text coverage with the editor input.
 - Do not use a fixed generic tag on every article; derive the tag from the confirmed article type and verify the rendered public tag.
+- Keep unique visitors separate from PV. Verify that a new visitor token adds one unique visitor, a repeated token adds only PV, and the admin fallback remains readable before the migration is applied.
 
 ## Stop conditions
 

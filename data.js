@@ -232,7 +232,11 @@
       publishedAt: row.published_at,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-      viewCount: Number(row.view_count || 0)
+      viewCount: Number(row.view_count || 0),
+      uniqueViewCount:
+        row.unique_view_count == null
+          ? null
+          : Number(row.unique_view_count || 0)
     };
   }
 
@@ -463,6 +467,18 @@
         createdAt: comment.created_at
       };
     });
+  }
+
+  async function getAdminUniqueVisitorCount() {
+    requireConfigured();
+    const { count, error } = await client
+      .from("site_visitors")
+      .select("visitor_hash", { count: "exact", head: true });
+    if (error) {
+      console.warn("Unique visitor stats unavailable:", error.message);
+      return null;
+    }
+    return Number(count || 0);
   }
 
   async function deleteComment(commentId) {
@@ -710,6 +726,7 @@
     saveArticle,
     deleteArticle,
     getAdminComments,
+    getAdminUniqueVisitorCount,
     deleteComment,
     getSession,
     getCurrentUser,

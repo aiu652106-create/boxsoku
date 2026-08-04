@@ -6,6 +6,31 @@ const escapeHtml = (value = "") =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
+const visitorCookieName = "boxsoku_visitor";
+
+const readCookie = (header, name) => {
+  const item = String(header || "")
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${name}=`));
+  if (!item) return "";
+  try {
+    return decodeURIComponent(item.slice(name.length + 1));
+  } catch {
+    return "";
+  }
+};
+
+const createVisitorToken = () => crypto.randomUUID();
+
+const hashVisitorToken = async (token, salt) => {
+  const input = new TextEncoder().encode(`${salt}:${token}`);
+  const digest = await crypto.subtle.digest("SHA-256", input);
+  return [...new Uint8Array(digest)]
+    .map((value) => value.toString(16).padStart(2, "0"))
+    .join("");
+};
+
 const safeUrl = (value, defaultValue = "#") => {
   try {
     const url = new URL(String(value || ""), "https://example.invalid");
@@ -429,6 +454,15 @@ export async function onRequestGet(context) {
   }
 
   const slug = String(params.slug || "");
+  const existingVisitorToken = readCookie(
+    request.headers.get("Cookie"),
+    visitorCookieName
+  );
+  const visitorToken = existingVisitorToken || createVisitorToken();
+  const visitorHash = await hashVisitorToken(
+    visitorToken,
+    String(env.VISITOR_ID_SALT || env.COMMENT_ID_SALT || env.SITE_URL || "boxsoku")
+  );
   const select = encodeURIComponent(
     "id,slug,title,summary,body,image_url,boxrec_url,accent,is_advertorial,affiliate_disclosure,affiliate_links,tweets,youtube_urls,instagram_urls,published_at,updated_at"
   );
@@ -601,21 +635,44 @@ export async function onRequestGet(context) {
 </html>`;
 
   context.waitUntil(
-    fetch(`${env.SUPABASE_URL}/rest/v1/rpc/increment_article_view`, {
-      method: "POST",
-      headers: {
+    (async () => {
+      const headers = {
         apikey: env.SUPABASE_ANON_KEY,
         Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
         "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ article_slug: slug })
-    })
+      };
+      const uniqueResponse = await fetch(
+        `${env.SUPABASE_URL}/rest/v1/rpc/record_article_view`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            p_article_slug: slug,
+            p_visitor_hash: visitorHash
+          })
+        }
+      );
+      if (!uniqueResponse.ok) {
+        await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/increment_article_view`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ article_slug: slug })
+        });
+      }
+    })().catch(() => {})
   );
 
+  const responseHeaders = {
+    "Content-Type": "text/html; charset=UTF-8",
+    "Cache-Control": "private, no-store"
+  };
+  if (!existingVisitorToken) {
+    responseHeaders["Set-Cookie"] = `${visitorCookieName}=${encodeURIComponent(
+      visitorToken
+    )}; Max-Age=31536000; Path=/; SameSite=Lax; Secure`;
+  }
+
   return new Response(html, {
-    headers: {
-      "Content-Type": "text/html; charset=UTF-8",
-      "Cache-Control": "public, max-age=60, s-maxage=300"
-    }
+    headers: responseHeaders
   });
 }
