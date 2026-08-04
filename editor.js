@@ -63,6 +63,7 @@ function createFightCardRow(card = {}) {
   remove.addEventListener("click", () => {
     row.remove();
     updateFightCardEmpty();
+    updatePreview();
   });
   heading.append(title, remove);
 
@@ -160,8 +161,11 @@ function collectFightCards() {
 addFightCardButton.addEventListener("click", () => {
   fightCardList.appendChild(createFightCardRow());
   updateFightCardEmpty();
+  updatePreview();
   fightCardList.lastElementChild.scrollIntoView({ behavior: "smooth", block: "center" });
 });
+
+fightCardList.addEventListener("input", updatePreview);
 
 function buildSummary(body, title) {
   const source = String(body || title || "").replace(/\s+/g, " ").trim();
@@ -200,11 +204,15 @@ function collectPreviewFightCards() {
         weight: row.querySelector('input[data-field="weight"]')?.value.trim() || "",
         left: {
           name: value("left", "name"),
-          ranking: value("left", "ranking")
+          ranking: value("left", "ranking"),
+          profile: value("left", "profile"),
+          image: value("left", "image")
         },
         right: {
           name: value("right", "name"),
-          ranking: value("right", "ranking")
+          ranking: value("right", "ranking"),
+          profile: value("right", "profile"),
+          image: value("right", "image")
         }
       };
     })
@@ -246,6 +254,30 @@ function renderPreviewFightCards(cards) {
       }
       const side = document.createElement("div");
       side.className = `preview-fight-side preview-fight-side-${index === 0 ? "left" : "right"}`;
+      let profile = "";
+      let image = "";
+      try {
+        profile = window.BoxingData.parseBoxRecUrl(fighter.profile);
+      } catch {}
+      try {
+        image = window.BoxingData.parseImageUrl(fighter.image);
+      } catch {}
+      if (image) {
+        const photo = document.createElement("a");
+        photo.className = "preview-fight-photo";
+        if (profile) {
+          photo.href = profile;
+          photo.target = "_blank";
+          photo.rel = "noopener noreferrer";
+        }
+        const imageElement = document.createElement("img");
+        imageElement.src = image;
+        imageElement.alt = `${fighter.name || "選手"}のプロフィール画像`;
+        imageElement.loading = "lazy";
+        imageElement.referrerPolicy = "no-referrer";
+        photo.appendChild(imageElement);
+        side.appendChild(photo);
+      }
       if (fighter.ranking) {
         const ranking = document.createElement("p");
         ranking.className = "preview-fight-ranking";
@@ -254,7 +286,17 @@ function renderPreviewFightCards(cards) {
       }
       const name = document.createElement("p");
       name.className = "preview-fight-name";
-      name.textContent = fighter.name || "選手名";
+      if (profile) {
+        const nameLink = document.createElement("a");
+        nameLink.className = "preview-fight-name-link";
+        nameLink.href = profile;
+        nameLink.target = "_blank";
+        nameLink.rel = "noopener noreferrer";
+        nameLink.textContent = fighter.name || "選手名";
+        name.appendChild(nameLink);
+      } else {
+        name.textContent = fighter.name || "選手名";
+      }
       side.appendChild(name);
       grid.appendChild(side);
     });

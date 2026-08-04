@@ -1683,6 +1683,22 @@ button {
   border-top-color: #a47b2c;
 }
 
+.preview-fight-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 9px;
+  overflow: hidden;
+  background: #ece8e1;
+}
+
+.preview-fight-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .preview-fight-ranking {
   color: #756e67;
   font-size: 10px;
@@ -1697,6 +1713,16 @@ button {
   font-weight: 800;
   line-height: 1.45;
   overflow-wrap: anywhere;
+}
+
+.preview-fight-name-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.preview-fight-name-link:hover {
+  color: #b3232d;
+  text-decoration: underline;
 }
 
 .preview-fight-vs {
