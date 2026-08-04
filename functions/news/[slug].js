@@ -124,6 +124,9 @@ const jsonArray = (value) => (Array.isArray(value) ? value : []);
 
 const articleTagText = (article) => {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
+  if (/再放送/.test(source)) {
+    return "再放送";
+  }
   if (/試合結果|結果速報|勝敗|判定|KO勝ち|TKO/.test(source)) {
     return "試合日程";
   }

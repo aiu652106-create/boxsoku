@@ -3056,6 +3056,32 @@ button {
   font-size: 10px;
 }
 
+.admin-article-group + .admin-article-group {
+  border-top: 8px solid #f3f5f7;
+}
+
+.admin-article-group-heading {
+  display: flex;
+  min-height: 48px;
+  padding: 12px 20px;
+  align-items: center;
+  justify-content: space-between;
+  background: #fafbfc;
+  border-bottom: 1px solid #e5e8ec;
+}
+
+.admin-article-group-heading h3 {
+  margin: 0;
+  color: #20242a;
+  font-size: 13px;
+}
+
+.admin-article-group-heading span {
+  color: #8a929d;
+  font-size: 10px;
+  font-weight: 700;
+}
+
 .admin-article-row {
   display: grid;
   min-height: 126px;
@@ -3109,6 +3135,13 @@ button {
   margin: 0 0 7px;
   font-size: 15px;
   line-height: 1.5;
+}
+
+.admin-article-info .admin-article-distribution {
+  margin: 0 0 2px;
+  color: #9a6a09;
+  font-size: 10px;
+  font-weight: 800;
 }
 
   .admin-article-info p {

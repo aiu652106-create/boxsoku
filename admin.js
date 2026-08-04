@@ -12,6 +12,57 @@ const commentEmpty = document.querySelector("#admin-comment-empty");
 let previewMode = false;
 const LOCAL_COMMENT_PREFIX = "boxing-comments:";
 
+const distributionRules = [
+  { label: "WOWOW", pattern: /WOWOW|wowowライブ/i },
+  { label: "U-NEXT", pattern: /U-?NEXT|ユーネクスト/i },
+  { label: "ABEMA", pattern: /ABEMA|アベマ/i },
+  { label: "DAZN", pattern: /DAZN/i },
+  { label: "Amazon Prime Video", pattern: /Amazon\s*Prime|アマゾンプライム|アマプラ/i }
+];
+
+function articleDistributionSite(article) {
+  const affiliateLinks = Array.isArray(article.affiliateLinks)
+    ? article.affiliateLinks
+    : [];
+  const source = [
+    article.title,
+    article.summary,
+    article.body,
+    ...affiliateLinks.flatMap((item) => [item?.label, item?.url])
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const matched = distributionRules
+    .filter((rule) => rule.pattern.test(source))
+    .map((rule) => rule.label);
+
+  if (matched.length) return matched.join(" / ");
+
+  const hosts = affiliateLinks
+    .map((item) => {
+      try {
+        return new URL(item?.url || "").hostname.replace(/^www\./, "");
+      } catch {
+        return "";
+      }
+    })
+    .filter(Boolean);
+  return hosts.length ? hosts.join(" / ") : "配信サイト未設定";
+}
+
+function distributionSiteOrder(label) {
+  const priority = [
+    "WOWOW",
+    "U-NEXT",
+    "ABEMA",
+    "DAZN",
+    "Amazon Prime Video",
+    "配信サイト未設定"
+  ];
+  const index = priority.indexOf(label);
+  return index === -1 ? priority.length - 1 : index;
+}
+
 function setBusy(button, busy, label) {
   button.disabled = busy;
   button.textContent = busy ? "処理中..." : label;
@@ -33,6 +84,9 @@ function createArticleRow(article) {
   status.append(badge, time);
   const title = document.createElement("h3");
   title.textContent = article.title;
+  const distribution = document.createElement("p");
+  distribution.className = "admin-article-distribution";
+  distribution.textContent = `配信：${articleDistributionSite(article)}`;
   const fightCardCount = document.createElement("p");
   fightCardCount.className = "admin-article-fight-count";
   fightCardCount.textContent = article.fightCards?.length
@@ -47,7 +101,7 @@ function createArticleRow(article) {
       : `ユニーク訪問者 ${Number(article.uniqueViewCount).toLocaleString("ja-JP")}人`;
   viewCount.className = "admin-article-view-count";
   viewCount.textContent = `閲覧数 ${Number(article.viewCount || 0).toLocaleString("ja-JP")} PV`;
-  info.append(status, title, fightCardCount, viewCount, uniqueViewCount);
+  info.append(status, title, distribution, fightCardCount, viewCount, uniqueViewCount);
 
   const actions = document.createElement("div");
   actions.className = "admin-article-actions";
@@ -91,6 +145,36 @@ function createArticleRow(article) {
   return row;
 }
 
+function renderArticleGroups(articles) {
+  const groups = new Map();
+  articles.forEach((article) => {
+    const label = articleDistributionSite(article);
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label).push(article);
+  });
+
+  const orderedGroups = [...groups.entries()].sort(
+    ([first], [second]) =>
+      distributionSiteOrder(first) - distributionSiteOrder(second) ||
+      first.localeCompare(second, "ja")
+  );
+  articleList.replaceChildren(
+    ...orderedGroups.map(([label, groupArticles]) => {
+      const section = document.createElement("section");
+      section.className = "admin-article-group";
+      const heading = document.createElement("div");
+      heading.className = "admin-article-group-heading";
+      const title = document.createElement("h3");
+      title.textContent = label;
+      const count = document.createElement("span");
+      count.textContent = `${groupArticles.length}件`;
+      heading.append(title, count);
+      section.append(heading, ...groupArticles.map(createArticleRow));
+      return section;
+    })
+  );
+}
+
 async function loadArticles(previewArticles = null) {
   const articles =
     previewArticles ||
@@ -98,7 +182,7 @@ async function loadArticles(previewArticles = null) {
       includeDrafts: true,
       force: true
     }));
-  articleList.replaceChildren(...articles.map(createArticleRow));
+  renderArticleGroups(articles);
   document.querySelector("#published-count").textContent = String(
     articles.filter((article) => article.status === "published").length
   );
