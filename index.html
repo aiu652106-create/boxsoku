@@ -17,7 +17,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="canonical" href="/" />
     <title>ボクシング速報</title>
-    <link rel="stylesheet" href="styles.css?v=20260804-category-nav1" />
+    <link rel="stylesheet" href="styles.css?v=20260804-category-sidebar1" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="config.js" defer></script>
     <script src="site.js" defer></script>
@@ -30,10 +30,6 @@
     <div class="retro-top">
       <div>
         <span data-site-tagline>ボクシングのニュースと話題をわかりやすく紹介</span>
-        <nav class="retro-category-nav" aria-label="記事カテゴリー">
-          <a href="index.html?category=schedule" data-category-filter="schedule">試合日程</a>
-          <a href="index.html?category=wowow" data-category-filter="wowow">WOWOWエキサイトマッチ</a>
-        </nav>
         <a href="about.html">運営者情報</a>
       </div>
     </div>
@@ -49,6 +45,11 @@
 
     <div class="retro-page-layout">
       <aside class="retro-sidebar retro-sidebar-popular" aria-labelledby="popular-heading">
+        <nav class="retro-category-nav retro-category-sidebar" aria-label="記事カテゴリー">
+          <a href="index.html?category=schedule" data-category-filter="schedule">試合日程</a>
+          <a href="index.html?category=news" data-category-filter="news">NEWS</a>
+          <a href="index.html?category=wowow" data-category-filter="wowow">WOWOWエキサイトマッチ</a>
+        </nav>
         <section class="retro-sidebar-panel">
           <h2 id="popular-heading">人気記事</h2>
           <ol id="popular-articles" class="retro-sidebar-list retro-ranking-list"></ol>

@@ -3,11 +3,16 @@ const params = new URLSearchParams(window.location.search);
 const identifier = params.get("slug") || params.get("id");
 const affiliateConfig = window.BOXING_CONFIG?.affiliate || {};
 
+function isNewsArticle(article) {
+  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  const declaredCategory = String(article?.category || "").toLowerCase();
+  return declaredCategory === "news" || /NEWS|\u30CB\u30E5\u30FC\u30B9/i.test(source);
+}
+
 function articleCategoryText(article) {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
-  return /WOWOW|エキサイトマッチ/i.test(source)
-    ? "WOWOWエキサイトマッチ"
-    : "試合日程";
+  if (/WOWOW|エキサイトマッチ/i.test(source)) return "WOWOWエキサイトマッチ";
+  return isNewsArticle(article) ? "NEWS" : "試合日程";
 }
 
 function createAdSlot(name) {

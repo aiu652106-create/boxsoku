@@ -122,11 +122,16 @@ const articleBodyHtml = (body, title = "", lead = "") => {
 
 const jsonArray = (value) => (Array.isArray(value) ? value : []);
 
+const isNewsArticle = (article) => {
+  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  const declaredCategory = String(article?.category || "").toLowerCase();
+  return declaredCategory === "news" || /NEWS|\u30CB\u30E5\u30FC\u30B9/i.test(source);
+};
+
 const articleCategoryText = (article) => {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
-  return /WOWOW|エキサイトマッチ/i.test(source)
-    ? "WOWOWエキサイトマッチ"
-    : "試合日程";
+  if (/WOWOW|エキサイトマッチ/i.test(source)) return "WOWOWエキサイトマッチ";
+  return isNewsArticle(article) ? "NEWS" : "試合日程";
 };
 
 const featuredFightCards = {
@@ -558,19 +563,19 @@ export async function onRequestGet(context) {
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ""}
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script type="application/ld+json">${structuredData}</script>
-   <link rel="stylesheet" href="/styles.css?v=20260804-category-nav1">
+   <link rel="stylesheet" href="/styles.css?v=20260804-category-sidebar1">
   <script src="/config.js" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
   <script src="/ads.js" defer></script>
 </head>
 <body class="retro-blog">
-  <div class="retro-top"><div><span data-site-tagline>ボクシングのニュースと話題</span><nav class="retro-category-nav" aria-label="記事カテゴリー"><a href="/?category=schedule" data-category-filter="schedule">試合日程</a><a href="/?category=wowow" data-category-filter="wowow">WOWOWエキサイトマッチ</a></nav><a href="/about.html">運営者情報</a></div></div>
+  <div class="retro-top"><div><span data-site-tagline>ボクシングのニュースと話題</span><a href="/about.html">運営者情報</a></div></div>
   <header class="retro-header"><a class="retro-logo" href="/"><strong data-site-name>${escapeHtml(
     siteName
   )}</strong><span>BOXING NEWS</span></a></header>
   <div class="retro-page-layout">
-    <aside class="retro-sidebar retro-sidebar-popular"><section class="retro-sidebar-panel"><h2>人気記事</h2><ol class="retro-sidebar-list retro-ranking-list">${sidebarHtml(
+    <aside class="retro-sidebar retro-sidebar-popular"><nav class="retro-category-nav retro-category-sidebar" aria-label="記事カテゴリー"><a href="/?category=schedule" data-category-filter="schedule">試合日程</a><a href="/?category=news" data-category-filter="news">NEWS</a><a href="/?category=wowow" data-category-filter="wowow">WOWOWエキサイトマッチ</a></nav><section class="retro-sidebar-panel"><h2>人気記事</h2><ol class="retro-sidebar-list retro-ranking-list">${sidebarHtml(
       popular,
       true
     )}</ol></section></aside>

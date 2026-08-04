@@ -1,16 +1,22 @@
 const feed = document.querySelector("#article-feed");
 const statusMessage = document.querySelector("#site-status");
 
+function isNewsArticle(article) {
+  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  const declaredCategory = String(article?.category || "").toLowerCase();
+  return declaredCategory === "news" || /NEWS|\u30CB\u30E5\u30FC\u30B9/i.test(source);
+}
+
 function articleCategoryText(article) {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
-  return /WOWOW|エキサイトマッチ/i.test(source)
-    ? "WOWOWエキサイトマッチ"
-    : "試合日程";
+  if (/WOWOW|エキサイトマッチ/i.test(source)) return "WOWOWエキサイトマッチ";
+  return isNewsArticle(article) ? "NEWS" : "試合日程";
 }
 
 function articleCategoryKey(article) {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
-  return /WOWOW|エキサイトマッチ/i.test(source) ? "wowow" : "schedule";
+  if (/WOWOW|エキサイトマッチ/i.test(source)) return "wowow";
+  return isNewsArticle(article) ? "news" : "schedule";
 }
 
 function updateCategoryNav(activeCategory) {
@@ -134,7 +140,7 @@ async function initialize() {
   try {
     const articles = await window.BoxingData.getArticles();
     const requestedCategory = new URLSearchParams(window.location.search).get("category");
-    const activeCategory = ["wowow", "schedule"].includes(requestedCategory)
+    const activeCategory = ["wowow", "schedule", "news"].includes(requestedCategory)
       ? requestedCategory
       : null;
     updateCategoryNav(activeCategory);
