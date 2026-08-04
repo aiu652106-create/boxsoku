@@ -124,9 +124,6 @@ const jsonArray = (value) => (Array.isArray(value) ? value : []);
 
 const articleTagText = (article) => {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
-  if (/再放送/.test(source)) {
-    return "再放送";
-  }
   if (/試合結果|結果速報|勝敗|判定|KO勝ち|TKO/.test(source)) {
     return "試合日程";
   }
@@ -144,6 +141,13 @@ const articleTagText = (article) => {
     return "試合日程";
   }
   return "試合日程";
+};
+
+const articleCategoryText = (article) => {
+  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  return /WOWOW|エキサイトマッチ/i.test(source)
+    ? "WOWOWエキサイトマッチ"
+    : "ボクシング";
 };
 
 const featuredFightCards = {
@@ -603,7 +607,9 @@ export async function onRequestGet(context) {
         )}</h1><a class="retro-tweet-link" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(
           article.title
         )}&url=${encodeURIComponent(canonical)}" target="_blank" rel="noopener noreferrer">Tweet</a></div>
-        <p class="retro-category">カテゴリ：ボクシング</p>
+          <p class="retro-category">カテゴリ：${escapeHtml(
+            articleCategoryText(article)
+          )}</p>
         ${
           image
             ? `<img class="retro-post-image retro-detail-image" src="${escapeHtml(

@@ -3,9 +3,6 @@ const statusMessage = document.querySelector("#site-status");
 
 function articleTagText(article) {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
-  if (/再放送/.test(source)) {
-    return "再放送";
-  }
   if (/試合結果|結果速報|勝敗|判定|KO勝ち|TKO/.test(source)) {
     return "試合日程";
   }
@@ -19,6 +16,13 @@ function articleTagText(article) {
     return "試合日程";
   }
   return "試合日程";
+}
+
+function articleCategoryText(article) {
+  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  return /WOWOW|エキサイトマッチ/i.test(source)
+    ? "WOWOWエキサイトマッチ"
+    : "ボクシング";
 }
 
 function affiliateItems(article) {
@@ -72,7 +76,7 @@ function createArticle(article) {
 
   const category = document.createElement("p");
   category.className = "retro-category";
-  category.textContent = "カテゴリ：ボクシング";
+  category.textContent = `カテゴリ：${articleCategoryText(article)}`;
 
   const summaryText = window.BoxingData.articleSummary(article);
   const summary = document.createElement("p");
@@ -127,7 +131,7 @@ function createArticle(article) {
   meta.className = "retro-meta";
   const time = document.createElement("time");
   time.textContent = window.BoxingData.articleDate(article);
-  meta.append(time, document.createTextNode("｜カテゴリ：ボクシング"));
+  meta.append(time, document.createTextNode(`｜カテゴリ：${articleCategoryText(article)}`));
 
   post.append(titleRow, category);
   if (hasImage) post.appendChild(image);

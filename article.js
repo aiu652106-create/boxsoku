@@ -5,9 +5,6 @@ const affiliateConfig = window.BOXING_CONFIG?.affiliate || {};
 
 function articleTagText(article) {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
-  if (/再放送/.test(source)) {
-    return "再放送";
-  }
   if (/試合結果|結果速報|勝敗|判定|KO勝ち|TKO/.test(source)) {
     return "試合日程";
   }
@@ -21,6 +18,13 @@ function articleTagText(article) {
     return "試合日程";
   }
   return "試合日程";
+}
+
+function articleCategoryText(article) {
+  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  return /WOWOW|エキサイトマッチ/i.test(source)
+    ? "WOWOWエキサイトマッチ"
+    : "ボクシング";
 }
 
 function createAdSlot(name) {
@@ -364,7 +368,7 @@ function renderArticle(article) {
 
   const category = document.createElement("p");
   category.className = "retro-category";
-  category.textContent = "カテゴリ：ボクシング";
+  category.textContent = `カテゴリ：${articleCategoryText(article)}`;
 
   const image = document.createElement("img");
   image.className = "retro-post-image retro-detail-image";
