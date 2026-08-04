@@ -19,6 +19,19 @@ const safeUrl = (value, defaultValue = "#") => {
   return defaultValue;
 };
 
+const safeBoxRecUrl = (value) => {
+  try {
+    const url = new URL(String(value || ""));
+    if (
+      url.protocol === "https:" &&
+      /(^|\.)boxrec\.com$/i.test(url.hostname)
+    ) {
+      return url.href;
+    }
+  } catch {}
+  return "";
+};
+
 const isTweetUrl = (value) =>
   /^https?:\/\/(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d+(?:\/photo\/\d+)?(?:\?.*)?$/i.test(
     String(value || "").trim()
@@ -202,12 +215,21 @@ function sidebarHtml(articles, ranked = false) {
 }
 
 async function supabaseRows(env, query) {
-  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/${query}`, {
+  let response = await fetch(`${env.SUPABASE_URL}/rest/v1/${query}`, {
     headers: {
       apikey: env.SUPABASE_ANON_KEY,
       Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`
     }
   });
+  if (!response.ok && query.includes("boxrec_url")) {
+    const legacyQuery = query.replace(/(?:%2C|,)boxrec_url/i, "");
+    response = await fetch(`${env.SUPABASE_URL}/rest/v1/${legacyQuery}`, {
+      headers: {
+        apikey: env.SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`
+      }
+    });
+  }
   if (!response.ok) throw new Error(`Supabase request failed: ${response.status}`);
   return response.json();
 }
@@ -222,7 +244,7 @@ export async function onRequestGet(context) {
 
   const slug = String(params.slug || "");
   const select = encodeURIComponent(
-    "id,slug,title,summary,body,image_url,accent,is_advertorial,affiliate_disclosure,affiliate_links,tweets,youtube_urls,instagram_urls,published_at,updated_at"
+    "id,slug,title,summary,body,image_url,boxrec_url,accent,is_advertorial,affiliate_disclosure,affiliate_links,tweets,youtube_urls,instagram_urls,published_at,updated_at"
   );
   const [articles, latest, popular] = await Promise.all([
     supabaseRows(
@@ -256,6 +278,7 @@ export async function onRequestGet(context) {
   const siteName = String(env.SITE_NAME || "ボクシング速報");
   const canonical = `${siteUrl}/news/${encodeURIComponent(article.slug)}`;
  const image = String(article.image_url || siteUrl + "/assets/boxing-arena.png");
+ const boxrecUrl = safeBoxRecUrl(article.boxrec_url);
  const summary = articleSummary(article);
   const metaDescription = summary.slice(0, 160);
   const hasAffiliateLinks = jsonArray(article.affiliate_links).some(
@@ -375,6 +398,13 @@ export async function onRequestGet(context) {
   ${
     jsonArray(article.instagram_urls).length
       ? '<script async src="https://www.instagram.com/embed.js"></script>'
+      : ""
+  }
+  ${
+    boxrecUrl
+      ? `<script>(function(){const image=document.querySelector(".retro-detail-image");if(!image||!image.parentNode)return;const link=document.createElement("a");link.className="retro-image-link";link.href=${JSON.stringify(
+          boxrecUrl
+        )};link.target="_blank";link.rel="noopener noreferrer";link.setAttribute("aria-label","BoxRecで選手情報を開く");image.parentNode.insertBefore(link,image);link.appendChild(image);})();</script>`
       : ""
   }
 </body>
