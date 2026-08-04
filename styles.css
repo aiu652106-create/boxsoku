@@ -1611,6 +1611,120 @@ button {
   line-height: 2.1;
 }
 
+.preview-fight-cards {
+  margin-top: 28px;
+  border-top: 2px solid #1d1b19;
+}
+
+.preview-fight-cards-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 12px 0 10px;
+  border-bottom: 1px solid #d9d5cd;
+}
+
+.preview-fight-cards-heading span {
+  color: #b3232d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.preview-fight-cards-heading h3 {
+  margin: 0;
+  color: #1d1b19;
+  font-size: 20px;
+}
+
+.preview-fight-card {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #d9d5cd;
+  background: #fbfaf8;
+}
+
+.preview-fight-number,
+.preview-fight-weight,
+.preview-fight-ranking,
+.preview-fight-name {
+  margin: 0;
+}
+
+.preview-fight-number {
+  color: #b3232d;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.preview-fight-weight {
+  margin-top: 4px;
+  color: #6f665f;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.preview-fight-card-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.preview-fight-side {
+  min-width: 0;
+  padding: 11px 10px;
+  border-top: 3px solid #282725;
+  background: #fff;
+}
+
+.preview-fight-side-right {
+  border-top-color: #a47b2c;
+}
+
+.preview-fight-ranking {
+  color: #756e67;
+  font-size: 10px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.preview-fight-name {
+  margin-top: 4px;
+  color: #282725;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.preview-fight-vs {
+  color: #756e67;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .preview-fight-card {
+    padding: 10px;
+  }
+
+  .preview-fight-card-grid {
+    grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .preview-fight-side {
+    padding: 9px 7px;
+  }
+
+  .preview-fight-name {
+    font-size: 13px;
+  }
+}
+
 .tweet-preview-card {
   display: flex;
   margin-top: 20px;

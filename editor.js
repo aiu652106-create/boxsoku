@@ -26,6 +26,7 @@ const previewAffiliateLinks = document.querySelector("#preview-affiliate-links")
 const previewAffiliateLinkList = document.querySelector(
   "#preview-affiliate-link-list"
 );
+const previewFightCards = document.querySelector("#preview-fight-cards");
 let editingArticle = null;
 let selectedFile = null;
 let previewObjectUrl = "";
@@ -189,6 +190,80 @@ function appendPreviewEmbed(parent, type, url) {
   parent.appendChild(item);
 }
 
+function collectPreviewFightCards() {
+  return [...fightCardList.querySelectorAll(".fight-card-editor-row")]
+    .map((row) => {
+      const value = (side, field) =>
+        row.querySelector(`input[data-side="${side}"][data-field="${field}"]`)?.value.trim() || "";
+      return {
+        bout: row.querySelector('input[data-field="bout"]')?.value.trim() || "",
+        weight: row.querySelector('input[data-field="weight"]')?.value.trim() || "",
+        left: {
+          name: value("left", "name"),
+          ranking: value("left", "ranking")
+        },
+        right: {
+          name: value("right", "name"),
+          ranking: value("right", "ranking")
+        }
+      };
+    })
+    .filter((card) => card.weight || card.left.name || card.right.name);
+}
+
+function renderPreviewFightCards(cards) {
+  previewFightCards.replaceChildren();
+  previewFightCards.hidden = cards.length === 0;
+  if (!cards.length) return;
+
+  const heading = document.createElement("div");
+  heading.className = "preview-fight-cards-heading";
+  const eyebrow = document.createElement("span");
+  eyebrow.textContent = "FIGHT CARD";
+  const title = document.createElement("h3");
+  title.textContent = "対戦カード";
+  heading.append(eyebrow, title);
+  previewFightCards.appendChild(heading);
+
+  cards.forEach((fight) => {
+    const card = document.createElement("article");
+    card.className = "preview-fight-card";
+    const bout = document.createElement("p");
+    bout.className = "preview-fight-number";
+    bout.textContent = fight.bout;
+    const weight = document.createElement("p");
+    weight.className = "preview-fight-weight";
+    weight.textContent = fight.weight;
+    const grid = document.createElement("div");
+    grid.className = "preview-fight-card-grid";
+
+    [fight.left, fight.right].forEach((fighter, index) => {
+      if (index === 1) {
+        const vs = document.createElement("span");
+        vs.className = "preview-fight-vs";
+        vs.textContent = "VS";
+        grid.appendChild(vs);
+      }
+      const side = document.createElement("div");
+      side.className = `preview-fight-side preview-fight-side-${index === 0 ? "left" : "right"}`;
+      if (fighter.ranking) {
+        const ranking = document.createElement("p");
+        ranking.className = "preview-fight-ranking";
+        ranking.textContent = fighter.ranking;
+        side.appendChild(ranking);
+      }
+      const name = document.createElement("p");
+      name.className = "preview-fight-name";
+      name.textContent = fighter.name || "選手名";
+      side.appendChild(name);
+      grid.appendChild(side);
+    });
+
+    card.append(bout, weight, grid);
+    previewFightCards.appendChild(card);
+  });
+}
+
 function setPreviewImage(url) {
   if (previewObjectUrl) {
     URL.revokeObjectURL(previewObjectUrl);
@@ -245,6 +320,8 @@ function updatePreview() {
   urlLines(instagramUrlsInput.value).forEach((url) => {
     appendPreviewEmbed(bodyPreview, "instagram", url);
   });
+
+  renderPreviewFightCards(collectPreviewFightCards());
 
   const linkLabels = affiliateLinksInput.value
     .split(/\r?\n/)
