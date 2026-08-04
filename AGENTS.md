@@ -61,6 +61,7 @@ Do not treat a correction as learned merely because the current output was fixed
 - When adding a data field, check the full path: input, live preview, save payload, reload, and public rendering.
 - When changing a cached static asset, bump its version key and verify the production HTML loads the new CSS/JS URL; a stale cached page is not a reflection check.
 - Live previews must render the complete saved body unless truncation is an explicit requirement; compare preview paragraph count and text coverage with the editor input.
+- Do not use a fixed generic tag on every article; derive the tag from the confirmed article type and verify the rendered public tag.
 
 ## Stop conditions
 

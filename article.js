@@ -3,6 +3,23 @@ const params = new URLSearchParams(window.location.search);
 const identifier = params.get("slug") || params.get("id");
 const affiliateConfig = window.BOXING_CONFIG?.affiliate || {};
 
+function articleTagText(article) {
+  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  if (/試合結果|結果速報|勝敗|判定|KO勝ち|TKO/.test(source)) {
+    return "試合結果　ニュース";
+  }
+  if (
+    article?.fightCards?.length ||
+    /試合予定|試合日程|放送予定|対戦カード/.test(source)
+  ) {
+    return "試合日程　ニュース";
+  }
+  if (/選手|ボクサー|戦績|プロフィール/.test(source)) {
+    return "選手情報　ニュース";
+  }
+  return "ニュース";
+}
+
 function createAdSlot(name) {
   const ad = document.createElement("aside");
   ad.className = "ad-slot";
@@ -401,7 +418,7 @@ function renderArticle(article) {
 
   const tags = document.createElement("p");
   tags.className = "retro-tags";
-  tags.textContent = "タグ：ボクシング　ニュース";
+  tags.textContent = `タグ：${articleTagText(article)}`;
   const meta = document.createElement("div");
   meta.className = "retro-meta";
   const time = document.createElement("time");

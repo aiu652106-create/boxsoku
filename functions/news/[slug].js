@@ -97,6 +97,27 @@ const articleBodyHtml = (body, title = "", lead = "") => {
 
 const jsonArray = (value) => (Array.isArray(value) ? value : []);
 
+const articleTagText = (article) => {
+  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  if (/試合結果|結果速報|勝敗|判定|KO勝ち|TKO/.test(source)) {
+    return "試合結果　ニュース";
+  }
+  const hasFightCards = jsonArray(article?.affiliate_links).some(
+    (item) =>
+      item &&
+      item.type === "fight_cards" &&
+      Array.isArray(item.cards) &&
+      item.cards.length
+  );
+  if (hasFightCards || /試合予定|試合日程|放送予定|対戦カード/.test(source)) {
+    return "試合日程　ニュース";
+  }
+  if (/選手|ボクサー|戦績|プロフィール/.test(source)) {
+    return "選手情報　ニュース";
+  }
+  return "ニュース";
+};
+
 const featuredFightCards = {
   "2026-08-16-treasure-boxing-promotion-14": [
     {
@@ -540,7 +561,7 @@ export async function onRequestGet(context) {
         <div class="retro-detail-body">${articleBodyHtml(article.body, article.title, summary)}${embedsHtml(article)}</div>
         ${fightCardsHtml(article)}
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>
-        <p class="retro-tags">タグ：ボクシング　ニュース</p>
+        <p class="retro-tags">タグ：${escapeHtml(articleTagText(article))}</p>
         <div class="retro-meta"><time>${escapeHtml(
           new Date(article.published_at).toLocaleDateString("ja-JP")
         )}</time></div>
