@@ -188,7 +188,7 @@ function fightCardsHtml(article) {
           fighter.name
         )}のBoxRecプロフィールを開く"><img src="${escapeHtml(
           image
-        )}" alt="${escapeHtml(fighter.name)}のプロフィール画像" loading="lazy"></a>`
+        )}" alt="${escapeHtml(fighter.name)}のプロフィール画像" loading="lazy" referrerpolicy="no-referrer"></a>`
       : "";
     const sourceLabel = fighter.imageSource
       ? `写真: ${fighter.imageSource}`

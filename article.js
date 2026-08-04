@@ -185,6 +185,7 @@ function createFightCards(article) {
         imageElement.src = image;
         imageElement.alt = `${fighter.name}のプロフィール画像`;
         imageElement.loading = "lazy";
+        imageElement.referrerPolicy = "no-referrer";
         photo.appendChild(imageElement);
         fighterCard.appendChild(photo);
       }
