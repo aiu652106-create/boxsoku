@@ -405,8 +405,8 @@ function renderArticle(article) {
   container.appendChild(topAd);
   if (affiliateLinks) container.appendChild(affiliateLinks);
   if (lead.textContent) container.appendChild(lead);
-  if (fightCards) container.appendChild(fightCards);
   container.appendChild(body);
+  if (fightCards) container.appendChild(fightCards);
   container.append(tags, meta, commentsMount, back);
   window.BoxingAds?.render(container);
   window.BoxingComments?.mount(commentsMount, article);

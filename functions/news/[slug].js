@@ -522,8 +522,8 @@ export async function onRequestGet(context) {
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         ${affiliateLinksHtml(article)}
         ${summary ? `<p class="retro-article-lead">${escapeHtml(summary)}</p>` : ""}
-        ${fightCardsHtml(article)}
         <div class="retro-detail-body">${articleBodyHtml(article.body, article.title, summary)}${embedsHtml(article)}</div>
+        ${fightCardsHtml(article)}
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>
         <p class="retro-tags">タグ：ボクシング　ニュース</p>
         <div class="retro-meta"><time>${escapeHtml(
