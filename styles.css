@@ -1727,6 +1727,14 @@ button {
   text-decoration: underline;
 }
 
+.preview-fighter-link-note {
+  display: block;
+  margin-top: 4px;
+  color: #716b64;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
 .preview-fight-vs {
   color: #756e67;
   font-size: 10px;
@@ -6177,6 +6185,14 @@ body.retro-blog .retro-fighter-name {
   line-height: 1.35;
   overflow-wrap: anywhere;
   text-decoration: none;
+}
+
+body.retro-blog .retro-fighter-link-note {
+  display: block;
+  margin-top: 4px;
+  color: #716b64;
+  font-size: 10px;
+  line-height: 1.4;
 }
 
 body.retro-blog .retro-fighter-name-left {

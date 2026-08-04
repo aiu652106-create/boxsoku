@@ -258,6 +258,12 @@ function createFightCards(article) {
           fighterCard.appendChild(plainName);
         }
       }
+      if (profile) {
+        const linkHint = document.createElement("small");
+        linkHint.className = "retro-fighter-link-note";
+        linkHint.textContent = "\u30af\u30ea\u30c3\u30af\u3067BoxRec\u30d7\u30ed\u30d5\u30a3\u30fc\u30eb\u3092\u958b\u304f";
+        fighterCard.appendChild(linkHint);
+      }
       grid.appendChild(fighterCard);
     });
     card.append(bout, weight, grid);
@@ -376,6 +382,8 @@ function renderArticle(article) {
 
   const body = document.createElement("div");
   body.className = "retro-detail-body";
+  const videoEmbeds = document.createElement("div");
+  videoEmbeds.className = "retro-article-videos";
   const leadText = window.BoxingData.articleSummary(article).trim();
   const paragraphs = String(article.body || "")
     .split(/\n\s*\n/)
@@ -413,7 +421,7 @@ function renderArticle(article) {
     if (index === middleAdIndex) body.appendChild(createAdSlot("articleMiddle"));
   });
   article.tweets.slice(paragraphs.length).forEach((url) => appendTweet(body, url));
-  article.youtubeUrls.forEach((url) => appendYouTube(body, url));
+  article.youtubeUrls.forEach((url) => appendYouTube(videoEmbeds, url));
   article.instagramUrls.forEach((url) => appendInstagram(body, url));
 
   const tags = document.createElement("p");
@@ -441,6 +449,7 @@ function renderArticle(article) {
   if (affiliateLinks) container.appendChild(affiliateLinks);
   container.appendChild(body);
   if (fightCards) container.appendChild(fightCards);
+  if (videoEmbeds.childElementCount) container.appendChild(videoEmbeds);
   container.append(tags, meta, commentsMount, back);
   window.BoxingAds?.render(container);
   window.BoxingComments?.mount(commentsMount, article);

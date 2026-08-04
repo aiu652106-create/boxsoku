@@ -27,6 +27,7 @@ const previewAffiliateLinkList = document.querySelector(
   "#preview-affiliate-link-list"
 );
 const previewFightCards = document.querySelector("#preview-fight-cards");
+const previewMedia = document.querySelector("#preview-media");
 let editingArticle = null;
 let selectedFile = null;
 let previewObjectUrl = "";
@@ -298,6 +299,12 @@ function renderPreviewFightCards(cards) {
         name.textContent = fighter.name || "選手名";
       }
       side.appendChild(name);
+      if (profile) {
+        const linkHint = document.createElement("small");
+        linkHint.className = "preview-fighter-link-note";
+        linkHint.textContent = "\u30af\u30ea\u30c3\u30af\u3067BoxRec\u30d7\u30ed\u30d5\u30a3\u30fc\u30eb\u3092\u958b\u304f";
+        side.appendChild(linkHint);
+      }
       grid.appendChild(side);
     });
 
@@ -329,6 +336,7 @@ function updatePreview() {
 
   const bodyPreview = document.querySelector("#preview-body");
   bodyPreview.replaceChildren();
+  previewMedia.replaceChildren();
   const paragraphs = body
     ? body.split(/\n\s*\n/).filter(Boolean)
     : ["本文を入力すると、ここで仕上がりを確認できます。"];
@@ -357,7 +365,7 @@ function updatePreview() {
     appendPreviewEmbed(bodyPreview, "tweet", url);
   });
   urlLines(youtubeUrlsInput.value).forEach((url) => {
-    appendPreviewEmbed(bodyPreview, "youtube", url);
+    appendPreviewEmbed(previewMedia, "youtube", url);
   });
   urlLines(instagramUrlsInput.value).forEach((url) => {
     appendPreviewEmbed(bodyPreview, "instagram", url);

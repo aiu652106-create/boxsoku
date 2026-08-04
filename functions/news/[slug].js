@@ -273,7 +273,10 @@ function fightCardsHtml(article) {
       : `<span class="retro-fighter-name retro-fighter-name-${side}">${escapeHtml(
           fighter.name
         )}</span>`;
-    return `<div class="retro-fighter-card">${imageHtml}${rankingHtml}${nameHtml}</div>`;
+    const linkHint = profile
+      ? `<small class="retro-fighter-link-note">&#12463;&#12522;&#12483;&#12463;&#12391;BoxRec&#12503;&#12525;&#12501;&#12449;&#12452;&#12523;&#12434;&#38283;&#12367;</small>`
+      : "";
+    return `<div class="retro-fighter-card">${imageHtml}${rankingHtml}${nameHtml}${linkHint}</div>`;
   };
   return `<section class="retro-fight-cards" aria-labelledby="fight-card-heading"><div class="retro-fight-cards-heading"><span>FIGHT CARD</span><h2 id="fight-card-heading">対戦カード</h2></div>${orderedFights
     .map(
@@ -379,7 +382,21 @@ function embedsHtml(article) {
     )
     .join("");
 
-  return tweets + videos + instagram;
+  return tweets + instagram;
+}
+
+function videosHtml(article) {
+  const videos = jsonArray(article.youtube_urls)
+    .map((url) => youtubeId(url))
+    .filter(Boolean)
+    .map(
+      (id) =>
+        `<div class="retro-youtube"><iframe src="https://www.youtube-nocookie.com/embed/${escapeHtml(
+          id
+        )}" title="YouTube&#21205;&#30011;" loading="lazy" allowfullscreen></iframe></div>`
+    )
+    .join("");
+  return videos ? `<div class="retro-article-videos">${videos}</div>` : "";
 }
 
 function affiliateLinksHtml(article) {
@@ -595,6 +612,7 @@ export async function onRequestGet(context) {
         ${affiliateLinksHtml(article)}
         <div class="retro-detail-body">${articleBodyHtml(article.body, article.title, summary)}${embedsHtml(article)}</div>
         ${fightCardsHtml(article)}
+        ${videosHtml(article)}
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>
         <p class="retro-tags">タグ：${escapeHtml(articleTagText(article))}</p>
         <div class="retro-meta"><time>${escapeHtml(
