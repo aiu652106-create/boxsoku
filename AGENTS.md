@@ -22,6 +22,20 @@
 9. Re-check the result against the original source and completion criteria.
 10. Report the URLs, checks performed, observed results, and any unverified items.
 
+## Efficiency cycle
+
+Use the following cycle to reduce repeated investigation without weakening verification:
+
+1. Start with the smallest clear task unit and define its output and stop condition.
+2. Reuse existing routes, templates, helpers, test commands, source lists, and browser checks before creating new ones.
+3. Batch related reads and checks together, but keep each fact and acceptance criterion separately traceable.
+4. Make one focused implementation pass, then run the narrowest check that can detect the likely failure first.
+5. Use fixed verification recipes for recurring work: source-to-output for facts, input-to-public for data flow, and desktop/mobile for layout.
+6. Stop investigating when the completion criteria are met and the required risk checks pass; record unresolved items instead of reopening settled decisions.
+7. After repeated work, convert stable steps into a reusable helper, checklist, test, or documented rule.
+
+For high-risk facts, deployment, persistence, rights, and user-visible layout, prioritize correctness over speed. For low-risk cosmetic or mechanical changes, use the shortest applicable recipe and avoid unrelated exploration.
+
 ## Error learning and recurrence prevention
 
 Whenever a mistake is found, the user corrects an assumption, or verification reveals an unexpected result:
