@@ -435,14 +435,10 @@ function renderArticle(article) {
 
   const affiliateLinks = createAffiliateLinks(article);
   const fightCards = createFightCards(article);
-  const lead = document.createElement("p");
-  lead.className = "retro-article-lead";
-  lead.textContent = leadText;
   container.append(titleRow, category);
   container.appendChild(imageContent);
   container.appendChild(topAd);
   if (affiliateLinks) container.appendChild(affiliateLinks);
-  if (lead.textContent) container.appendChild(lead);
   container.appendChild(body);
   if (fightCards) container.appendChild(fightCards);
   container.append(tags, meta, commentsMount, back);
