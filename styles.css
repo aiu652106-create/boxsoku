@@ -6312,9 +6312,10 @@ body.retro-blog .retro-category-nav a.is-active {
 }
 
 body.retro-blog .retro-category-sidebar {
+  display: flex !important;
   width: 100%;
   box-sizing: border-box;
-  flex-direction: column;
+  flex-direction: column !important;
   align-items: stretch;
   gap: 4px;
   margin: 0 0 12px;
@@ -6327,11 +6328,18 @@ body.retro-blog .retro-category-sidebar {
 }
 
 body.retro-blog .retro-category-sidebar a {
+  display: flex !important;
+  position: static !important;
   justify-content: center;
   min-height: 34px;
   padding: 6px 8px;
   font-size: 12px;
   line-height: 1.3;
+}
+
+body.retro-blog .retro-sidebar-popular > .retro-sidebar-panel {
+  position: static !important;
+  margin-top: 24px;
 }
 
 @media (max-width: 720px) {
