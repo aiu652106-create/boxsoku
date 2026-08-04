@@ -6339,11 +6339,11 @@ body.retro-blog .retro-category-sidebar a {
 
 body.retro-blog .retro-sidebar-popular > .retro-sidebar-panel {
   position: static !important;
-  margin-top: 0;
+  margin-top: 16px;
 }
 
 body.retro-blog .retro-sidebar-popular {
-  padding-top: 180px !important;
+  padding-top: 0 !important;
 }
 
 @media (max-width: 720px) {
