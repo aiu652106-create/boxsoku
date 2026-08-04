@@ -88,6 +88,12 @@
   let publicArticlesPromise = null;
 
   function normalizeArticle(row) {
+    const storedAffiliateLinks = Array.isArray(row.affiliate_links)
+      ? row.affiliate_links
+      : [];
+    const legacyBoxRecLink = storedAffiliateLinks.find(
+      (item) => item && item.type === "boxrec_image" && item.url
+    );
     return {
       id: row.id,
       slug: row.slug,
@@ -96,12 +102,14 @@
       body: row.body || "",
       image: row.image_url || "",
       imagePath: row.image_path || "",
-      boxrecUrl: row.boxrec_url || "",
+      boxrecUrl: row.boxrec_url || legacyBoxRecLink?.url || "",
       accent: row.accent || "red",
       status: row.status || "draft",
       isAdvertorial: Boolean(row.is_advertorial),
       affiliateDisclosure: row.affiliate_disclosure || "",
-      affiliateLinks: Array.isArray(row.affiliate_links) ? row.affiliate_links : [],
+      affiliateLinks: storedAffiliateLinks.filter(
+        (item) => item && item.label && item.url
+      ),
       tweets: Array.isArray(row.tweets) ? row.tweets : [],
       youtubeUrls: Array.isArray(row.youtube_urls) ? row.youtube_urls : [],
       instagramUrls: Array.isArray(row.instagram_urls) ? row.instagram_urls : [],
@@ -113,6 +121,12 @@
   }
 
   function articleToRow(article) {
+    const affiliateLinks = Array.isArray(article.affiliateLinks)
+      ? [...article.affiliateLinks]
+      : [];
+    if (article.boxrecUrl) {
+      affiliateLinks.push({ type: "boxrec_image", url: article.boxrecUrl });
+    }
     return {
       slug: article.slug,
       title: article.title,
@@ -131,7 +145,7 @@
       status: article.status || "draft",
       is_advertorial: Boolean(article.isAdvertorial),
       affiliate_disclosure: article.affiliateDisclosure || "",
-      affiliate_links: article.affiliateLinks || [],
+      affiliate_links: affiliateLinks,
       tweets: article.tweets || [],
       youtube_urls: article.youtubeUrls || [],
       instagram_urls: article.instagramUrls || [],

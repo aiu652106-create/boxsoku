@@ -278,7 +278,10 @@ export async function onRequestGet(context) {
   const siteName = String(env.SITE_NAME || "ボクシング速報");
   const canonical = `${siteUrl}/news/${encodeURIComponent(article.slug)}`;
  const image = String(article.image_url || siteUrl + "/assets/boxing-arena.png");
- const boxrecUrl = safeBoxRecUrl(article.boxrec_url);
+ const legacyBoxRecUrl = jsonArray(article.affiliate_links).find(
+   (item) => item && item.type === "boxrec_image" && item.url
+ )?.url;
+ const boxrecUrl = safeBoxRecUrl(article.boxrec_url || legacyBoxRecUrl);
  const summary = articleSummary(article);
   const metaDescription = summary.slice(0, 160);
   const hasAffiliateLinks = jsonArray(article.affiliate_links).some(
