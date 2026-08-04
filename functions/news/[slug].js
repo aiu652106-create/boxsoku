@@ -20,6 +20,7 @@ const safeUrl = (value, defaultValue = "#") => {
 };
 
 const fightImageUrl = (value) => {
+  if (!String(value || "").trim()) return "";
   const image = safeUrl(value, "");
   try {
     const url = new URL(image);
