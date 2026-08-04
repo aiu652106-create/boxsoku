@@ -332,7 +332,7 @@ function updatePreview() {
   const paragraphs = body
     ? body.split(/\n\s*\n/).filter(Boolean)
     : ["本文を入力すると、ここで仕上がりを確認できます。"];
-  paragraphs.slice(0, 4).forEach((value) => {
+  paragraphs.forEach((value) => {
     const lines = value.split(/\n/);
     const firstLine = String(lines[0] || "").trim();
     if (window.BoxingData?.isTweetUrl?.(firstLine)) {

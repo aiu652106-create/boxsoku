@@ -60,6 +60,7 @@ Do not treat a correction as learned merely because the current output was fixed
 - For admin editor changes, verify the live preview renders each newly editable field, not only the saved form value.
 - When adding a data field, check the full path: input, live preview, save payload, reload, and public rendering.
 - When changing a cached static asset, bump its version key and verify the production HTML loads the new CSS/JS URL; a stale cached page is not a reflection check.
+- Live previews must render the complete saved body unless truncation is an explicit requirement; compare preview paragraph count and text coverage with the editor input.
 
 ## Stop conditions
 
