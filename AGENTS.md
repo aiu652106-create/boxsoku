@@ -47,6 +47,12 @@ Whenever a mistake is found, the user corrects an assumption, or verification re
 5. Re-run the original failing scenario and at least one nearby edge case.
 6. Confirm the public result again and report both the fix and the new prevention measure.
 
+For external fighter profiles and images, add a provider-identity gate before saving: use the provider's canonical profile URL (not a wiki or search-result URL), verify the page name and profile ID, and take the image URL from that same verified profile when the provider is the requested source. After saving, compare the editor value, preview href/src, reloaded value, and public href/src so a click target and its image cannot silently point to different or unrelated pages.
+
+For article pages, keep the event/program lead image separate from fight-card media: only a fighter photo or fighter name inside a fight card may link to that fighter's verified profile. Before declaring completion, inspect the exact lead-image parent and every card-image href on the public page; an article-level profile URL must never be reused as the lead-image link.
+
+Treat any reference page named by the user as a task-specific comparison target, not as a permanent template. First obey the current request and its explicit non-goals; use reference pages only to validate the requested behavior or appearance, and do not copy unrelated labels, structure, links, or content.
+
 Do not treat a correction as learned merely because the current output was fixed. The workflow, test, or documented rule must change so the same failure mode has a new detection or prevention step.
 
 ## Numeric and count verification
@@ -60,8 +66,10 @@ Do not treat a correction as learned merely because the current output was fixed
 - For admin editor changes, verify the live preview renders each newly editable field, not only the saved form value.
 - When adding a data field, check the full path: input, live preview, save payload, reload, and public rendering.
 - When changing a cached static asset, bump its version key and verify the production HTML loads the new CSS/JS URL; a stale cached page is not a reflection check.
+- Treat asset version keys as immutable: after changing or reverting an asset, never reuse an older key; publish a new unique key so an old cached file cannot masquerade as the current build.
+- If production still serves the previous asset version, do not report completion: wait for deployment, reload the same public tab with a unique QA query, then re-check the asset version and the relevant rendered coordinates.
 - Live previews must render the complete saved body unless truncation is an explicit requirement; compare preview paragraph count and text coverage with the editor input.
-- Do not use a fixed generic tag on every article; derive the tag from the confirmed article type and verify the rendered public tag.
+- Tags are retired from the public article UI; use the confirmed article category and verify the category navigation instead.
 - Keep unique visitors separate from PV. Verify that a new visitor token adds one unique visitor, a repeated token adds only PV, and the admin fallback remains readable before the migration is applied.
 - Use `boxsoku_verify=1` for agent QA visits to article URLs; verification requests must skip PV and visitor RPCs so checks do not pollute analytics.
 
