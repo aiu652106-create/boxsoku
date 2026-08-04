@@ -5978,6 +5978,10 @@ body.retro-blog .retro-fight-number {
   text-align: center;
 }
 
+body.retro-blog .retro-fight-number:empty {
+  display: none;
+}
+
 body.retro-blog .retro-fight-card-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr);

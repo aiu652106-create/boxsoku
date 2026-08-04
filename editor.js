@@ -109,7 +109,7 @@ function updateFightCardEmpty() {
 function renderFightCards(cards) {
   fightCardList.replaceChildren(
     ...cards.map((card, index) =>
-      createFightCardRow({ ...card, bout: card.bout || `第${index + 1}試合` })
+      createFightCardRow({ ...card, bout: card.bout || "" })
     )
   );
   updateFightCardEmpty();

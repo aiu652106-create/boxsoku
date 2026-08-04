@@ -220,8 +220,8 @@ function fightCardsHtml(article) {
   };
   return `<section class="retro-fight-cards" aria-labelledby="fight-card-heading"><div class="retro-fight-cards-heading"><span>FIGHT CARD</span><h2 id="fight-card-heading">対戦カード</h2></div>${fights
     .map(
-      (fight, index) => `<article class="retro-fight-card"><p class="retro-fight-number">${escapeHtml(
-        fight.bout || `第${index + 1}試合`
+      (fight) => `<article class="retro-fight-card"><p class="retro-fight-number">${escapeHtml(
+        fight.bout || ""
       )}</p><p class="retro-fight-weight">${escapeHtml(
         fight.weight
       )}</p><div class="retro-fight-card-grid">${fighterHtml(

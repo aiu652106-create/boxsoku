@@ -166,7 +166,7 @@ function createFightCards(article) {
     card.className = "retro-fight-card";
     const bout = document.createElement("p");
     bout.className = "retro-fight-number";
-    bout.textContent = fight.bout || `第${index + 1}試合`;
+    bout.textContent = fight.bout || "";
     const weight = document.createElement("p");
     weight.className = "retro-fight-weight";
     weight.textContent = fight.weight;
