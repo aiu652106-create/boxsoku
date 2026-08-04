@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="styles.css?v=20260703-ranking2" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="config.js" defer></script>
-    <script src="data.js?v=20260804-boxrec1" defer></script>
-    <script src="editor.js?v=20260804-boxrec1" defer></script>
+    <script src="data.js?v=20260804-fightcards1" defer></script>
+    <script src="editor.js?v=20260804-fightcards1" defer></script>
   </head>
   <body class="editor-page">
     <header class="editor-header">
@@ -90,6 +90,19 @@
             required
           ></textarea>
         </label>
+
+        <section class="fight-card-editor" aria-labelledby="fight-card-editor-heading">
+          <div class="fight-card-editor-heading">
+            <div>
+              <span>FIGHT CARD</span>
+              <h2 id="fight-card-editor-heading">対戦カード</h2>
+            </div>
+            <button id="add-fight-card" type="button">＋ 試合を追加</button>
+          </div>
+          <p>選手名・BoxRecプロフィールURL・写真URLを入力できます。写真URLはhttps://で始まる画像URLを指定してください。</p>
+          <div id="fight-card-list" class="fight-card-list"></div>
+          <p id="fight-card-empty" class="fight-card-empty">対戦カードはまだありません。「試合を追加」から登録できます。</p>
+        </section>
 
         <section class="affiliate-editor">
           <label class="checkbox-field">

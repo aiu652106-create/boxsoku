@@ -13,6 +13,9 @@ const affiliateLinksInput = document.querySelector("#affiliate-links");
 const tweetUrlsInput = document.querySelector("#tweet-urls");
 const youtubeUrlsInput = document.querySelector("#youtube-urls");
 const instagramUrlsInput = document.querySelector("#instagram-urls");
+const fightCardList = document.querySelector("#fight-card-list");
+const fightCardEmpty = document.querySelector("#fight-card-empty");
+const addFightCardButton = document.querySelector("#add-fight-card");
 const previewAffiliateDisclosure = document.querySelector(
   "#preview-affiliate-disclosure"
 );
@@ -27,6 +30,131 @@ let editingArticle = null;
 let selectedFile = null;
 let previewObjectUrl = "";
 let imageCleared = false;
+
+function createFightCardField(labelText, field, value, type = "text") {
+  const label = document.createElement("label");
+  label.className = "fight-card-field";
+  const labelTextElement = document.createElement("span");
+  labelTextElement.textContent = labelText;
+  const input = document.createElement("input");
+  input.type = type;
+  input.dataset.field = field;
+  input.value = value || "";
+  if (type === "url") input.placeholder = "https://...";
+  label.append(labelTextElement, input);
+  return label;
+}
+
+function createFightCardRow(card = {}) {
+  const row = document.createElement("article");
+  row.className = "fight-card-editor-row";
+  row.dataset.imageSourceLeft = card.left?.imageSource || "";
+  row.dataset.imageSourceRight = card.right?.imageSource || "";
+
+  const heading = document.createElement("div");
+  heading.className = "fight-card-row-heading";
+  const title = document.createElement("strong");
+  title.textContent = "対戦カード";
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "fight-card-remove";
+  remove.textContent = "削除";
+  remove.addEventListener("click", () => {
+    row.remove();
+    updateFightCardEmpty();
+  });
+  heading.append(title, remove);
+
+  const weight = createFightCardField("階級・試合形式", "weight", card.weight);
+  const fighters = document.createElement("div");
+  fighters.className = "fight-card-fighters-editor";
+
+  const sides = [
+    ["left", "選手A", card.left || {}],
+    ["right", "選手B", card.right || {}]
+  ];
+  sides.forEach(([side, sideLabel, fighter]) => {
+    const panel = document.createElement("div");
+    panel.className = `fight-card-fighter-editor fight-card-fighter-${side}`;
+    const panelHeading = document.createElement("h3");
+    panelHeading.textContent = sideLabel;
+    panel.appendChild(panelHeading);
+    [
+      ["選手名", "name", "text"],
+      ["BoxRecプロフィールURL", "profile", "url"],
+      ["写真URL", "image", "url"]
+    ].forEach(([label, field, type]) => {
+      const fieldElement = createFightCardField(
+        label,
+        field,
+        fighter[field],
+        type
+      );
+      fieldElement.querySelector("input").dataset.side = side;
+      panel.appendChild(fieldElement);
+    });
+    fighters.appendChild(panel);
+  });
+
+  row.append(heading, weight, fighters);
+  return row;
+}
+
+function updateFightCardEmpty() {
+  fightCardEmpty.hidden = fightCardList.children.length > 0;
+}
+
+function renderFightCards(cards) {
+  fightCardList.replaceChildren(...cards.map(createFightCardRow));
+  updateFightCardEmpty();
+}
+
+function collectFightCards() {
+  const cards = [...fightCardList.querySelectorAll(".fight-card-editor-row")]
+    .map((row) => {
+      const value = (side, field) =>
+        row.querySelector(`input[data-side="${side}"][data-field="${field}"]`)?.value.trim() ||
+        (field === "weight"
+          ? row.querySelector('input[data-field="weight"]')?.value.trim() || ""
+          : "");
+      const leftProfile = window.BoxingData.parseBoxRecUrl(value("left", "profile"));
+      const rightProfile = window.BoxingData.parseBoxRecUrl(value("right", "profile"));
+      const leftImage = window.BoxingData.parseImageUrl(value("left", "image"));
+      const rightImage = window.BoxingData.parseImageUrl(value("right", "image"));
+      return {
+        weight: row.querySelector('input[data-field="weight"]')?.value.trim() || "",
+        left: {
+          name: value("left", "name"),
+          profile: leftProfile,
+          image: leftImage,
+          imageSource: row.dataset.imageSourceLeft || ""
+        },
+        right: {
+          name: value("right", "name"),
+          profile: rightProfile,
+          image: rightImage,
+          imageSource: row.dataset.imageSourceRight || ""
+        }
+      };
+    })
+    .filter((card) => card.weight || card.left.name || card.right.name);
+
+  cards.forEach((card, index) => {
+    if (!card.weight || !card.left.name || !card.right.name) {
+      throw new Error(`対戦カード${index + 1}は階級・選手A・選手Bを入力してください。`);
+    }
+    if (!card.left.profile || !card.right.profile) {
+      throw new Error(`対戦カード${index + 1}は両選手のBoxRec URLを入力してください。`);
+    }
+  });
+  return window.BoxingData.normalizeFightCards(cards);
+}
+
+addFightCardButton.addEventListener("click", () => {
+  fightCardList.appendChild(createFightCardRow());
+  updateFightCardEmpty();
+  fightCardList.lastElementChild.scrollIntoView({ behavior: "smooth", block: "center" });
+});
 
 function buildSummary(body, title) {
   const source = String(body || title || "").replace(/\s+/g, " ").trim();
@@ -254,6 +382,7 @@ form.addEventListener("submit", async (event) => {
     const affiliateLinks = window.BoxingData.parseAffiliateLinks(
       affiliateLinksInput.value
     );
+    const fightCards = collectFightCards();
     const article = {
       id: editingArticle?.id,
       slug: window.BoxingData.createSlug(document.querySelector("#slug").value),
@@ -277,6 +406,7 @@ form.addEventListener("submit", async (event) => {
             "この記事には配信サービスのアフィリエイトリンクが含まれています。"
           : ""),
       affiliateLinks,
+      fightCards,
       tweets: window.BoxingData.parseUrlList(
         tweetUrlsInput.value,
         window.BoxingData.isTweetUrl
@@ -338,6 +468,11 @@ function fillForm(article) {
     imageStatus.textContent = "現在の記事画像";
   }
   boxrecUrlInput.value = article.boxrecUrl || "";
+  renderFightCards(
+    article.fightCards?.length
+      ? article.fightCards
+      : window.BoxingData.getDefaultFightCards(article.slug)
+  );
   submitButton.firstChild.textContent = "変更を保存する";
   updatePreview();
 }
@@ -361,6 +496,7 @@ async function initialize() {
     fillForm(article);
   } else {
     document.querySelector("#slug").value = window.BoxingData.createSlug("");
+    renderFightCards([]);
     updatePreview();
   }
 }

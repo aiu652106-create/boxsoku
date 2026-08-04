@@ -85,6 +85,115 @@
     }
   ];
 
+  const defaultFightCardsBySlug = {
+    "2026-08-16-treasure-boxing-promotion-14": [
+      {
+        weight: "スーパーバンタム級10回戦",
+        left: {
+          name: "小國 以載",
+          profile: "https://boxrec.com/en/box-pro/518213",
+          image: "https://boxrec.com/images/thumb/6/63/518213_2023.jpeg/200px-518213_2023.jpeg",
+          imageSource: "BoxRec"
+        },
+        right: {
+          name: "アレックス サンティシマ Jr.",
+          profile: "https://boxrec.com/en/box-pro/895661",
+          image: "https://boxmob.jp/sp/img/boxer/1709295805.jpeg",
+          imageSource: "Boxing Mobile"
+        }
+      },
+      {
+        weight: "WBO-AP・OPBFスーパーウェルター級王座統一10回戦",
+        left: {
+          name: "豊嶋 亮太",
+          profile: "https://boxrec.com/en/box-pro/704550",
+          image: "https://boxrec.com/images/thumb/4/4d/704550.jpg/200px-704550.jpg",
+          imageSource: "BoxRec"
+        },
+        right: {
+          name: "緑川 創",
+          profile: "https://boxrec.com/en/box-pro/1274846",
+          image: "https://boxmob.jp/sp/img/boxer/1783088460.jpeg",
+          imageSource: "Boxing Mobile"
+        }
+      },
+      {
+        weight: "WBO-AP・日本ミドル級王座決定10回戦",
+        left: {
+          name: "竹迫 司登",
+          profile: "https://boxrec.com/en/box-pro/724918",
+          image: "https://boxrec.com/images/thumb/f/f5/Kazuto_Takesako.jpeg/200px-Kazuto_Takesako.jpeg",
+          imageSource: "BoxRec"
+        },
+        right: {
+          name: "川渕 一統",
+          profile: "https://boxrec.com/en/box-pro/1131567",
+          image: "https://boxmob.jp/sp/img/boxer/1781109877.jpeg",
+          imageSource: "Boxing Mobile"
+        }
+      },
+      {
+        weight: "日本ライトフライ級タイトルマッチ10回戦",
+        left: {
+          name: "亀山 大輝",
+          profile: "https://boxrec.com/en/box-pro/749423",
+          image: "https://boxrec.com/images/thumb/4/43/Daiki_Kameyama.JPG/200px-Daiki_Kameyama.JPG",
+          imageSource: "BoxRec"
+        },
+        right: {
+          name: "大橋 波月",
+          profile: "https://boxrec.com/en/box-pro/762381",
+          image: "https://boxrec.com/images/thumb/e/e7/Natsu_Ohashi.jpg/200px-Natsu_Ohashi.jpg",
+          imageSource: "BoxRec"
+        }
+      },
+      {
+        weight: "スーパーバンタム級8回戦",
+        left: {
+          name: "細川 兼伸",
+          profile: "https://boxrec.com/en/box-pro/1038164",
+          image: "https://boxmob.jp/sp/img/boxer/1638448496.jpeg",
+          imageSource: "Boxing Mobile"
+        },
+        right: {
+          name: "森 朝登",
+          profile: "https://boxrec.com/en/box-pro/834182",
+          image: "https://boxmob.jp/sp/img/boxer/1601015040.jpg",
+          imageSource: "Boxing Mobile"
+        }
+      }
+    ]
+  };
+
+  function normalizeFightCards(value) {
+    if (!Array.isArray(value)) return [];
+    return value
+      .map((card) => ({
+        weight: String(card?.weight || "").trim(),
+        left: {
+          name: String(card?.left?.name || "").trim(),
+          profile: String(card?.left?.profile || "").trim(),
+          image: String(card?.left?.image || "").trim(),
+          imageSource: String(card?.left?.imageSource || "").trim()
+        },
+        right: {
+          name: String(card?.right?.name || "").trim(),
+          profile: String(card?.right?.profile || "").trim(),
+          image: String(card?.right?.image || "").trim(),
+          imageSource: String(card?.right?.imageSource || "").trim()
+        }
+      }))
+      .filter((card) => card.weight || card.left.name || card.right.name);
+  }
+
+  function getDefaultFightCards(slug) {
+    return normalizeFightCards(defaultFightCardsBySlug[slug]).map((card) => ({
+      ...card,
+      left: { ...card.left },
+      right: { ...card.right }
+    }));
+  }
+
   let publicArticlesPromise = null;
 
   function normalizeArticle(row) {
@@ -93,6 +202,9 @@
       : [];
     const legacyBoxRecLink = storedAffiliateLinks.find(
       (item) => item && item.type === "boxrec_image" && item.url
+    );
+    const storedFightCards = storedAffiliateLinks.find(
+      (item) => item && item.type === "fight_cards" && Array.isArray(item.cards)
     );
     return {
       id: row.id,
@@ -103,6 +215,7 @@
       image: row.image_url || "",
       imagePath: row.image_path || "",
       boxrecUrl: row.boxrec_url || legacyBoxRecLink?.url || "",
+      fightCards: normalizeFightCards(storedFightCards?.cards),
       accent: row.accent || "red",
       status: row.status || "draft",
       isAdvertorial: Boolean(row.is_advertorial),
@@ -122,10 +235,16 @@
 
   function articleToRow(article) {
     const affiliateLinks = Array.isArray(article.affiliateLinks)
-      ? [...article.affiliateLinks]
+      ? [...article.affiliateLinks].filter((item) => item?.type !== "fight_cards")
       : [];
     if (article.boxrecUrl) {
       affiliateLinks.push({ type: "boxrec_image", url: article.boxrecUrl });
+    }
+    if (Array.isArray(article.fightCards) && article.fightCards.length) {
+      affiliateLinks.push({
+        type: "fight_cards",
+        cards: normalizeFightCards(article.fightCards)
+      });
     }
     return {
       slug: article.slug,
@@ -484,6 +603,18 @@
     }
   }
 
+  function parseImageUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    try {
+      const url = new URL(raw);
+      if (url.protocol !== "https:") throw new Error();
+      return url.href;
+    } catch {
+      throw new Error("画像URLはhttps://から入力してください。");
+    }
+  }
+
   function parseAffiliateLinks(value) {
     const links = String(value || "")
       .split(/\r?\n/)
@@ -591,6 +722,9 @@
     createSlug,
     parseUrlList,
     parseBoxRecUrl,
+    parseImageUrl,
+    getDefaultFightCards,
+    normalizeFightCards,
     parseAffiliateLinks,
     isTweetUrl,
     getYouTubeVideoId,

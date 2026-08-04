@@ -151,8 +151,31 @@ const featuredFightCards = {
   ]
 };
 
-function fightCardsHtml(slug) {
-  const fights = featuredFightCards[slug] || [];
+const featuredPhotoFallbacks = [
+  "https://boxmob.jp/sp/img/boxer/1709295805.jpeg",
+  "https://boxmob.jp/sp/img/boxer/1783088460.jpeg",
+  "https://boxmob.jp/sp/img/boxer/1781109877.jpeg",
+  "https://boxmob.jp/sp/img/boxer/1638448496.jpeg",
+  "https://boxmob.jp/sp/img/boxer/1601015040.jpg"
+];
+
+const featuredDefaultSlug = "2026-08-16-treasure-boxing-promotion-14";
+featuredFightCards[featuredDefaultSlug].forEach((fight, fightIndex) => {
+  [fight.left, fight.right].forEach((fighter) => {
+    if (fighter.image.includes("v8-avatar")) {
+      fighter.image = featuredPhotoFallbacks[fightIndex];
+      fighter.imageSource = "Boxing Mobile";
+    }
+  });
+});
+
+function fightCardsHtml(article) {
+  const stored = jsonArray(article?.affiliate_links).find(
+    (item) => item && item.type === "fight_cards" && Array.isArray(item.cards)
+  );
+  const fights = stored?.cards?.length
+    ? stored.cards
+    : featuredFightCards[article?.slug] || [];
   if (!fights.length) return "";
   const fighterHtml = (fighter, side) => {
     const profile = safeBoxRecUrl(fighter.profile);
@@ -165,13 +188,18 @@ function fightCardsHtml(slug) {
           fighter.name
         )}のBoxRecプロフィールを開く"><img src="${escapeHtml(
           image
-        )}" alt="${escapeHtml(fighter.name)}のBoxRecプロフィール画像" loading="lazy"></a>`
+        )}" alt="${escapeHtml(fighter.name)}のプロフィール画像" loading="lazy"></a>`
       : "";
+    const sourceLabel = fighter.imageSource
+      ? `写真: ${fighter.imageSource}`
+      : "BoxRec";
     return `<div class="retro-fighter-card">${imageHtml}<a class="retro-fighter-name retro-fighter-name-${side}" href="${escapeHtml(
       profile
     )}" target="_blank" rel="noopener noreferrer">${escapeHtml(
       fighter.name
-    )}</a><span class="retro-fighter-source">BoxRec</span></div>`;
+    )}</a><span class="retro-fighter-source">${escapeHtml(
+      sourceLabel
+    )}</span></div>`;
   };
   return `<section class="retro-fight-cards" aria-labelledby="fight-card-heading"><div class="retro-fight-cards-heading"><span>FIGHT CARD</span><h2 id="fight-card-heading">対戦カード</h2></div>${fights
     .map(
@@ -479,7 +507,7 @@ export async function onRequestGet(context) {
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         ${affiliateLinksHtml(article)}
         ${summary ? `<p class="retro-article-lead">${escapeHtml(summary)}</p>` : ""}
-        ${fightCardsHtml(article.slug)}
+        ${fightCardsHtml(article)}
         <div class="retro-detail-body">${articleBodyHtml(article.body, article.title, summary)}${embedsHtml(article)}</div>
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>
         <p class="retro-tags">タグ：ボクシング　ニュース</p>

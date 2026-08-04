@@ -126,6 +126,91 @@ function createAffiliateLinks(article) {
   return section;
 }
 
+function createFightCards(article) {
+  const cards = article.fightCards?.length
+    ? article.fightCards
+    : window.BoxingData.getDefaultFightCards(article.slug);
+  if (!cards.length) return null;
+
+  const section = document.createElement("section");
+  section.className = "retro-fight-cards";
+  section.setAttribute("aria-labelledby", "fight-card-heading");
+  const heading = document.createElement("div");
+  heading.className = "retro-fight-cards-heading";
+  const eyebrow = document.createElement("span");
+  eyebrow.textContent = "FIGHT CARD";
+  const title = document.createElement("h2");
+  title.id = "fight-card-heading";
+  title.textContent = "対戦カード";
+  heading.append(eyebrow, title);
+  section.appendChild(heading);
+
+  cards.forEach((fight) => {
+    const card = document.createElement("article");
+    card.className = "retro-fight-card";
+    const weight = document.createElement("p");
+    weight.className = "retro-fight-weight";
+    weight.textContent = fight.weight;
+    const grid = document.createElement("div");
+    grid.className = "retro-fight-card-grid";
+
+    [
+      [fight.left, "left"],
+      [fight.right, "right"]
+    ].forEach(([fighter, side], index) => {
+      if (index === 1) {
+        const vs = document.createElement("span");
+        vs.className = "retro-fight-vs";
+        vs.setAttribute("aria-hidden", "true");
+        vs.textContent = "VS";
+        grid.appendChild(vs);
+      }
+      const fighterCard = document.createElement("div");
+      fighterCard.className = `retro-fighter-card retro-fighter-card-${side}`;
+      let profile = "";
+      try {
+        profile = window.BoxingData.parseBoxRecUrl(fighter.profile);
+      } catch {}
+      let image = "";
+      try {
+        image = window.BoxingData.parseImageUrl(fighter.image);
+      } catch {}
+      if (profile && image) {
+        const photo = document.createElement("a");
+        photo.className = `retro-fighter-photo retro-fighter-photo-${side}`;
+        photo.href = profile;
+        photo.target = "_blank";
+        photo.rel = "noopener noreferrer";
+        const imageElement = document.createElement("img");
+        imageElement.src = image;
+        imageElement.alt = `${fighter.name}のプロフィール画像`;
+        imageElement.loading = "lazy";
+        photo.appendChild(imageElement);
+        fighterCard.appendChild(photo);
+      }
+      if (profile) {
+        const name = document.createElement("a");
+        name.className = `retro-fighter-name retro-fighter-name-${side}`;
+        name.href = profile;
+        name.target = "_blank";
+        name.rel = "noopener noreferrer";
+        name.textContent = fighter.name;
+        fighterCard.appendChild(name);
+      }
+      const source = document.createElement("span");
+      source.className = "retro-fighter-source";
+      source.textContent = fighter.imageSource
+        ? `写真: ${fighter.imageSource}`
+        : "BoxRec";
+      fighterCard.appendChild(source);
+      grid.appendChild(fighterCard);
+    });
+    card.append(weight, grid);
+    section.appendChild(card);
+  });
+  return section;
+}
+
 function addExternalScript(src) {
   if ([...document.scripts].some((script) => script.src === src)) return;
   const script = document.createElement("script");
@@ -294,6 +379,7 @@ function renderArticle(article) {
   commentsMount.className = "retro-comments-mount";
 
   const affiliateLinks = createAffiliateLinks(article);
+  const fightCards = createFightCards(article);
   const lead = document.createElement("p");
   lead.className = "retro-article-lead";
   lead.textContent = leadText;
@@ -302,6 +388,7 @@ function renderArticle(article) {
   container.appendChild(topAd);
   if (affiliateLinks) container.appendChild(affiliateLinks);
   if (lead.textContent) container.appendChild(lead);
+  if (fightCards) container.appendChild(fightCards);
   container.appendChild(body);
   container.append(tags, meta, commentsMount, back);
   window.BoxingAds?.render(container);

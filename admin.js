@@ -33,7 +33,12 @@ function createArticleRow(article) {
   status.append(badge, time);
   const title = document.createElement("h3");
   title.textContent = article.title;
-  info.append(status, title);
+  const fightCardCount = document.createElement("p");
+  fightCardCount.className = "admin-article-fight-count";
+  fightCardCount.textContent = article.fightCards?.length
+    ? `対戦カード ${article.fightCards.length}件`
+    : "対戦カードなし";
+  info.append(status, title, fightCardCount);
 
   const actions = document.createElement("div");
   actions.className = "admin-article-actions";
@@ -49,7 +54,7 @@ function createArticleRow(article) {
 
   const edit = document.createElement("a");
   edit.href = `editor.html?id=${encodeURIComponent(article.id)}`;
-  edit.textContent = "編集";
+  edit.textContent = "記事・対戦カードを編集";
   const remove = document.createElement("button");
   remove.type = "button";
   remove.textContent = "削除";

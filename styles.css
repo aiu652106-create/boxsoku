@@ -2946,16 +2946,22 @@ button {
   line-height: 1.5;
 }
 
-.admin-article-info p {
-  display: -webkit-box;
+  .admin-article-info p {
+    display: -webkit-box;
   margin: 0;
   overflow: hidden;
   color: #7c838c;
   font-size: 10px;
   line-height: 1.7;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-}
+    -webkit-line-clamp: 1;
+  }
+
+  .admin-article-fight-count {
+    color: #d9231e !important;
+    font-size: 10px !important;
+    font-weight: 800;
+  }
 
 .admin-article-actions {
   display: flex;
@@ -4547,6 +4553,132 @@ body.retro-blog a {
   gap: 24px;
 }
 
+.fight-card-editor {
+  margin: 36px 0 0;
+  padding: 24px;
+  border: 1px solid #d8c9c0;
+  background: #fff;
+}
+
+.fight-card-editor-heading,
+.fight-card-row-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.fight-card-editor-heading > div > span {
+  color: var(--red);
+  font-family: var(--display);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.fight-card-editor-heading h2 {
+  margin: 4px 0 0;
+  font-size: 20px;
+}
+
+.fight-card-editor-heading button,
+.fight-card-remove {
+  padding: 8px 11px;
+  border: 1px solid var(--ink);
+  background: #fff;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.fight-card-editor-heading button:hover,
+.fight-card-remove:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.fight-card-editor > p,
+.fight-card-empty {
+  margin: 10px 0 0;
+  color: #7d756d;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.fight-card-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.fight-card-editor-row {
+  padding: 18px;
+  border: 1px solid #ded5cf;
+  background: #faf8f6;
+}
+
+.fight-card-row-heading {
+  margin-bottom: 14px;
+}
+
+.fight-card-row-heading strong {
+  font-size: 12px;
+}
+
+.fight-card-field {
+  display: block;
+  margin-top: 10px;
+}
+
+.fight-card-field > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #6f665f;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.fight-card-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #d4cec5;
+  background: #fff;
+  outline: none;
+  font-size: 12px;
+}
+
+.fight-card-field input:focus {
+  border-color: var(--ink);
+}
+
+.fight-card-fighters-editor {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.fight-card-fighter-editor {
+  padding: 14px;
+  border-top: 3px solid #283a57;
+  background: #fff;
+}
+
+.fight-card-fighter-right {
+  border-top-color: var(--red);
+}
+
+.fight-card-fighter-editor h3 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.fight-card-empty[hidden] {
+  display: none;
+}
+
 .affiliate-editor {
   margin: 36px 0 0;
   padding: 24px;
@@ -5037,6 +5169,25 @@ body.retro-blog .retro-detail-body > p {
 
   body.retro-blog .retro-post-image {
     height: 220px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .fight-card-editor {
+    padding: 18px 14px;
+  }
+
+  .fight-card-editor-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .fight-card-editor-heading button {
+    width: 100%;
+  }
+
+  .fight-card-fighters-editor {
+    grid-template-columns: 1fr;
   }
 }
 
