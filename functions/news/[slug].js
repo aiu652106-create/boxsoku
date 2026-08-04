@@ -19,6 +19,21 @@ const safeUrl = (value, defaultValue = "#") => {
   return defaultValue;
 };
 
+const fightImageUrl = (value) => {
+  const image = safeUrl(value, "");
+  try {
+    const url = new URL(image);
+    if (
+      url.protocol === "https:" &&
+      url.hostname === "boxmob.jp" &&
+      url.pathname.startsWith("/sp/img/boxer/")
+    ) {
+      return `/image-proxy?url=${encodeURIComponent(url.href)}`;
+    }
+  } catch {}
+  return image;
+};
+
 const safeBoxRecUrl = (value) => {
   try {
     const url = new URL(String(value || ""));
@@ -180,7 +195,7 @@ function fightCardsHtml(article) {
   const fighterHtml = (fighter, side) => {
     const profile = safeBoxRecUrl(fighter.profile);
     if (!profile) return "";
-    const image = safeUrl(fighter.image, "");
+    const image = fightImageUrl(fighter.image);
     const imageHtml = image
       ? `<a class="retro-fighter-photo retro-fighter-photo-${side}" href="${escapeHtml(
           profile

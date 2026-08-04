@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "include": ["/news/*", "/api/*", "/sitemap.xml", "/robots.txt", "/ads.txt"],
+  "include": ["/news/*", "/api/*", "/image-proxy", "/sitemap.xml", "/robots.txt", "/ads.txt"],
   "exclude": ["/assets/*", "/*.js", "/*.css", "/*.html"]
 }

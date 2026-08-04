@@ -126,6 +126,22 @@ function createAffiliateLinks(article) {
   return section;
 }
 
+function fightImageUrl(value) {
+  let image = "";
+  try {
+    image = window.BoxingData.parseImageUrl(value);
+    const url = new URL(image);
+    if (
+      url.protocol === "https:" &&
+      url.hostname === "boxmob.jp" &&
+      url.pathname.startsWith("/sp/img/boxer/")
+    ) {
+      return `/image-proxy?url=${encodeURIComponent(url.href)}`;
+    }
+  } catch {}
+  return image;
+}
+
 function createFightCards(article) {
   const cards = article.fightCards?.length
     ? article.fightCards
@@ -171,10 +187,7 @@ function createFightCards(article) {
       try {
         profile = window.BoxingData.parseBoxRecUrl(fighter.profile);
       } catch {}
-      let image = "";
-      try {
-        image = window.BoxingData.parseImageUrl(fighter.image);
-      } catch {}
+      const image = fightImageUrl(fighter.image);
       if (profile && image) {
         const photo = document.createElement("a");
         photo.className = `retro-fighter-photo retro-fighter-photo-${side}`;
