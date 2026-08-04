@@ -192,10 +192,15 @@ function fightCardsHtml(article) {
     ? stored.cards
     : featuredFightCards[article?.slug] || [];
   if (!fights.length) return "";
+  const fightSortOrder = (value) => {
+    const number = Number(String(value || "").match(/\d+/)?.[0]);
+    if (Number.isFinite(number)) return number;
+    if (String(value || "").includes("セミファイナル")) return 1000;
+    if (String(value || "").includes("メインイベント")) return 1001;
+    return 999;
+  };
   const orderedFights = [...fights].sort((a, b) => {
-    const numberA = Number(String(a.bout || "").match(/\d+/)?.[0] || 999);
-    const numberB = Number(String(b.bout || "").match(/\d+/)?.[0] || 999);
-    return numberA - numberB;
+    return fightSortOrder(a.bout) - fightSortOrder(b.bout);
   });
   const fighterHtml = (fighter, side) => {
     const profile = safeBoxRecUrl(fighter.profile);

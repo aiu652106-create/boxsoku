@@ -147,10 +147,15 @@ function createFightCards(article) {
     ? article.fightCards
     : window.BoxingData.getDefaultFightCards(article.slug);
   if (!cards.length) return null;
+  const fightSortOrder = (value) => {
+    const number = Number(String(value || "").match(/\d+/)?.[0]);
+    if (Number.isFinite(number)) return number;
+    if (String(value || "").includes("セミファイナル")) return 1000;
+    if (String(value || "").includes("メインイベント")) return 1001;
+    return 999;
+  };
   const orderedCards = [...cards].sort((a, b) => {
-    const numberA = Number(String(a.bout || "").match(/\d+/)?.[0] || 999);
-    const numberB = Number(String(b.bout || "").match(/\d+/)?.[0] || 999);
-    return numberA - numberB;
+    return fightSortOrder(a.bout) - fightSortOrder(b.bout);
   });
 
   const section = document.createElement("section");
