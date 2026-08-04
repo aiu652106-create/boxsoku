@@ -354,10 +354,6 @@ function renderArticle(article) {
   tweet.textContent = "Tweet";
   titleRow.append(heading, tweet);
 
-  const category = document.createElement("p");
-  category.className = "retro-category";
-  category.textContent = `カテゴリ：${articleCategoryText(article)}`;
-
   const image = document.createElement("img");
   image.className = "retro-post-image retro-detail-image";
   window.BoxingUI?.applyArticleImage(image, article);
@@ -427,7 +423,7 @@ function renderArticle(article) {
 
   const affiliateLinks = createAffiliateLinks(article);
   const fightCards = createFightCards(article);
-  container.append(titleRow, category);
+  container.appendChild(titleRow);
   container.appendChild(imageContent);
   container.appendChild(topAd);
   if (affiliateLinks) container.appendChild(affiliateLinks);

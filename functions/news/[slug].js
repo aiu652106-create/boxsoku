@@ -587,9 +587,6 @@ export async function onRequestGet(context) {
         )}</h1><a class="retro-tweet-link" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(
           article.title
         )}&url=${encodeURIComponent(canonical)}" target="_blank" rel="noopener noreferrer">Tweet</a></div>
-          <p class="retro-category">カテゴリ：${escapeHtml(
-            articleCategoryText(article)
-          )}</p>
         ${
           image
             ? `<img class="retro-post-image retro-detail-image" src="${escapeHtml(
