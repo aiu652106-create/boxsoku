@@ -77,6 +77,10 @@ function createArticle(article) {
 
   titleRow.append(heading, tweet);
 
+  const category = document.createElement("p");
+  category.className = "retro-category";
+  category.textContent = `カテゴリ：${articleCategoryText(article)}`;
+
   const summaryText = window.BoxingData.articleSummary(article);
   const summary = document.createElement("p");
   summary.className = "retro-summary";
@@ -122,9 +126,9 @@ function createArticle(article) {
   meta.className = "retro-meta";
   const time = document.createElement("time");
   time.textContent = window.BoxingData.articleDate(article);
-  meta.appendChild(time);
+  meta.append(time, document.createTextNode(`｜カテゴリ：${articleCategoryText(article)}`));
 
-  post.appendChild(titleRow);
+  post.append(titleRow, category);
   if (hasImage) post.appendChild(image);
   if (summaryText) post.appendChild(summary);
   if (teaser) post.appendChild(teaser);
