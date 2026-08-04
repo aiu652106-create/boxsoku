@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="styles.css?v=20260703-ranking2" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="config.js" defer></script>
-    <script src="data.js" defer></script>
-    <script src="editor.js" defer></script>
+    <script src="data.js?v=20260804-boxrec1" defer></script>
+    <script src="editor.js?v=20260804-boxrec1" defer></script>
   </head>
   <body class="editor-page">
     <header class="editor-header">
@@ -65,6 +65,11 @@
           <label class="image-url-field">
             <span>記事画像URL</span>
             <input id="image-url" type="url" placeholder="https://pbs.twimg.com/media/xxxx.jpg" />
+          </label>
+          <label class="image-url-field">
+            <span>写真クリック先（BoxRec URL）</span>
+            <input id="boxrec-url" type="url" placeholder="https://boxrec.com/en/box-pro/xxxx" />
+            <small>写真をクリックしたときに開く選手のBoxRecページです。</small>
           </label>
           <div class="image-file-row">
             <label class="image-file-button">

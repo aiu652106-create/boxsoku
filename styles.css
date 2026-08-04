@@ -5768,3 +5768,10 @@ body.retro-blog .retro-detail .retro-meta {
     margin-right: 8px !important;
   }
 }
+
+/* Keep BoxRec-linked article images visually identical to unlinked images. */
+body.retro-blog .retro-image-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}

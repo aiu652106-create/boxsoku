@@ -220,6 +220,17 @@ function renderArticle(article) {
   const image = document.createElement("img");
   image.className = "retro-post-image retro-detail-image";
   window.BoxingUI?.applyArticleImage(image, article);
+  let imageContent = image;
+  if (article.boxrecUrl) {
+    const imageLink = document.createElement("a");
+    imageLink.className = "retro-image-link";
+    imageLink.href = article.boxrecUrl;
+    imageLink.target = "_blank";
+    imageLink.rel = "noopener noreferrer";
+    imageLink.setAttribute("aria-label", "BoxRecで選手情報を開く");
+    imageLink.appendChild(image);
+    imageContent = imageLink;
+  }
 
   const topAd = createAdSlot("articleTop");
 
@@ -287,7 +298,7 @@ function renderArticle(article) {
   lead.className = "retro-article-lead";
   lead.textContent = leadText;
   container.append(titleRow, category);
-  container.appendChild(image);
+  container.appendChild(imageContent);
   container.appendChild(topAd);
   if (affiliateLinks) container.appendChild(affiliateLinks);
   if (lead.textContent) container.appendChild(lead);

@@ -96,6 +96,7 @@
       body: row.body || "",
       image: row.image_url || "",
       imagePath: row.image_path || "",
+      boxrecUrl: row.boxrec_url || "",
       accent: row.accent || "red",
       status: row.status || "draft",
       isAdvertorial: Boolean(row.is_advertorial),
@@ -125,6 +126,7 @@
       body: article.body,
       image_url: article.image || null,
       image_path: article.imagePath || null,
+      boxrec_url: article.boxrecUrl || "",
       accent: "red",
       status: article.status || "draft",
       is_advertorial: Boolean(article.isAdvertorial),
@@ -258,23 +260,34 @@
     requireConfigured();
     const row = articleToRow(article);
 
+    // Keep existing deployments usable until the schema migration is run.
+    const retryWithoutBoxRecColumn = async (operation) => {
+      let result = await operation(row);
+      if (result.error && /boxrec_url/i.test(String(result.error.message || ""))) {
+        const legacyRow = { ...row };
+        delete legacyRow.boxrec_url;
+        result = await operation(legacyRow);
+      }
+      return result;
+    };
+
     if (article.id) {
-      const { data, error } = await client
-        .from("articles")
-        .update(row)
-        .eq("id", article.id)
-        .select()
-        .single();
+      const { data, error } = await retryWithoutBoxRecColumn((payload) =>
+        client
+          .from("articles")
+          .update(payload)
+          .eq("id", article.id)
+          .select()
+          .single()
+      );
       if (error) throw error;
       publicArticlesPromise = null;
       return normalizeArticle(data);
     }
 
-    const { data, error } = await client
-      .from("articles")
-      .insert(row)
-      .select()
-      .single();
+    const { data, error } = await retryWithoutBoxRecColumn((payload) =>
+      client.from("articles").insert(payload).select().single()
+    );
     if (error) throw error;
     publicArticlesPromise = null;
     return normalizeArticle(data);
@@ -440,6 +453,23 @@
     return urls;
   }
 
+  function parseBoxRecUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    try {
+      const url = new URL(raw);
+      if (
+        url.protocol !== "https:" ||
+        !/(^|\.)boxrec\.com$/i.test(url.hostname)
+      ) {
+        throw new Error();
+      }
+      return url.href;
+    } catch {
+      throw new Error("BoxRec URLはhttps://boxrec.com/から入力してください。");
+    }
+  }
+
   function parseAffiliateLinks(value) {
     const links = String(value || "")
       .split(/\r?\n/)
@@ -546,6 +576,7 @@
     articleSummary,
     createSlug,
     parseUrlList,
+    parseBoxRecUrl,
     parseAffiliateLinks,
     isTweetUrl,
     getYouTubeVideoId,

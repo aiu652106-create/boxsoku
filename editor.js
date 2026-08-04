@@ -3,6 +3,7 @@ const params = new URLSearchParams(window.location.search);
 const editingId = params.get("id");
 const imageFileInput = document.querySelector("#image-file");
 const imageUrlInput = document.querySelector("#image-url");
+const boxrecUrlInput = document.querySelector("#boxrec-url");
 const imageStatus = document.querySelector("#image-status");
 const previewImage = document.querySelector("#preview-image");
 const submitButton = document.querySelector("#publish-button");
@@ -264,6 +265,7 @@ form.addEventListener("submit", async (event) => {
       body: document.querySelector("#body").value.trim(),
       image,
       imagePath,
+      boxrecUrl: window.BoxingData.parseBoxRecUrl(boxrecUrlInput.value),
       accent: "red",
       status,
       isAdvertorial:
@@ -335,6 +337,7 @@ function fillForm(article) {
     setPreviewImage(article.image);
     imageStatus.textContent = "現在の記事画像";
   }
+  boxrecUrlInput.value = article.boxrecUrl || "";
   submitButton.firstChild.textContent = "変更を保存する";
   updatePreview();
 }

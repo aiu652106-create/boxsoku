@@ -14,6 +14,7 @@ create table if not exists public.articles (
   body text not null,
   image_url text,
   image_path text,
+  boxrec_url text not null default '',
   accent text not null default 'red' check (accent in ('red', 'blue', 'gold', 'mono')),
   status text not null default 'draft' check (status in ('draft', 'published')),
   is_advertorial boolean not null default false,
@@ -40,6 +41,9 @@ create table if not exists public.comments (
 
 alter table public.articles
   add column if not exists affiliate_links jsonb not null default '[]'::jsonb;
+
+alter table public.articles
+  add column if not exists boxrec_url text not null default '';
 
 create index if not exists articles_public_order_idx
   on public.articles (status, published_at desc);
