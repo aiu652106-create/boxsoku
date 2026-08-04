@@ -471,11 +471,18 @@
 
   async function getAdminUniqueVisitorCount() {
     requireConfigured();
-    const { error: articleSchemaError } = await client
+    const { data: articleSchemaRows, error: articleSchemaError } = await client
       .from("articles")
-      .select("unique_view_count", { count: "exact", head: true });
-    if (articleSchemaError) {
-      console.warn("Unique visitor article field unavailable:", articleSchemaError.message);
+      .select("unique_view_count")
+      .limit(1);
+    if (
+      articleSchemaError ||
+      (articleSchemaRows?.length && articleSchemaRows[0].unique_view_count == null)
+    ) {
+      console.warn(
+        "Unique visitor article field unavailable:",
+        articleSchemaError?.message || "field is not initialized"
+      );
       return null;
     }
     const { count, error } = await client
