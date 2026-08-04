@@ -105,9 +105,6 @@ async function loadArticles(previewArticles = null) {
   document.querySelector("#draft-count").textContent = String(
     articles.filter((article) => article.status === "draft").length
   );
-  document.querySelector("#view-count").textContent = String(
-    articles.reduce((total, article) => total + Number(article.viewCount || 0), 0).toLocaleString("ja-JP")
-  );
   document.querySelector("#admin-list-count").textContent = `${articles.length}件`;
   emptyState.hidden = articles.length > 0;
 }
@@ -205,14 +202,19 @@ async function loadComments(previewItems = null) {
   renderComments(comments);
 }
 
-async function loadUniqueVisitorCount() {
-  const element = document.querySelector("#unique-visitor-count");
+async function loadVisitStats() {
+  const todayElement = document.querySelector("#today-visitor-count");
+  const monthElement = document.querySelector("#month-visitor-count");
   if (previewMode) {
-    element.textContent = "未設定";
+    todayElement.textContent = "未設定";
+    monthElement.textContent = "未設定";
     return;
   }
-  const count = await window.BoxingData.getAdminUniqueVisitorCount();
-  element.textContent = count == null ? "未設定" : count.toLocaleString("ja-JP");
+  const stats = await window.BoxingData.getAdminVisitStats();
+  todayElement.textContent =
+    stats == null ? "未設定" : stats.today.toLocaleString("ja-JP");
+  monthElement.textContent =
+    stats == null ? "未設定" : stats.month.toLocaleString("ja-JP");
 }
 
 function getLocalAdminComments() {
@@ -263,7 +265,7 @@ async function showDashboard() {
   }
   loginPanel.hidden = true;
   dashboard.hidden = false;
-  await Promise.all([loadArticles(), loadComments(), loadUniqueVisitorCount()]);
+  await Promise.all([loadArticles(), loadComments(), loadVisitStats()]);
 }
 
 loginForm.addEventListener("submit", async (event) => {
@@ -306,7 +308,7 @@ async function initialize() {
     await Promise.all([
       loadArticles(window.BoxingData.sampleArticles),
       loadComments(),
-      loadUniqueVisitorCount()
+      loadVisitStats()
     ]);
     return;
   }

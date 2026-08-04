@@ -469,30 +469,43 @@
     });
   }
 
-  async function getAdminUniqueVisitorCount() {
+  async function getAdminVisitStats() {
     requireConfigured();
-    const { data: articleSchemaRows, error: articleSchemaError } = await client
-      .from("articles")
-      .select("unique_view_count")
-      .limit(1);
-    if (
-      articleSchemaError ||
-      (articleSchemaRows?.length && articleSchemaRows[0].unique_view_count == null)
-    ) {
+    const now = new Date();
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Tokyo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      })
+        .formatToParts(now)
+        .filter((part) => part.type !== "literal")
+        .map((part) => [part.type, part.value])
+    );
+    const todayStart = `${parts.year}-${parts.month}-${parts.day}T00:00:00+09:00`;
+    const monthStart = `${parts.year}-${parts.month}-01T00:00:00+09:00`;
+    const [todayResult, monthResult] = await Promise.all([
+      client
+        .from("site_visitors")
+        .select("visitor_hash", { count: "exact", head: true })
+        .gte("last_seen", todayStart),
+      client
+        .from("site_visitors")
+        .select("visitor_hash", { count: "exact", head: true })
+        .gte("last_seen", monthStart)
+    ]);
+    if (todayResult.error || monthResult.error) {
       console.warn(
-        "Unique visitor article field unavailable:",
-        articleSchemaError?.message || "field is not initialized"
+        "Visit stats unavailable:",
+        todayResult.error?.message || monthResult.error?.message
       );
       return null;
     }
-    const { count, error } = await client
-      .from("site_visitors")
-      .select("visitor_hash", { count: "exact", head: true });
-    if (error) {
-      console.warn("Unique visitor stats unavailable:", error.message);
-      return null;
-    }
-    return Number(count || 0);
+    return {
+      today: Number(todayResult.count || 0),
+      month: Number(monthResult.count || 0)
+    };
   }
 
   async function deleteComment(commentId) {
@@ -740,7 +753,7 @@
     saveArticle,
     deleteArticle,
     getAdminComments,
-    getAdminUniqueVisitorCount,
+    getAdminVisitStats,
     deleteComment,
     getSession,
     getCurrentUser,

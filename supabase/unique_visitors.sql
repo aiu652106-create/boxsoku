@@ -88,3 +88,9 @@ using (public.is_admin());
 
 grant execute on function public.record_article_view(text, text) to anon, authenticated;
 grant select on public.site_visitors, public.article_unique_views to authenticated;
+
+-- Start the requested visitor dashboard from zero. Run this migration once.
+truncate table public.article_unique_views, public.site_visitors;
+update public.articles
+set view_count = 0,
+    unique_view_count = 0;
