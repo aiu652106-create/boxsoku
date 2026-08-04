@@ -82,11 +82,7 @@ function createArticle(article) {
 
   const image = document.createElement("a");
   image.className = "retro-post-image";
-  image.href = article.boxrecUrl || window.BoxingData.articleUrl(article);
-  if (article.boxrecUrl) {
-    image.target = "_blank";
-    image.rel = "noopener noreferrer";
-  }
+  image.href = window.BoxingData.articleUrl(article);
   image.setAttribute("aria-label", `${article.title}の続きを読む`);
   const hasImage = window.BoxingUI.applyArticleImage(image, article);
 
