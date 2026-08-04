@@ -81,6 +81,113 @@ const articleBodyHtml = (body, title = "", lead = "") => {
 
 const jsonArray = (value) => (Array.isArray(value) ? value : []);
 
+const featuredFightCards = {
+  "2026-08-16-treasure-boxing-promotion-14": [
+    {
+      weight: "スーパーバンタム級10回戦",
+      left: {
+        name: "小國 以載",
+        profile: "https://boxrec.com/en/box-pro/518213",
+        image: "https://boxrec.com/images/thumb/6/63/518213_2023.jpeg/200px-518213_2023.jpeg"
+      },
+      right: {
+        name: "アレックス サンティシマ Jr.",
+        profile: "https://boxrec.com/en/box-pro/895661",
+        image: "https://boxrec.com/assets/images/main/v8-avatar-XyaKPuP.svg"
+      }
+    },
+    {
+      weight: "WBO-AP・OPBFスーパーウェルター級王座統一10回戦",
+      left: {
+        name: "豊嶋 亮太",
+        profile: "https://boxrec.com/en/box-pro/704550",
+        image: "https://boxrec.com/images/thumb/4/4d/704550.jpg/200px-704550.jpg"
+      },
+      right: {
+        name: "緑川 創",
+        profile: "https://boxrec.com/en/box-pro/1274846",
+        image: "https://boxrec.com/assets/images/main/v8-avatar-XyaKPuP.svg"
+      }
+    },
+    {
+      weight: "WBO-AP・日本ミドル級王座決定10回戦",
+      left: {
+        name: "竹迫 司登",
+        profile: "https://boxrec.com/en/box-pro/724918",
+        image: "https://boxrec.com/images/thumb/f/f5/Kazuto_Takesako.jpeg/200px-Kazuto_Takesako.jpeg"
+      },
+      right: {
+        name: "川渕 一統",
+        profile: "https://boxrec.com/en/box-pro/1131567",
+        image: "https://boxrec.com/assets/images/main/v8-avatar-XyaKPuP.svg"
+      }
+    },
+    {
+      weight: "日本ライトフライ級タイトルマッチ10回戦",
+      left: {
+        name: "亀山 大輝",
+        profile: "https://boxrec.com/en/box-pro/749423",
+        image: "https://boxrec.com/images/thumb/4/43/Daiki_Kameyama.JPG/200px-Daiki_Kameyama.JPG"
+      },
+      right: {
+        name: "大橋 波月",
+        profile: "https://boxrec.com/en/box-pro/762381",
+        image: "https://boxrec.com/images/thumb/e/e7/Natsu_Ohashi.jpg/200px-Natsu_Ohashi.jpg"
+      }
+    },
+    {
+      weight: "スーパーバンタム級8回戦",
+      left: {
+        name: "細川 兼伸",
+        profile: "https://boxrec.com/en/box-pro/1038164",
+        image: "https://boxrec.com/assets/images/main/v8-avatar-XyaKPuP.svg"
+      },
+      right: {
+        name: "森 朝登",
+        profile: "https://boxrec.com/en/box-pro/834182",
+        image: "https://boxrec.com/assets/images/main/v8-avatar-XyaKPuP.svg"
+      }
+    }
+  ]
+};
+
+function fightCardsHtml(slug) {
+  const fights = featuredFightCards[slug] || [];
+  if (!fights.length) return "";
+  const fighterHtml = (fighter, side) => {
+    const profile = safeBoxRecUrl(fighter.profile);
+    if (!profile) return "";
+    const image = safeUrl(fighter.image, "");
+    const imageHtml = image
+      ? `<a class="retro-fighter-photo retro-fighter-photo-${side}" href="${escapeHtml(
+          profile
+        )}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(
+          fighter.name
+        )}のBoxRecプロフィールを開く"><img src="${escapeHtml(
+          image
+        )}" alt="${escapeHtml(fighter.name)}のBoxRecプロフィール画像" loading="lazy"></a>`
+      : "";
+    return `<div class="retro-fighter-card">${imageHtml}<a class="retro-fighter-name retro-fighter-name-${side}" href="${escapeHtml(
+      profile
+    )}" target="_blank" rel="noopener noreferrer">${escapeHtml(
+      fighter.name
+    )}</a><span class="retro-fighter-source">BoxRec</span></div>`;
+  };
+  return `<section class="retro-fight-cards" aria-labelledby="fight-card-heading"><div class="retro-fight-cards-heading"><span>FIGHT CARD</span><h2 id="fight-card-heading">対戦カード</h2></div>${fights
+    .map(
+      (fight) => `<article class="retro-fight-card"><p class="retro-fight-weight">${escapeHtml(
+        fight.weight
+      )}</p><div class="retro-fight-card-grid">${fighterHtml(
+        fight.left,
+        "left"
+      )}<span class="retro-fight-vs" aria-hidden="true">VS</span>${fighterHtml(
+        fight.right,
+        "right"
+      )}</div></article>`
+    )
+    .join("")}</section>`;
+}
+
 function articleSummary(article) {
   const title = String(article?.title || "").trim();
   const rawSummary = String(article?.summary || "").trim();
@@ -372,6 +479,7 @@ export async function onRequestGet(context) {
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         ${affiliateLinksHtml(article)}
         ${summary ? `<p class="retro-article-lead">${escapeHtml(summary)}</p>` : ""}
+        ${fightCardsHtml(article.slug)}
         <div class="retro-detail-body">${articleBodyHtml(article.body, article.title, summary)}${embedsHtml(article)}</div>
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>
         <p class="retro-tags">タグ：ボクシング　ニュース</p>
