@@ -43,6 +43,8 @@ Do not treat a correction as learned merely because the current output was fixed
 - Re-read the saved values after reload and compare them with the source check.
 - Check internal counts for consistency, such as the number stated in an article matching the number of cards displayed.
 - If a source contains a corrected or newer value, replace the old value everywhere it is displayed and re-check the public page.
+- For admin editor changes, verify the live preview renders each newly editable field, not only the saved form value.
+- When adding a data field, check the full path: input, live preview, save payload, reload, and public rendering.
 
 ## Stop conditions
 
