@@ -147,6 +147,11 @@ function createFightCards(article) {
     ? article.fightCards
     : window.BoxingData.getDefaultFightCards(article.slug);
   if (!cards.length) return null;
+  const orderedCards = [...cards].sort((a, b) => {
+    const numberA = Number(String(a.bout || "").match(/\d+/)?.[0] || 999);
+    const numberB = Number(String(b.bout || "").match(/\d+/)?.[0] || 999);
+    return numberA - numberB;
+  });
 
   const section = document.createElement("section");
   section.className = "retro-fight-cards";
@@ -161,7 +166,7 @@ function createFightCards(article) {
   heading.append(eyebrow, title);
   section.appendChild(heading);
 
-  cards.forEach((fight, index) => {
+  orderedCards.forEach((fight, index) => {
     const card = document.createElement("article");
     card.className = "retro-fight-card";
     const bout = document.createElement("p");

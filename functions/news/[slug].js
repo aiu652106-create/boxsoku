@@ -192,6 +192,11 @@ function fightCardsHtml(article) {
     ? stored.cards
     : featuredFightCards[article?.slug] || [];
   if (!fights.length) return "";
+  const orderedFights = [...fights].sort((a, b) => {
+    const numberA = Number(String(a.bout || "").match(/\d+/)?.[0] || 999);
+    const numberB = Number(String(b.bout || "").match(/\d+/)?.[0] || 999);
+    return numberA - numberB;
+  });
   const fighterHtml = (fighter, side) => {
     const profile = safeBoxRecUrl(fighter.profile);
     const image = fightImageUrl(fighter.image);
@@ -218,7 +223,7 @@ function fightCardsHtml(article) {
         )}</span>`;
     return `<div class="retro-fighter-card">${imageHtml}${rankingHtml}${nameHtml}</div>`;
   };
-  return `<section class="retro-fight-cards" aria-labelledby="fight-card-heading"><div class="retro-fight-cards-heading"><span>FIGHT CARD</span><h2 id="fight-card-heading">対戦カード</h2></div>${fights
+  return `<section class="retro-fight-cards" aria-labelledby="fight-card-heading"><div class="retro-fight-cards-heading"><span>FIGHT CARD</span><h2 id="fight-card-heading">対戦カード</h2></div>${orderedFights
     .map(
       (fight) => `<article class="retro-fight-card"><p class="retro-fight-number">${escapeHtml(
         fight.bout || ""
