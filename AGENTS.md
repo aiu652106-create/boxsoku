@@ -59,6 +59,7 @@ Do not treat a correction as learned merely because the current output was fixed
 - If a source contains a corrected or newer value, replace the old value everywhere it is displayed and re-check the public page.
 - For admin editor changes, verify the live preview renders each newly editable field, not only the saved form value.
 - When adding a data field, check the full path: input, live preview, save payload, reload, and public rendering.
+- When changing a cached static asset, bump its version key and verify the production HTML loads the new CSS/JS URL; a stale cached page is not a reflection check.
 
 ## Stop conditions
 
