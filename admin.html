@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex,nofollow" />
     <title>管理画面 | ボクシング速報</title>
-    <link rel="stylesheet" href="styles.css?v=20260703-ranking2" />
+    <link rel="stylesheet" href="styles.css?v=20260804-admin-viewcount1" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="config.js" defer></script>
     <script src="data.js?v=20260804-carddetails1" defer></script>
-    <script src="admin.js?v=20260804-carddetails1" defer></script>
+    <script src="admin.js?v=20260804-admin-viewcount1" defer></script>
   </head>
   <body class="admin-page">
     <header class="admin-header">
@@ -69,17 +69,18 @@
           <div>
             <span>ARTICLES</span>
             <h1>記事管理</h1>
-            <p>公開記事と下書きを編集・削除できます。</p>
+            <p>公開記事と下書きを編集・削除できます。訪問数は記事ページのPVとして集計します。</p>
           </div>
           <a id="new-article-button" class="admin-new-button" href="editor.html">
             ＋ 新しい記事を書く
           </a>
         </div>
 
-        <section class="admin-stats" aria-label="記事数">
+        <section class="admin-stats" aria-label="記事・閲覧統計">
           <div><span>公開記事</span><strong id="published-count">0</strong></div>
           <div><span>下書き</span><strong id="draft-count">0</strong></div>
           <div><span>コメント</span><strong id="comment-count">0</strong></div>
+          <div><span>累計閲覧数</span><strong id="view-count">0</strong></div>
         </section>
 
         <section class="admin-list-panel">

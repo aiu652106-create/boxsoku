@@ -38,7 +38,10 @@ function createArticleRow(article) {
   fightCardCount.textContent = article.fightCards?.length
     ? `対戦カード ${article.fightCards.length}件`
     : "対戦カードなし";
-  info.append(status, title, fightCardCount);
+  const viewCount = document.createElement("p");
+  viewCount.className = "admin-article-view-count";
+  viewCount.textContent = `閲覧数 ${Number(article.viewCount || 0).toLocaleString("ja-JP")} PV`;
+  info.append(status, title, fightCardCount, viewCount);
 
   const actions = document.createElement("div");
   actions.className = "admin-article-actions";
@@ -95,6 +98,9 @@ async function loadArticles(previewArticles = null) {
   );
   document.querySelector("#draft-count").textContent = String(
     articles.filter((article) => article.status === "draft").length
+  );
+  document.querySelector("#view-count").textContent = String(
+    articles.reduce((total, article) => total + Number(article.viewCount || 0), 0).toLocaleString("ja-JP")
   );
   document.querySelector("#admin-list-count").textContent = `${articles.length}件`;
   emptyState.hidden = articles.length > 0;

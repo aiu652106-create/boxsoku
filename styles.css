@@ -1685,6 +1685,7 @@ button {
 
 .preview-fight-photo {
   display: block;
+  min-width: 0;
   width: 100%;
   aspect-ratio: 4 / 3;
   margin-bottom: 9px;
@@ -1694,6 +1695,7 @@ button {
 
 .preview-fight-photo img {
   display: block;
+  max-width: 100%;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -2995,7 +2997,7 @@ button {
 .admin-stats {
   display: grid;
   margin-bottom: 22px;
-  grid-template-columns: repeat(3, minmax(0, 190px));
+  grid-template-columns: repeat(4, minmax(0, 190px));
   gap: 14px;
 }
 
@@ -3057,6 +3059,13 @@ button {
 
 .admin-article-row:last-child {
   border-bottom: 0;
+}
+
+.admin-article-view-count {
+  margin: 4px 0 0;
+  color: #737b85;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .admin-article-status {
@@ -3290,7 +3299,7 @@ button {
   }
 
   .admin-stats {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .admin-article-row {
