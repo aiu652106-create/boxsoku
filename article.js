@@ -161,9 +161,12 @@ function createFightCards(article) {
   heading.append(eyebrow, title);
   section.appendChild(heading);
 
-  cards.forEach((fight) => {
+  cards.forEach((fight, index) => {
     const card = document.createElement("article");
     card.className = "retro-fight-card";
+    const bout = document.createElement("p");
+    bout.className = "retro-fight-number";
+    bout.textContent = fight.bout || `第${index + 1}試合`;
     const weight = document.createElement("p");
     weight.className = "retro-fight-weight";
     weight.textContent = fight.weight;
@@ -202,6 +205,12 @@ function createFightCards(article) {
         photo.appendChild(imageElement);
         fighterCard.appendChild(photo);
       }
+      if (fighter.ranking) {
+        const ranking = document.createElement("p");
+        ranking.className = "retro-fighter-ranking";
+        ranking.textContent = fighter.ranking;
+        fighterCard.appendChild(ranking);
+      }
       if (profile) {
         const name = document.createElement("a");
         name.className = `retro-fighter-name retro-fighter-name-${side}`;
@@ -213,7 +222,7 @@ function createFightCards(article) {
       }
       grid.appendChild(fighterCard);
     });
-    card.append(weight, grid);
+    card.append(bout, weight, grid);
     section.appendChild(card);
   });
   return section;

@@ -5969,6 +5969,15 @@ body.retro-blog .retro-fight-weight {
   text-align: center;
 }
 
+body.retro-blog .retro-fight-number {
+  margin: 0 0 4px;
+  color: #9b762e;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
 body.retro-blog .retro-fight-card-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr);
@@ -6010,11 +6019,21 @@ body.retro-blog .retro-fighter-name {
 }
 
 body.retro-blog .retro-fighter-name-left {
-  background: #b3232d;
+  background: #282725;
 }
 
 body.retro-blog .retro-fighter-name-right {
-  background: #1f5da8;
+  background: #a47b2c;
+}
+
+body.retro-blog .retro-fighter-ranking {
+  min-height: 18px;
+  margin: 0 0 5px;
+  color: #8a6727;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 body.retro-blog .retro-fighter-source {

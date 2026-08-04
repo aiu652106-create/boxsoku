@@ -65,6 +65,7 @@ function createFightCardRow(card = {}) {
   });
   heading.append(title, remove);
 
+  const bout = createFightCardField("試合番号", "bout", card.bout);
   const weight = createFightCardField("階級・試合形式", "weight", card.weight);
   const fighters = document.createElement("div");
   fighters.className = "fight-card-fighters-editor";
@@ -81,6 +82,7 @@ function createFightCardRow(card = {}) {
     panel.appendChild(panelHeading);
     [
       ["選手名", "name", "text"],
+      ["ランキング・肩書き", "ranking", "text"],
       ["BoxRecプロフィールURL", "profile", "url"],
       ["写真URL", "image", "url"]
     ].forEach(([label, field, type]) => {
@@ -96,7 +98,7 @@ function createFightCardRow(card = {}) {
     fighters.appendChild(panel);
   });
 
-  row.append(heading, weight, fighters);
+  row.append(heading, bout, weight, fighters);
   return row;
 }
 
@@ -105,7 +107,11 @@ function updateFightCardEmpty() {
 }
 
 function renderFightCards(cards) {
-  fightCardList.replaceChildren(...cards.map(createFightCardRow));
+  fightCardList.replaceChildren(
+    ...cards.map((card, index) =>
+      createFightCardRow({ ...card, bout: card.bout || `第${index + 1}試合` })
+    )
+  );
   updateFightCardEmpty();
 }
 
@@ -122,15 +128,18 @@ function collectFightCards() {
       const leftImage = window.BoxingData.parseImageUrl(value("left", "image"));
       const rightImage = window.BoxingData.parseImageUrl(value("right", "image"));
       return {
+        bout: row.querySelector('input[data-field="bout"]')?.value.trim() || "",
         weight: row.querySelector('input[data-field="weight"]')?.value.trim() || "",
         left: {
           name: value("left", "name"),
+          ranking: value("left", "ranking"),
           profile: leftProfile,
           image: leftImage,
           imageSource: row.dataset.imageSourceLeft || ""
         },
         right: {
           name: value("right", "name"),
+          ranking: value("right", "ranking"),
           profile: rightProfile,
           image: rightImage,
           imageSource: row.dataset.imageSourceRight || ""

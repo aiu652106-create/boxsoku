@@ -169,15 +169,18 @@
     if (!Array.isArray(value)) return [];
     return value
       .map((card) => ({
+        bout: String(card?.bout || "").trim(),
         weight: String(card?.weight || "").trim(),
         left: {
           name: String(card?.left?.name || "").trim(),
+          ranking: String(card?.left?.ranking || "").trim(),
           profile: String(card?.left?.profile || "").trim(),
           image: String(card?.left?.image || "").trim(),
           imageSource: String(card?.left?.imageSource || "").trim()
         },
         right: {
           name: String(card?.right?.name || "").trim(),
+          ranking: String(card?.right?.ranking || "").trim(),
           profile: String(card?.right?.profile || "").trim(),
           image: String(card?.right?.image || "").trim(),
           imageSource: String(card?.right?.imageSource || "").trim()
