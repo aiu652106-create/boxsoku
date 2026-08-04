@@ -44,6 +44,15 @@ const safeUrl = (value, defaultValue = "#") => {
   return defaultValue;
 };
 
+const safeHttpsUrl = (value) => {
+  try {
+    const url = new URL(String(value || ""));
+    return url.protocol === "https:" ? url.href : "";
+  } catch {
+    return "";
+  }
+};
+
 const fightImageUrl = (value) => {
   if (!String(value || "").trim()) return "";
   const image = safeUrl(value, "");
@@ -408,6 +417,45 @@ function affiliateLinksHtml(article) {
     : "";
 }
 
+function productCardsHtml(article) {
+  const stored = jsonArray(article?.affiliate_links).find(
+    (item) => item && item.type === "product_cards" && Array.isArray(item.cards)
+  );
+  const cards = (stored?.cards || [])
+    .map((item) => ({
+      title: String(item?.title || "").trim(),
+      image: safeHttpsUrl(item?.image),
+      url: safeHttpsUrl(item?.url),
+      price: String(item?.price || "").trim(),
+      checkedAt: String(item?.checkedAt || "").trim()
+    }))
+    .filter((item) => item.title && item.image && item.url)
+    .slice(0, 4);
+  if (!cards.length) return "";
+
+  return `<section class="affiliate-products" aria-label="おすすめ商品">${cards
+    .map(
+      (item) => `<a class="affiliate-product-card" href="${escapeHtml(
+        item.url
+      )}" target="_blank" rel="sponsored nofollow noopener"><img src="${escapeHtml(
+        item.image
+      )}" alt="${escapeHtml(item.title)}の商品画像" loading="lazy" referrerpolicy="no-referrer"><span class="affiliate-product-card-content"><strong>${escapeHtml(
+        item.title
+      )}</strong>${
+        item.price
+          ? `<span class="affiliate-product-price">${escapeHtml(item.price)}</span>`
+          : ""
+      }${
+        item.checkedAt
+          ? `<small class="affiliate-product-checked-at">${escapeHtml(
+              item.checkedAt
+            )}時点</small>`
+          : ""
+      }<span class="affiliate-product-action">商品を見る</span></span></a>`
+    )
+    .join("")}</section>`;
+}
+
 function sidebarHtml(articles, ranked = false) {
   return articles
     .map(
@@ -513,12 +561,20 @@ export async function onRequestGet(context) {
   const hasAffiliateLinks = jsonArray(article.affiliate_links).some(
     (item) => item && item.label && item.url
   );
-  const disclosure = article.is_advertorial || hasAffiliateLinks
+  const hasProductCards = jsonArray(article.affiliate_links).some(
+    (item) =>
+      item &&
+      item.type === "product_cards" &&
+      Array.isArray(item.cards) &&
+      item.cards.length > 0
+  );
+  const disclosure = article.is_advertorial || hasAffiliateLinks || hasProductCards
     ? `<aside class="affiliate-disclosure"><span class="affiliate-disclosure-badge">PR</span><span>${escapeHtml(
         article.affiliate_disclosure ||
           "この記事には配信サービスのアフィリエイトリンクが含まれています。"
       )}</span></aside>`
     : "";
+  const productCards = productCardsHtml(article);
   const structuredData = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "NewsArticle",
@@ -563,7 +619,7 @@ export async function onRequestGet(context) {
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ""}
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script type="application/ld+json">${structuredData}</script>
-   <link rel="stylesheet" href="/styles.css?v=20260804-category-sidebar6">
+   <link rel="stylesheet" href="/styles.css?v=20260805-affiliate-products1">
   <script src="/config.js" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
@@ -599,6 +655,7 @@ export async function onRequestGet(context) {
         }
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         ${affiliateLinksHtml(article)}
+        ${productCards}
         <div class="retro-detail-body">${articleBodyHtml(article.body, article.title, summary)}${embedsHtml(article)}</div>
         ${fightCardsHtml(article)}
         ${videosHtml(article)}
