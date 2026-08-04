@@ -6328,8 +6328,10 @@ body.retro-blog .retro-category-sidebar {
 
 body.retro-blog .retro-category-sidebar a {
   justify-content: center;
-  min-height: 30px;
-  padding: 5px 8px;
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.3;
 }
 
 @media (max-width: 720px) {
