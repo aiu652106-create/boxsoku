@@ -6339,7 +6339,11 @@ body.retro-blog .retro-category-sidebar a {
 
 body.retro-blog .retro-sidebar-popular > .retro-sidebar-panel {
   position: static !important;
-  margin-top: 24px;
+  margin-top: 0;
+}
+
+body.retro-blog .retro-sidebar-popular {
+  padding-top: 180px !important;
 }
 
 @media (max-width: 720px) {
@@ -6371,5 +6375,9 @@ body.retro-blog .retro-sidebar-popular > .retro-sidebar-panel {
     width: 100%;
     margin-bottom: 10px;
     overflow: visible;
+  }
+
+  body.retro-blog .retro-sidebar-popular {
+    padding-top: 0 !important;
   }
 }
