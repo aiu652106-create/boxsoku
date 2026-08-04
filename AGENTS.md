@@ -63,6 +63,7 @@ Do not treat a correction as learned merely because the current output was fixed
 - Live previews must render the complete saved body unless truncation is an explicit requirement; compare preview paragraph count and text coverage with the editor input.
 - Do not use a fixed generic tag on every article; derive the tag from the confirmed article type and verify the rendered public tag.
 - Keep unique visitors separate from PV. Verify that a new visitor token adds one unique visitor, a repeated token adds only PV, and the admin fallback remains readable before the migration is applied.
+- Use `boxsoku_verify=1` for agent QA visits to article URLs; verification requests must skip PV and visitor RPCs so checks do not pollute analytics.
 
 ## Stop conditions
 

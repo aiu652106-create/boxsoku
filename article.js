@@ -468,7 +468,9 @@ async function initialize() {
     renderArticle(article);
     const articles = await window.BoxingData.getArticles();
     await window.BoxingUI.renderSidebars(articles);
-    window.BoxingData.incrementView(article.slug).catch(() => {});
+    if (params.get("boxsoku_verify") !== "1") {
+      window.BoxingData.incrementView(article.slug).catch(() => {});
+    }
   } catch (error) {
     console.error(error);
     container.innerHTML =

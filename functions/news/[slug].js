@@ -454,6 +454,8 @@ export async function onRequestGet(context) {
   }
 
   const slug = String(params.slug || "");
+  const isVerificationRequest =
+    new URL(request.url).searchParams.get("boxsoku_verify") === "1";
   const existingVisitorToken = readCookie(
     request.headers.get("Cookie"),
     visitorCookieName
@@ -636,6 +638,7 @@ export async function onRequestGet(context) {
 
   context.waitUntil(
     (async () => {
+      if (isVerificationRequest) return;
       const headers = {
         apikey: env.SUPABASE_ANON_KEY,
         Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
@@ -666,7 +669,7 @@ export async function onRequestGet(context) {
     "Content-Type": "text/html; charset=UTF-8",
     "Cache-Control": "private, no-store"
   };
-  if (!existingVisitorToken) {
+  if (!existingVisitorToken && !isVerificationRequest) {
     responseHeaders["Set-Cookie"] = `${visitorCookieName}=${encodeURIComponent(
       visitorToken
     )}; Max-Age=31536000; Path=/; SameSite=Lax; Secure`;
