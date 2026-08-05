@@ -36,6 +36,31 @@ Use the following cycle to reduce repeated investigation without weakening verif
 
 For high-risk facts, deployment, persistence, rights, and user-visible layout, prioritize correctness over speed. For low-risk cosmetic or mechanical changes, use the shortest applicable recipe and avoid unrelated exploration.
 
+## Affiliate operation cycle
+
+Use this cycle for every affiliate change, even when the edit appears small:
+
+1. Identify the program, the exact approved tracking URL, the visible text or image that should link, and the intended article or page scope.
+2. Check whether the current link is missing, official, duplicated, or already affiliated; do not replace another service or add a second CTA by inference.
+3. Implement the smallest change with the existing article, template, and disclosure patterns. Keep `target`, `rel="sponsored"`, and the visible destination wording correct.
+4. Check the source-to-render path: stored value or config, server-rendered HTML, client-rendered fallback, and cache-busted CSS/JS when applicable.
+5. Verify the CTA is visibly clickable, works on desktop and mobile, and does not overlap, truncate, or mislead the reader.
+6. Open the real production URL with `boxsoku_verify=1`, confirm the exact text/image, href, disclosure, and click destination, then check one neighboring article or service for unintended changes.
+7. Record the program URL and verification result in the task summary. Never introduce a paid service, purchase, or new billing setting without explicit approval.
+
+## Affiliate performance improvement cycle
+
+Use this cycle to improve earnings without blindly increasing ad volume:
+
+1. Set one measurable goal for the period, such as affiliate clicks, click-through rate, conversion rate, earnings per article, or earnings per visit.
+2. Establish a baseline by program, article category, device type, placement, CTA wording, and product group before changing the layout.
+3. Match the offer to the reader's immediate intent: streaming links near the event and viewing information, products near relevant fight or fighter content, and no unrelated recommendation.
+4. Test one variable at a time, such as text versus image, CTA wording, position, number of products, or article relevance. Keep the other conditions stable.
+5. Prefer clear, honest CTAs and restrained placement. Do not hide links, create false urgency, interrupt the article repeatedly, or add offers that weaken trust or disclosure clarity.
+6. Review enough traffic for a meaningful comparison, record the result and the losing variant, then keep the better variant only when the evidence supports it.
+7. Re-check mobile layout, page speed, link validity, affiliate disclosure, and revenue attribution after every winning change.
+8. Feed the result back into the next hypothesis. Do not assume that a high click rate means high earnings when conversion or earnings per visit falls.
+
 ## Error learning and recurrence prevention
 
 Whenever a mistake is found, the user corrects an assumption, or verification reveals an unexpected result:
