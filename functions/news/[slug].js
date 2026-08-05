@@ -98,11 +98,11 @@ const linkLeminoText = (value) =>
   String(value || "")
     .replaceAll(
       "配信：Lemino",
-      `<a href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer">配信：Lemino</a>`
+      `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer">配信：Leminoで視聴する</a>`
     )
     .replaceAll(
       "配信: Lemino",
-      `<a href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer">配信: Lemino</a>`
+      `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer">配信: Leminoで視聴する</a>`
     );
 
 const articleBodyHtml = (body, title = "", lead = "") => {
@@ -800,7 +800,7 @@ export async function onRequestGet(context) {
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ""}
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script type="application/ld+json">${structuredData}</script>
-   <link rel="stylesheet" href="/styles.css?v=20260805-affiliate-products1">
+   <link rel="stylesheet" href="/styles.css?v=20260805-lemino-link2">
   <script src="/config.js" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>

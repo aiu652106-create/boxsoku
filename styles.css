@@ -4396,6 +4396,19 @@ body.retro-blog a {
   font-weight: 700;
 }
 
+.retro-detail-body .affiliate-streaming-link {
+  color: var(--red);
+  font-weight: 900;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.retro-detail-body .affiliate-streaming-link:hover,
+.retro-detail-body .affiliate-streaming-link:focus-visible {
+  color: #8b1d1d;
+}
+
 .affiliate-links {
   width: 100%;
   margin: 28px auto 8px;

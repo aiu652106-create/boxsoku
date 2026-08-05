@@ -136,10 +136,11 @@ function appendArticleText(parent, value) {
   }
   paragraph.append(document.createTextNode(text.slice(0, index)));
   const link = document.createElement("a");
+  link.className = "affiliate-streaming-link";
   link.href = leminoAffiliateUrl;
   link.target = "_blank";
   link.rel = "sponsored noopener noreferrer";
-  link.textContent = matched;
+  link.textContent = `${matched}で視聴する`;
   paragraph.append(link, document.createTextNode(text.slice(index + matched.length)));
   parent.appendChild(paragraph);
 }
