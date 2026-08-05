@@ -60,6 +60,8 @@ Use this cycle to improve earnings without blindly increasing ad volume:
 6. Review enough traffic for a meaningful comparison, record the result and the losing variant, then keep the better variant only when the evidence supports it.
 7. Re-check mobile layout, page speed, link validity, affiliate disclosure, and revenue attribution after every winning change.
 8. Feed the result back into the next hypothesis. Do not assume that a high click rate means high earnings when conversion or earnings per visit falls.
+9. When a metric changes, analyze the likely cause before editing again: traffic source or intent, offer relevance, CTA wording, placement visibility, device layout, page speed, link validity, inventory or viewing conditions, and attribution tracking.
+10. Separate observation, hypothesis, evidence, and decision. Record what changed, what was expected, what actually happened, and the next smallest test so the same weak assumption is not repeated.
 
 ## Error learning and recurrence prevention
 
