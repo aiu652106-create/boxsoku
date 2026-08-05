@@ -2,6 +2,7 @@ const container = document.querySelector("#article-container");
 const params = new URLSearchParams(window.location.search);
 const identifier = params.get("slug") || params.get("id");
 const affiliateConfig = window.BOXING_CONFIG?.affiliate || {};
+const leminoAffiliateUrl = affiliateConfig.leminoUrl || "";
 
 function isNewsArticle(article) {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
@@ -117,6 +118,30 @@ function appendInstagram(parent, url) {
   quote.appendChild(link);
   slot.appendChild(quote);
   parent.appendChild(slot);
+}
+
+function appendArticleText(parent, value) {
+  const text = String(value || "");
+  const marker = "配信：Lemino";
+  const alternateMarker = "配信: Lemino";
+  const markerIndex = text.indexOf(marker);
+  const alternateIndex = text.indexOf(alternateMarker);
+  const index = markerIndex >= 0 ? markerIndex : alternateIndex;
+  const matched = markerIndex >= 0 ? marker : alternateMarker;
+  const paragraph = document.createElement("p");
+  if (index < 0 || !leminoAffiliateUrl) {
+    paragraph.textContent = text;
+    parent.appendChild(paragraph);
+    return;
+  }
+  paragraph.append(document.createTextNode(text.slice(0, index)));
+  const link = document.createElement("a");
+  link.href = leminoAffiliateUrl;
+  link.target = "_blank";
+  link.rel = "sponsored noopener noreferrer";
+  link.textContent = matched;
+  paragraph.append(link, document.createTextNode(text.slice(index + matched.length)));
+  parent.appendChild(paragraph);
 }
 
 function createAffiliateLinks(article) {
@@ -466,9 +491,7 @@ function renderArticle(article) {
     } else if (window.BoxingData.isTweetUrl(paragraph.trim())) {
       appendTweet(body, paragraph.trim());
     } else {
-      const text = document.createElement("p");
-      text.textContent = paragraph;
-      body.appendChild(text);
+      appendArticleText(body, paragraph);
     }
     if (index < article.tweets.length) appendTweet(body, article.tweets[index]);
     if (index === middleAdIndex) body.appendChild(createAdSlot("articleMiddle"));

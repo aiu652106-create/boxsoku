@@ -21,6 +21,8 @@ window.BOXING_CONFIG = {
     }
   },
   affiliate: {
+    leminoUrl:
+      "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2",
     disclosure:
       "この記事には配信サービスのアフィリエイトリンクが含まれています。",
     heading: "この試合を配信サイトで見る",

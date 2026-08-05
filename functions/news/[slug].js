@@ -92,6 +92,19 @@ const tweetEmbedHtml = (url) =>
     safeUrl(url, "#")
   )}">Xで投稿を見る</a></blockquote></div>`;
 
+const leminoAffiliateUrl =
+  "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2";
+const linkLeminoText = (value) =>
+  String(value || "")
+    .replaceAll(
+      "配信：Lemino",
+      `<a href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer">配信：Lemino</a>`
+    )
+    .replaceAll(
+      "配信: Lemino",
+      `<a href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer">配信: Lemino</a>`
+    );
+
 const articleBodyHtml = (body, title = "", lead = "") => {
   const paragraphs = String(body || "")
     .split(/\n\s*\n/)
@@ -124,7 +137,8 @@ const articleBodyHtml = (body, title = "", lead = "") => {
       if (isTweetUrl(paragraph.trim())) {
         return `${tweetEmbedHtml(paragraph.trim())}${ad}`;
       }
-      return `<p>${escapeHtml(paragraph).replaceAll("\n", "<br>")}</p>${ad}`;
+      const escapedParagraph = escapeHtml(paragraph).replaceAll("\n", "<br>");
+      return `<p>${linkLeminoText(escapedParagraph)}</p>${ad}`;
     })
     .join("");
 };
