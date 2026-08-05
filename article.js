@@ -27,8 +27,16 @@ function hasAffiliatePromotion(article) {
   return (
     article.isAdvertorial ||
     (Array.isArray(article.affiliateLinks) && article.affiliateLinks.length > 0) ||
-    (Array.isArray(article.productCards) && article.productCards.length > 0)
+    getPublicProductCards(article).length > 0
   );
+}
+
+function getPublicProductCards(article) {
+  const selectProducts = window.BoxingData?.selectAffiliateProductCards;
+  if (selectProducts) {
+    return selectProducts(article?.slug || article?.id || "");
+  }
+  return Array.isArray(article?.productCards) ? article.productCards : [];
 }
 
 function safeAffiliateUrl(value) {
@@ -48,7 +56,7 @@ function createAffiliateDisclosure(article) {
   badge.className = "affiliate-disclosure-badge";
   badge.textContent = "PR";
   const text = document.createElement("span");
-  const hasProducts = Array.isArray(article.productCards) && article.productCards.length > 0;
+  const hasProducts = getPublicProductCards(article).length > 0;
   text.textContent =
     article.affiliateDisclosure ||
     (hasProducts
@@ -143,7 +151,7 @@ function createAffiliateLinks(article) {
 }
 
 function createProductCards(article) {
-  const cards = (Array.isArray(article.productCards) ? article.productCards : [])
+  const cards = getPublicProductCards(article)
     .map((item) => ({
       ...item,
       url: safeAffiliateUrl(item?.url),

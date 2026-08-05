@@ -131,6 +131,177 @@ const articleBodyHtml = (body, title = "", lead = "") => {
 
 const jsonArray = (value) => (Array.isArray(value) ? value : []);
 
+const rakutenPictTextToken =
+  "eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D";
+const rakutenBoxingPartner =
+  "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/";
+const rakutenMizunoPartner =
+  "https://hb.afl.rakuten.co.jp/ichiba/5653e6af.b6bfc266.5653e6b0.a5e5a4e7/";
+const rakutenHeathPartner =
+  "https://hb.afl.rakuten.co.jp/ichiba/5653e2a5.fcd29aba.5653e2a6.838e9ac7/";
+const rakutenAffiliateUrl = (partner, itemUrl) =>
+  `${partner}?pc=${encodeURIComponent(itemUrl)}&link_type=picttext&ut=${rakutenPictTextToken}`;
+const affiliateProductPool = [
+  {
+    title: "大橋ボクシングジム コラボ HEATH Tシャツ メンズ 半袖",
+    itemUrl: "https://item.rakuten.co.jp/heath-industrial/111t-kento/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e2a5.fcd29aba.5653e2a6.838e9ac7/?me_id=1231804&item_id=10015809&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fheath-industrial%2Fcabinet%2Fheath3%2Fst041_ht_rakuten.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "4,900円（税込、送料別）",
+    family: "gym-shirt",
+    partner: rakutenHeathPartner
+  },
+  {
+    title: "【入荷しました】2020.10.31 LAS 井上尚弥 限定Tシャツ ブラック",
+    itemUrl: "https://item.rakuten.co.jp/boxing/10002535/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002535&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0118068580.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "4,400円（税込、送料無料）",
+    family: "las-shirt",
+    partner: rakutenBoxingPartner
+  },
+  {
+    title: "【入荷しました】2020.10.31 LAS 井上尚弥 限定Tシャツ ホワイト",
+    itemUrl: "https://item.rakuten.co.jp/boxing/10002536/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002536&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0118068581.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "4,400円（税込、送料無料）",
+    family: "las-shirt",
+    partner: rakutenBoxingPartner
+  },
+  {
+    title: "【入荷しました】25.1.24 TOKYO 井上尚弥 限定 WINNER Tシャツ ミズノ",
+    itemUrl: "https://item.rakuten.co.jp/boxing/32jabx5601/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10004194&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0168208178.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "6,050円（税込、送料無料）",
+    family: "shirt-0124",
+    partner: rakutenBoxingPartner
+  },
+  {
+    title: "【3-5日で発送】2024 5.6東京 ネリ戦 井上尚弥 限定 WINNER Tシャツ ミズノ",
+    itemUrl: "https://item.rakuten.co.jp/boxing/32jabx51/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10003907&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0163852388.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "5,500円（税込、送料無料）",
+    family: "shirt-0506",
+    partner: rakutenBoxingPartner
+  },
+  {
+    title: "【入荷しました】12.14 東京 井上尚弥限定 WINNER Tシャツ",
+    itemUrl: "https://item.rakuten.co.jp/boxing/10002723/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002723&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0130750673.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "4,400円（税込、送料無料）",
+    family: "shirt-1214",
+    partner: rakutenBoxingPartner
+  },
+  {
+    title: "【入荷しました】12.14 東京 井上尚弥限定 WINNER Tシャツ（別カラー）",
+    itemUrl: "https://item.rakuten.co.jp/boxing/10002724/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002724&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0130750674.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "4,400円（税込、送料無料）",
+    family: "shirt-1214",
+    partner: rakutenBoxingPartner
+  },
+  {
+    title: "【入荷しました】7.25東京 井上尚弥限定 WINNER Tシャツ ミズノ",
+    itemUrl: "https://item.rakuten.co.jp/boxing/32jaax11/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10003307&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0153971159.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "4,400円（税込、送料無料）",
+    family: "shirt-0725",
+    partner: rakutenBoxingPartner
+  },
+  {
+    title: "【入荷しました】2022/12/13 井上尚弥限定 WINNER Tシャツ",
+    itemUrl: "https://item.rakuten.co.jp/boxing/10002945/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002945&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0148084624.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "4,300円（税込、送料無料）",
+    family: "shirt-1213",
+    partner: rakutenBoxingPartner
+  },
+  {
+    title: "井上尚弥 vs ノニト・ドネア Tシャツ（2022年6月7日）",
+    itemUrl: "https://item.rakuten.co.jp/boxing/10002796/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002796&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0141211734.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "3,000円（税込、送料無料）",
+    family: "shirt-donaire",
+    partner: rakutenBoxingPartner
+  },
+  {
+    title: "【入荷しました】6.7 井上尚弥限定 WINNER Tシャツ",
+    itemUrl: "https://item.rakuten.co.jp/boxing/10002805/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002805&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0141495394.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "4,400円（税込、送料無料）",
+    family: "shirt-0607",
+    partner: rakutenBoxingPartner
+  },
+  {
+    title: "ミズノ公式 6.7 井上尚弥VSノニト・ドネア限定Tシャツ",
+    itemUrl: "https://item.rakuten.co.jp/mizunoshop/32ja260009/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e6af.b6bfc266.5653e6b0.a5e5a4e7/?me_id=1313488&item_id=10146307&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fmizunoshop%2Fcabinet%2Fgoods%2F1155%2Fsh_32ja260009.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "4,400円（税込、送料無料）",
+    family: "shirt-0607",
+    partner: rakutenMizunoPartner
+  },
+  {
+    title: "【入荷しました】2022/12/13 井上尚弥 バスタオル",
+    itemUrl: "https://item.rakuten.co.jp/boxing/10002946/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002946&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0148084623.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "3,000円（税込、送料別）",
+    family: "towel-1213",
+    partner: rakutenBoxingPartner
+  },
+  {
+    title: "【限定 入荷しました】7.25東京 井上尚弥限定 WINNERバスタオル ミズノ",
+    itemUrl: "https://item.rakuten.co.jp/boxing/32jyax20/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10003308&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0153971158.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "3,000円（税込、送料別）",
+    family: "towel-0725",
+    partner: rakutenBoxingPartner
+  },
+  {
+    title: "12.26東京 井上尚弥限定 WINNERバスタオル ミズノ",
+    itemUrl: "https://item.rakuten.co.jp/boxing/32jaax52/",
+    image:
+      "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10003544&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0157419191.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+    price: "3,000円（税込、送料別）",
+    family: "towel-1226",
+    partner: rakutenBoxingPartner
+  }
+].map((item) => ({
+  ...item,
+  url: rakutenAffiliateUrl(item.partner, item.itemUrl),
+  checkedAt: "2026/8/5"
+}));
+
+const affiliateProductSeed = (value) =>
+  [...String(value || "affiliate-products")].reduce(
+    (hash, character) => (hash * 31 + character.charCodeAt(0)) >>> 0,
+    7
+  );
+
+const selectAffiliateProductCards = (slug, limit = 4) => {
+  const selected = [];
+  const usedFamilies = new Set();
+  const seed = affiliateProductSeed(slug);
+  for (let offset = 0; offset < affiliateProductPool.length && selected.length < limit; offset += 1) {
+    const item = affiliateProductPool[(seed + offset * 7) % affiliateProductPool.length];
+    if (usedFamilies.has(item.family)) continue;
+    usedFamilies.add(item.family);
+    selected.push({ ...item });
+  }
+  return selected;
+};
+
 const isNewsArticle = (article) => {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
   const declaredCategory = String(article?.category || "").toLowerCase();
@@ -421,7 +592,9 @@ function productCardsHtml(article) {
   const stored = jsonArray(article?.affiliate_links).find(
     (item) => item && item.type === "product_cards" && Array.isArray(item.cards)
   );
-  const cards = (stored?.cards || [])
+  const selected = selectAffiliateProductCards(article?.slug || article?.id || "");
+  const sourceCards = selected.length ? selected : stored?.cards || [];
+  const cards = sourceCards
     .map((item) => ({
       title: String(item?.title || "").trim(),
       image: safeHttpsUrl(item?.image),
@@ -561,20 +734,14 @@ export async function onRequestGet(context) {
   const hasAffiliateLinks = jsonArray(article.affiliate_links).some(
     (item) => item && item.label && item.url
   );
-  const hasProductCards = jsonArray(article.affiliate_links).some(
-    (item) =>
-      item &&
-      item.type === "product_cards" &&
-      Array.isArray(item.cards) &&
-      item.cards.length > 0
-  );
+  const productCards = productCardsHtml(article);
+  const hasProductCards = Boolean(productCards);
   const disclosure = article.is_advertorial || hasAffiliateLinks || hasProductCards
     ? `<aside class="affiliate-disclosure"><span class="affiliate-disclosure-badge">PR</span><span>${escapeHtml(
         article.affiliate_disclosure ||
           "この記事には配信サービスのアフィリエイトリンクが含まれています。"
       )}</span></aside>`
     : "";
-  const productCards = productCardsHtml(article);
   const structuredData = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "NewsArticle",

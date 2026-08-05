@@ -542,7 +542,10 @@ function updatePreview() {
 
   renderPreviewFightCards(collectPreviewFightCards());
   const previewProducts = collectPreviewProductCards();
-  renderPreviewProductCards(previewProducts);
+  const previewSlug = document.querySelector("#slug")?.value.trim() || title;
+  const fallbackProducts =
+    window.BoxingData?.selectAffiliateProductCards?.(previewSlug) || [];
+  renderPreviewProductCards(previewProducts.length ? previewProducts : fallbackProducts);
 
   const linkLabels = affiliateLinksInput.value
     .split(/\r?\n/)
@@ -550,7 +553,7 @@ function updatePreview() {
     .filter(Boolean)
     .slice(0, 5);
   const showAffiliate =
-    advertorialInput.checked || linkLabels.length > 0 || previewProducts.length > 0;
+    advertorialInput.checked || linkLabels.length > 0 || previewProducts.length > 0 || fallbackProducts.length > 0;
   previewAffiliateDisclosure.hidden = !showAffiliate;
   previewAffiliateLinks.hidden = linkLabels.length === 0;
   previewAffiliateDisclosureText.textContent =

@@ -85,6 +85,185 @@
     }
   ];
 
+  const rawAffiliateProductPool = [
+    {
+      title: "大橋ボクシングジム コラボ HEATH Tシャツ メンズ 半袖",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e2a5.fcd29aba.5653e2a6.838e9ac7/?me_id=1231804&item_id=10015809&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fheath-industrial%2Fcabinet%2Fheath3%2Fst041_ht_rakuten.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e2a5.fcd29aba.5653e2a6.838e9ac7/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fheath-industrial%2F111t-kento%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D",
+      price: "4,900円（税込、送料別）",
+      family: "gym-shirt"
+    },
+    {
+      title: "【入荷しました】2020.10.31 LAS 井上尚弥 限定Tシャツ ブラック",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002535&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0118068580.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fboxing%2F10002535%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D",
+      price: "4,400円（税込、送料無料）",
+      family: "las-shirt"
+    },
+    {
+      title: "【入荷しました】2020.10.31 LAS 井上尚弥 限定Tシャツ ホワイト",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002536&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0118068581.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fboxing%2F10002536%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+      price: "4,400円（税込、送料無料）",
+      family: "las-shirt"
+    },
+    {
+      title: "【入荷しました】25.1.24 TOKYO 井上尚弥 限定 WINNER Tシャツ ミズノ",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10004194&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0168208178.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fboxing%2F32jabx5601%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+      price: "6,050円（税込、送料無料）",
+      family: "shirt-0124"
+    },
+    {
+      title: "【3-5日で発送】2024 5.6東京 ネリ戦 井上尚弥 限定 WINNER Tシャツ ミズノ",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10003907&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0163852388.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fboxing%2F32jabx51%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D",
+      price: "5,500円（税込、送料無料）",
+      family: "shirt-0506"
+    },
+    {
+      title: "【入荷しました】12.14 東京 井上尚弥限定 WINNER Tシャツ",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002723&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0130750673.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fboxing%2F10002723%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiY29sIjoxLCJiYnIiOjEsImNvbCI6MSwiYmJ0biI6MSwicHJvZCI6MCwiYW1wIjpmYWxzZX0%3D",
+      price: "4,400円（税込、送料無料）",
+      family: "shirt-1214"
+    },
+    {
+      title: "【入荷しました】12.14 東京 井上尚弥限定 WINNER Tシャツ（別カラー）",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002724&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0130750674.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fboxing%2F10002724%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiYm9yIjoxLCJjb2wiOjEsImJidG4iOjEsInByb2QiOjAsImFtcCI6ZmFsc2V9",
+      price: "4,400円（税込、送料無料）",
+      family: "shirt-1214"
+    },
+    {
+      title: "【入荷しました】7.25東京 井上尚弥限定 WINNER Tシャツ ミズノ",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10003307&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0153971159.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fboxing%2F32jaax11%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D",
+      price: "4,400円（税込、送料無料）",
+      family: "shirt-0725"
+    },
+    {
+      title: "【入荷しました】2022/12/13 井上尚弥限定 WINNER Tシャツ",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002945&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0148084624.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fboxing%2F10002945%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOiEsImNvbXAiOjEsInByaWNlIjoxLCJib3IiOjEsImNvbCI6MSwiYmJ0biI6MSwicHJvZCI6MCwiYW1wIjpmYWxzZX0%3D",
+      price: "4,300円（税込、送料無料）",
+      family: "shirt-1213"
+    },
+    {
+      title: "井上尚弥 vs ノニト・ドネア Tシャツ（2022年6月7日）",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002796&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0141211734.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fboxing%2F10002796%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D",
+      price: "3,000円（税込、送料無料）",
+      family: "shirt-donaire"
+    },
+    {
+      title: "【入荷しました】6.7 井上尚弥限定 WINNER Tシャツ",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002805&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0141495394.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fboxing%2F10002805%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D",
+      price: "4,400円（税込、送料無料）",
+      family: "shirt-0607"
+    },
+    {
+      title: "ミズノ公式 6.7 井上尚弥VSノニト・ドネア限定Tシャツ",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e6af.b6bfc266.5653e6b0.a5e5a4e7/?me_id=1313488&item_id=10146307&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fmizunoshop%2Fcabinet%2Fgoods%2F1155%2Fsh_32ja260009.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e6af.b6bfc266.5653e6b0.a5e5a4e7/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmizunoshop%2F32ja260009%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOjEsInByaWNlIjoxLCJib3IiOjEsImNvbCI6MSwiYmJ0biI6MSwicHJvZCI6MCwiYW1wIjpmYWxzZX0%3D",
+      price: "4,400円（税込、送料無料）",
+      family: "shirt-0607"
+    },
+    {
+      title: "【入荷しました】2022/12/13 井上尚弥 バスタオル",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10002946&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0148084623.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fboxing%2F10002946%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D",
+      price: "3,000円（税込、送料別）",
+      family: "towel-1213"
+    },
+    {
+      title: "【限定 入荷しました】7.25東京 井上尚弥限定 WINNERバスタオル ミズノ",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10003308&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0153971158.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fboxing%2F32jyax20%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D",
+      price: "3,000円（税込、送料別）",
+      family: "towel-0725"
+    },
+    {
+      title: "12.26東京 井上尚弥限定 WINNERバスタオル ミズノ",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/5653e619.a81fc6cc.5653e61a.a6cc27b9/?me_id=1195019&item_id=10003544&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fboxing%2Fcabinet%2Fimgrc0157419191.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fboxing%2F32jaax52%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOjEsImJvciI6MSwiYmJ0biI6MSwicHJvZCI6MCwiYW1wIjpmYWxzZX0%3D",
+      price: "3,000円（税込、送料別）",
+      family: "towel-1226"
+    }
+  ];
+  const rakutenPictTextToken =
+    "eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D";
+  const normalizeRakutenAffiliateUrl = (value) => {
+    try {
+      const parsed = new URL(value);
+      const itemUrl = parsed.searchParams.get("pc");
+      if (!itemUrl) return value;
+      return `${parsed.origin}${parsed.pathname}?pc=${encodeURIComponent(
+        itemUrl
+      )}&link_type=picttext&ut=${rakutenPictTextToken}`;
+    } catch {
+      return value;
+    }
+  };
+
+  const affiliateProductPool = rawAffiliateProductPool.map((item) => ({
+    ...item,
+    url: normalizeRakutenAffiliateUrl(item.url),
+    checkedAt: "2026/8/5"
+  }));
+
+  function affiliateProductSeed(value) {
+    return [...String(value || "affiliate-products")].reduce(
+      (hash, character) => (hash * 31 + character.charCodeAt(0)) >>> 0,
+      7
+    );
+  }
+
+  function selectAffiliateProductCards(slug, limit = 4) {
+    const pool = affiliateProductPool.slice();
+    const selected = [];
+    const usedFamilies = new Set();
+    const seed = affiliateProductSeed(slug);
+    for (let offset = 0; offset < pool.length && selected.length < limit; offset += 1) {
+      const item = pool[(seed + offset * 7) % pool.length];
+      if (usedFamilies.has(item.family)) continue;
+      usedFamilies.add(item.family);
+      selected.push({ ...item });
+    }
+    return selected;
+  }
+
   const defaultFightCardsBySlug = {
     "2026-08-16-treasure-boxing-promotion-14": [
       {
@@ -794,6 +973,8 @@
     parseImageUrl,
     getDefaultFightCards,
     normalizeFightCards,
+    affiliateProductPool,
+    selectAffiliateProductCards,
     parseAffiliateLinks,
     isTweetUrl,
     getYouTubeVideoId,
