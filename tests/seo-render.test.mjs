@@ -142,4 +142,28 @@ const robotsSource = fs.readFileSync(
 assert.match(robotsSource, /User-agent: OAI-SearchBot\nAllow: \//);
 assert.match(robotsSource, /User-agent: Googlebot\nAllow: \//);
 
+const routes = JSON.parse(
+  fs.readFileSync(path.join(projectRoot, "_routes.json"), "utf8")
+);
+assert.ok(routes.include.includes("/google3091a30e3cad8e8f.html"));
+assert.ok(!routes.exclude.includes("/*.html"));
+
+const verificationSource = fs.readFileSync(
+  path.join(projectRoot, "functions", "google3091a30e3cad8e8f.html.js"),
+  "utf8"
+);
+const verificationModule = path.join(
+  os.tmpdir(),
+  `boxsoku-google-verification-${Date.now()}.mjs`
+);
+fs.writeFileSync(verificationModule, verificationSource, "utf8");
+const { onRequest: verifyGoogleSite } = await import(verificationModule);
+fs.unlinkSync(verificationModule);
+const verificationResponse = await verifyGoogleSite();
+assert.equal(verificationResponse.status, 200);
+assert.equal(
+  await verificationResponse.text(),
+  "google-site-verification: google3091a30e3cad8e8f.html\n"
+);
+
 console.log("SEO render checks passed");

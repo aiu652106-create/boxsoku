@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "include": ["/news/*", "/api/*", "/image-proxy", "/sitemap.xml", "/robots.txt", "/ads.txt"],
-  "exclude": ["/assets/*", "/*.js", "/*.css", "/*.html"]
+  "include": ["/news/*", "/api/*", "/image-proxy", "/sitemap.xml", "/robots.txt", "/ads.txt", "/google3091a30e3cad8e8f.html"],
+  "exclude": ["/assets/*", "/*.js", "/*.css"]
 }
