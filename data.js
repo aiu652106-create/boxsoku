@@ -220,6 +220,16 @@
         "https://hb.afl.rakuten.co.jp/ichiba/5653e619.a81fc6cc.5653e61a.a6cc27b9/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fboxing%2F32jaax52%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOjEsImJvciI6MSwiYmJ0biI6MSwicHJvZCI6MCwiYW1wIjpmYWxzZX0%3D",
       price: "3,000円（税込、送料別）",
       family: "towel-1226"
+    },
+    {
+      title: "天心語録 [ 那須川 天心 ]",
+      image:
+        "https://hbb.afl.rakuten.co.jp/hgb/56735f5d.198cf9f9.56735f5e.de85ab88/?me_id=1213310&item_id=20521680&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fbook%2Fcabinet%2F5072%2F9784910315072_1_65.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
+      url:
+        "https://hb.afl.rakuten.co.jp/ichiba/56735f5d.198cf9f9.56735f5e.de85ab88/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fbook%2F16958291%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D",
+      price: "1,540円（税込、送料無料）",
+      family: "tenshin-book",
+      checkedAt: "2026/8/9"
     }
   ];
   const rakutenPictTextToken =
@@ -240,7 +250,7 @@
   const affiliateProductPool = rawAffiliateProductPool.map((item) => ({
     ...item,
     url: normalizeRakutenAffiliateUrl(item.url),
-    checkedAt: "2026/8/5"
+    checkedAt: item.checkedAt || "2026/8/5"
   }));
 
   function affiliateProductSeed(value) {
@@ -251,17 +261,27 @@
   }
 
   function selectAffiliateProductCards(slug, limit = 4) {
-    const pool = affiliateProductPool.slice();
-    const selected = [];
-    const usedFamilies = new Set();
     const seed = affiliateProductSeed(slug);
-    for (let offset = 0; offset < pool.length && selected.length < limit; offset += 1) {
-      const item = pool[(seed + offset * 7) % pool.length];
-      if (usedFamilies.has(item.family)) continue;
-      usedFamilies.add(item.family);
-      selected.push({ ...item });
-    }
-    return selected;
+    const inoueProducts = affiliateProductPool.filter((item) =>
+      /井上\s*尚弥/.test(item.title)
+    );
+    const otherProducts = affiliateProductPool.filter(
+      (item) => !/井上\s*尚弥/.test(item.title)
+    );
+    const pick = (pool, count, start) => {
+      const selected = [];
+      const usedFamilies = new Set();
+      for (let offset = 0; offset < pool.length && selected.length < count; offset += 1) {
+        const item = pool[(start + offset * 7) % pool.length];
+        if (usedFamilies.has(item.family)) continue;
+        usedFamilies.add(item.family);
+        selected.push({ ...item });
+      }
+      return selected;
+    };
+    const inoue = pick(inoueProducts, Math.min(2, limit), seed);
+    const others = pick(otherProducts, Math.max(0, limit - inoue.length), seed + 3);
+    return [inoue[0], others[0], inoue[1], others[1]].filter(Boolean).slice(0, limit);
   }
 
   function selectRelevantAffiliateProductCards(article) {

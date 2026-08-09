@@ -283,7 +283,10 @@ const ohashiResponse = await onRequestGet(ohashiContext);
 assert.equal(ohashiResponse.status, 200);
 const ohashiHtml = await ohashiResponse.text();
 assert.equal((ohashiHtml.match(/class="affiliate-product-card"/g) || []).length, 4);
-assert.match(ohashiHtml, /井上尚弥/);
+assert.equal((ohashiHtml.match(/<strong>[^<]*井上尚弥[^<]*<\/strong>/g) || []).length, 2);
+assert.match(ohashiHtml, /大橋ボクシングジム コラボ HEATH Tシャツ/);
+assert.match(ohashiHtml, /天心語録 \[ 那須川 天心 \]/);
+assert.match(ohashiHtml, /56735f5d\.198cf9f9\.56735f5e\.de85ab88/);
 assert.ok(!ohashiHtml.includes("ohashi-owner-link"));
 assert.ok(!ohashiHtml.includes("inoue-owner-link"));
 
