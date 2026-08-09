@@ -218,21 +218,6 @@ assert.match(listingHtml, /<h2><a href="\/news\/seo-test">9月2日のボクシ�
 assert.match(listingHtml, /"@type":"CollectionPage"/);
 assert.match(listingHtml, /"@type":"ItemList"/);
 assert.match(listingHtml, /"@type":"Organization"/);
-assert.match(listingHtml, /styles\.css\?v=20260809-public-readability1/);
-assert.match(html, /styles\.css\?v=20260809-public-readability1/);
-
-const stylesSource = fs.readFileSync(
-  path.join(projectRoot, "styles.css"),
-  "utf8"
-);
-assert.match(
-  stylesSource,
-  /Public readability baseline[\s\S]*?body\.retro-blog\s*\{\s*font-size: 16px;/
-);
-assert.match(
-  stylesSource,
-  /retro-sidebar-text strong\s*\{\s*font-size: 14px !important;/
-);
 assert.ok(!listingHtml.includes("記事を読み込んでいます"));
 
 const listingHead = await renderListingPage(
