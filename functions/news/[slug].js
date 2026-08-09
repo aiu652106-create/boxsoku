@@ -99,6 +99,18 @@ const tweetEmbedHtml = (url) =>
 
 const leminoAffiliateUrl =
   "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2";
+
+const stripSimpleMarkdown = (value = "") =>
+  String(value)
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/^\s*[-*+]\s+/gm, "")
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/(\*\*|__|`)(.*?)\1/g, "$2")
+    .replace(/https?:\/\/\S+/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 const linkLeminoText = (value) =>
   String(value || "")
     .replaceAll(
@@ -112,7 +124,10 @@ const linkLeminoText = (value) =>
 
 const articleInlineHtml = (value) =>
   linkLeminoText(
-    escapeHtml(String(value || "")).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    escapeHtml(String(value || ""))
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/__(.+?)__/g, "<strong>$1</strong>")
+      .replace(/`(.+?)`/g, "<code>$1</code>")
   );
 
 const articleBodyHtml = (body, title = "", lead = "") => {
@@ -148,15 +163,21 @@ const articleBodyHtml = (body, title = "", lead = "") => {
         return `${tweetEmbedHtml(paragraph.trim())}${ad}`;
       }
       const heading = firstLine.match(/^#{2,6}\s+(.+)$/);
-      if (heading && lines.length === 1) {
-        return `<h2>${articleInlineHtml(heading[1])}</h2>${ad}`;
+      if (heading) {
+        const rest = lines.slice(1).join("\n").trim();
+        return `<h2>${articleInlineHtml(heading[1])}</h2>${
+          rest
+            ? `<p>${articleInlineHtml(rest).replaceAll("\n", "<br>")}</p>`
+            : ""
+        }${ad}`;
       }
-      if (lines.every((line) => /^[-*+]\s+/.test(line.trim()))) {
-        const items = lines
-          .map((line) => line.trim().replace(/^[-*+]\s+/, ""))
-          .map((line) => `<li>${articleInlineHtml(line)}</li>`)
-          .join("");
-        return `<ul>${items}</ul>${ad}`;
+      const listItems = lines
+        .map((line) => line.match(/^\s*[-*+]\s+(.+)$/)?.[1] || "")
+        .filter(Boolean);
+      if (listItems.length === lines.filter((line) => line.trim()).length) {
+        return `<ul>${listItems
+          .map((item) => `<li>${articleInlineHtml(item)}</li>`)
+          .join("")}</ul>${ad}`;
       }
       return `<p>${articleInlineHtml(paragraph).replaceAll("\n", "<br>")}</p>${ad}`;
     })
@@ -526,28 +547,17 @@ function articleSummary(article) {
   }
   const paragraphs = text
     .split(/\n\s*\n/)
-    .map((paragraph) => {
-      const lines = paragraph
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean);
-      if (!lines.length) return "";
-      if (lines.length === 1 && /^#{1,6}\s+/.test(lines[0])) return "";
-      if (lines.every((line) => /^[-*+]\s+/.test(line))) return "";
-      return lines
-        .join(" ")
-        .replace(/^#{1,6}\s+/, "")
-        .replace(/\*\*(.+?)\*\*/g, "$1")
-        .trim();
-    })
-    .filter(Boolean);
-  text =
-    paragraphs.find((paragraph) => paragraph.length >= 40) ||
-    paragraphs[0] ||
-    text.replace(/\s+/g, " ").trim();
-  const currentIndex = paragraphs.indexOf(text);
-  if (text.length < 70 && paragraphs[currentIndex + 1]) {
-    text = text + " " + paragraphs[currentIndex + 1];
+    .map(stripSimpleMarkdown)
+    .filter(
+      (paragraph) =>
+        paragraph.length >= 12 &&
+        !/^(?:大会概要|配信情報|対戦カード|試合概要|全対戦カード|視聴方法|情報源と確認日)$/.test(
+          paragraph
+        )
+    );
+  text = paragraphs[0] || text.replace(/\s+/g, " ").trim();
+  if (text.length < 70 && paragraphs[1]) {
+    text = text + " " + paragraphs[1];
   }
   const maxLength = 500;
   if (text.length > maxLength) {
@@ -557,10 +567,9 @@ function articleSummary(article) {
         ? text.slice(0, sentenceEnd + 1)
         : text.slice(0, maxLength);
   }
-  return text
-    .replace(/https?:\/\/\S+/gi, " ")
+  return stripSimpleMarkdown(text)
     .replace(/(?:公式情報|U-NEXT BOXING)\s*[:：]\s*/gi, " ")
-   .replace(/\s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim()
     .slice(0, 500);
 }
@@ -736,8 +745,9 @@ export async function onRequestGet(context) {
   const slug = String(params.slug || "");
   const isVerificationRequest =
     new URL(request.url).searchParams.get("boxsoku_verify") === "1";
-  const shouldSkipAnalytics =
-    isVerificationRequest || request.method === "HEAD" || isCrawlerRequest(request);
+  const isHeadRequest = request.method === "HEAD";
+  const crawlerRequest = isCrawlerRequest(request);
+  const shouldSkipAnalytics = isVerificationRequest || isHeadRequest || crawlerRequest;
   const existingVisitorToken = readCookie(
     request.headers.get("Cookie"),
     visitorCookieName
@@ -795,10 +805,9 @@ export async function onRequestGet(context) {
           "この記事には配信サービスのアフィリエイトリンクが含まれています。"
       )}</span></aside>`
     : "";
-  const articleType = articleCategoryText(article) === "NEWS" ? "NewsArticle" : "Article";
   const structuredData = JSON.stringify({
     "@context": "https://schema.org",
-    "@type": articleType,
+    "@type": isNewsArticle(article) ? "NewsArticle" : "Article",
     headline: article.title,
     description: summary,
     ...(image ? { image: [image] } : {}),
@@ -859,7 +868,6 @@ export async function onRequestGet(context) {
     )}</ol></section></aside>
     <main class="retro-feed">
       <article class="retro-post retro-detail">
-        ${disclosure}
         <div class="retro-title-row"><h1>${escapeHtml(
           article.title
         )}</h1><a class="retro-tweet-link" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(
@@ -875,11 +883,12 @@ export async function onRequestGet(context) {
               )}" alt="${escapeHtml(article.title)}のアイキャッチ画像" loading="lazy">`
             : ""
         }
+        ${disclosure}
         <div class="retro-detail-body">${articleBodyHtml(article.body, article.title, summary)}${embedsHtml(article)}</div>
+        ${affiliateLinksHtml(article)}
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         ${fightCardsHtml(article)}
         ${videosHtml(article)}
-        ${affiliateLinksHtml(article)}
         ${productCards}
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>
         <div class="retro-meta"><time>${escapeHtml(
@@ -951,7 +960,9 @@ export async function onRequestGet(context) {
 
   const responseHeaders = {
     "Content-Type": "text/html; charset=UTF-8",
-    "Cache-Control": "private, no-store"
+    "Cache-Control": crawlerRequest
+      ? "public, max-age=300, s-maxage=300"
+      : "private, no-store"
   };
   if (!existingVisitorToken && !shouldSkipAnalytics) {
     responseHeaders["Set-Cookie"] = `${visitorCookieName}=${encodeURIComponent(
@@ -959,15 +970,11 @@ export async function onRequestGet(context) {
     )}; Max-Age=31536000; Path=/; SameSite=Lax; Secure`;
   }
 
-  return new Response(html, {
+  return new Response(isHeadRequest ? null : html, {
     headers: responseHeaders
   });
 }
 
 export async function onRequestHead(context) {
-  const response = await onRequestGet(context);
-  return new Response(null, {
-    status: response.status,
-    headers: response.headers
-  });
+  return onRequestGet(context);
 }

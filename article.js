@@ -120,50 +120,65 @@ function appendInstagram(parent, url) {
   parent.appendChild(slot);
 }
 
-function appendArticleInlineText(parent, value) {
-  const text = String(value || "").replaceAll("**", "");
-  const marker = "配信：Lemino";
-  const alternateMarker = "配信: Lemino";
-  const markerIndex = text.indexOf(marker);
-  const alternateIndex = text.indexOf(alternateMarker);
-  const index = markerIndex >= 0 ? markerIndex : alternateIndex;
-  const matched = markerIndex >= 0 ? marker : alternateMarker;
-  if (index < 0 || !leminoAffiliateUrl) {
-    parent.appendChild(document.createTextNode(text));
-    return;
-  }
-  parent.append(document.createTextNode(text.slice(0, index)));
-  const link = document.createElement("a");
-  link.className = "affiliate-streaming-link";
-  link.href = leminoAffiliateUrl;
-  link.target = "_blank";
-  link.rel = "sponsored noopener noreferrer";
-  link.textContent = `${matched}で視聴する`;
-  parent.append(link, document.createTextNode(text.slice(index + matched.length)));
-}
-
 function appendArticleText(parent, value) {
-  const text = String(value || "");
-  const lines = text.split(/\r?\n/);
+  const stripSimpleMarkdown = (text) =>
+    String(text || "")
+      .replace(/(\*\*|__|`)(.*?)\1/g, "$2")
+      .trim();
+  const appendLinkedText = (element, valueToAppend) => {
+    const text = stripSimpleMarkdown(valueToAppend);
+    const marker = "配信：Lemino";
+    const alternateMarker = "配信: Lemino";
+    const markerIndex = text.indexOf(marker);
+    const alternateIndex = text.indexOf(alternateMarker);
+    const index = markerIndex >= 0 ? markerIndex : alternateIndex;
+    const matched = markerIndex >= 0 ? marker : alternateMarker;
+    if (index < 0 || !leminoAffiliateUrl) {
+      element.textContent = text;
+      return;
+    }
+    element.append(document.createTextNode(text.slice(0, index)));
+    const link = document.createElement("a");
+    link.className = "affiliate-streaming-link";
+    link.href = leminoAffiliateUrl;
+    link.target = "_blank";
+    link.rel = "sponsored noopener noreferrer";
+    link.textContent = `${matched}で視聴する`;
+    element.append(link, document.createTextNode(text.slice(index + matched.length)));
+  };
+
+  const text = String(value || "").trim();
+  const lines = text.split("\n");
   const heading = String(lines[0] || "").trim().match(/^#{2,6}\s+(.+)$/);
-  if (heading && lines.length === 1) {
-    const element = document.createElement("h2");
-    appendArticleInlineText(element, heading[1]);
-    parent.appendChild(element);
+  if (heading) {
+    const title = document.createElement("h2");
+    title.textContent = stripSimpleMarkdown(heading[1]);
+    parent.appendChild(title);
+    const rest = lines.slice(1).join("\n").trim();
+    if (rest) {
+      const paragraph = document.createElement("p");
+      appendLinkedText(paragraph, rest);
+      parent.appendChild(paragraph);
+    }
     return;
   }
-  if (lines.length && lines.every((line) => /^[-*+]\s+/.test(line.trim()))) {
+
+  const listItems = lines
+    .map((line) => line.match(/^\s*[-*+]\s+(.+)$/)?.[1] || "")
+    .filter(Boolean);
+  if (listItems.length === lines.filter((line) => line.trim()).length) {
     const list = document.createElement("ul");
-    lines.forEach((line) => {
-      const item = document.createElement("li");
-      appendArticleInlineText(item, line.trim().replace(/^[-*+]\s+/, ""));
-      list.appendChild(item);
+    listItems.forEach((item) => {
+      const listItem = document.createElement("li");
+      appendLinkedText(listItem, item);
+      list.appendChild(listItem);
     });
     parent.appendChild(list);
     return;
   }
+
   const paragraph = document.createElement("p");
-  appendArticleInlineText(paragraph, text);
+  appendLinkedText(paragraph, text);
   parent.appendChild(paragraph);
 }
 
@@ -433,7 +448,7 @@ function updateMetadata(article) {
   }
   structuredData.textContent = JSON.stringify({
     "@context": "https://schema.org",
-    "@type": articleCategoryText(article) === "NEWS" ? "NewsArticle" : "Article",
+    "@type": isNewsArticle(article) ? "NewsArticle" : "Article",
     headline: article.title,
     description: summary,
     ...(imageUrl ? { image: [imageUrl] } : {}),
@@ -458,7 +473,6 @@ function renderArticle(article) {
   container.innerHTML = "";
 
   const disclosure = createAffiliateDisclosure(article);
-  if (disclosure) container.appendChild(disclosure);
 
   const titleRow = document.createElement("div");
   titleRow.className = "retro-title-row";
@@ -548,11 +562,12 @@ function renderArticle(article) {
   const fightCards = createFightCards(article);
   container.append(titleRow, category);
   container.appendChild(imageContent);
+  if (disclosure) container.appendChild(disclosure);
   container.appendChild(body);
+  if (affiliateLinks) container.appendChild(affiliateLinks);
   container.appendChild(topAd);
   if (fightCards) container.appendChild(fightCards);
   if (videoEmbeds.childElementCount) container.appendChild(videoEmbeds);
-  if (affiliateLinks) container.appendChild(affiliateLinks);
   if (productCards) container.appendChild(productCards);
   container.append(meta, commentsMount, back);
   window.BoxingAds?.render(container);

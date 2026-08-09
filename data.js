@@ -507,30 +507,29 @@
         text = text.slice(common).replace(/^[\s|｜:：\-–—]+/, "").trim();
       }
     }
+    const cleanSummaryText = (value) =>
+      String(value || "")
+        .replace(/^#{1,6}\s+/gm, "")
+        .replace(/^\s*[-*+]\s+/gm, "")
+        .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+        .replace(/(\*\*|__|`)(.*?)\1/g, "$2")
+        .replace(/https?:\/\/\S+/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
     const paragraphs = text
       .split(/\n\s*\n/)
-      .map((paragraph) => {
-        const lines = paragraph
-          .split("\n")
-          .map((line) => line.trim())
-          .filter(Boolean);
-        if (!lines.length) return "";
-        if (lines.length === 1 && /^#{1,6}\s+/.test(lines[0])) return "";
-        if (lines.every((line) => /^[-*+]\s+/.test(line))) return "";
-        return lines
-          .join(" ")
-          .replace(/^#{1,6}\s+/, "")
-          .replace(/\*\*(.+?)\*\*/g, "$1")
-          .trim();
-      })
-      .filter(Boolean);
-    text =
-      paragraphs.find((paragraph) => paragraph.length >= 40) ||
-      paragraphs[0] ||
-      text.replace(/\s+/g, " ").trim();
-    const currentIndex = paragraphs.indexOf(text);
-    if (text.length < 70 && paragraphs[currentIndex + 1]) {
-      text = text + " " + paragraphs[currentIndex + 1];
+      .map(cleanSummaryText)
+      .filter(
+        (paragraph) =>
+          paragraph.length >= 12 &&
+          !/^(?:大会概要|配信情報|対戦カード|試合概要|全対戦カード|視聴方法|情報源と確認日)$/.test(
+            paragraph
+          )
+      );
+    text = paragraphs[0] || text.replace(/\s+/g, " ").trim();
+    if (text.length < 70 && paragraphs[1]) {
+      text = text + " " + paragraphs[1];
     }
     const maxLength = 500;
     if (text.length > maxLength) {
@@ -540,8 +539,7 @@
           ? text.slice(0, sentenceEnd + 1)
           : text.slice(0, maxLength);
     }
-    return text
-      .replace(/https?:\/\/\S+/gi, " ")
+    return cleanSummaryText(text)
       .replace(/(?:公式情報|U-NEXT BOXING)\s*[:：]\s*/gi, " ")
       .replace(/\s+/g, " ")
       .trim()
