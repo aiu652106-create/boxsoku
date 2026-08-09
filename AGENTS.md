@@ -74,6 +74,10 @@ Whenever a mistake is found, the user corrects an assumption, or verification re
 5. Re-run the original failing scenario and at least one nearby edge case.
 6. Confirm the public result again and report both the fix and the new prevention measure.
 
+This recurrence-prevention work is mandatory for every mistake, without waiting for the user to request it. After adding or strengthening a prevention measure, explicitly tell the user `サイクルに追加しました`.
+
+For browser and responsive verification, never apply viewport or device emulation to a user-owned or already-open Chrome tab. Use a separate disposable verification tab, clear every emulation override before cleanup, and confirm the original user tab remains at its normal desktop state. When a screenshot and the deployed CSS suggest different causes, first distinguish browser state from site code; do not edit or deploy CSS until the failure is reproduced in a clean tab. If a speculative change was made from a wrong diagnosis, revert only that change and verify the restored production state.
+
 For external fighter profiles and images, add a provider-identity gate before saving: use the provider's canonical profile URL (not a wiki or search-result URL), verify the page name and profile ID, and take the image URL from that same verified profile when the provider is the requested source. After saving, compare the editor value, preview href/src, reloaded value, and public href/src so a click target and its image cannot silently point to different or unrelated pages.
 
 For streaming and affiliate link changes, add an exact-target gate before editing: capture the user's selected or named visible text, identify the current rendered element that owns it, and preserve the surrounding copy unless a wording change is requested. Verify the exact destination URL, `target`, and `rel` attributes, make the link visually identifiable without changing unrelated services, then check the server-rendered and client-rendered paths when both exist. After deployment, reload a production URL with `boxsoku_verify=1` and confirm the exact visible text, href, CSS version, and click target.
