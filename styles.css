@@ -6033,6 +6033,12 @@ body.retro-blog .affiliate-links > a {
   font-weight: 900 !important;
 }
 
+body.retro-blog .affiliate-teaser > a {
+  max-width: 300px;
+  line-height: 1.5;
+  text-align: center;
+}
+
 body.retro-blog .affiliate-teaser > a:hover,
 body.retro-blog .affiliate-links > a:hover {
   background: var(--red-dark) !important;
@@ -6646,6 +6652,11 @@ body.retro-blog .affiliate-product-action,
 }
 
 @media (max-width: 720px) {
+  body.retro-blog .affiliate-teaser > a {
+    width: 100%;
+    max-width: none;
+  }
+
   body.retro-blog .affiliate-products,
   .preview-paper .affiliate-products {
     grid-template-columns: 1fr;

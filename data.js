@@ -264,6 +264,26 @@
     return selected;
   }
 
+  function selectRelevantAffiliateProductCards(article) {
+    const fighterNames = (Array.isArray(article?.fightCards) ? article.fightCards : [])
+      .flatMap((card) => [card?.left?.name, card?.right?.name])
+      .filter(Boolean)
+      .join(" ");
+    const source = `${article?.title || ""}\n${article?.summary || ""}\n${
+      article?.body || ""
+    }\n${fighterNames}`;
+    if (/井上\s*尚弥|Naoya\s+Inoue|ノニト[・\s]*ドネア|Nonito\s+Donaire|ネリ戦/i.test(source)) {
+      return selectAffiliateProductCards(article?.slug || article?.id || "", 4);
+    }
+    if (/大橋(?:ボクシング)?ジム|PHOENIX\s+BATTLE|フェニックスバトル/i.test(source)) {
+      const gymProduct = affiliateProductPool.find(
+        (item) => item.family === "gym-shirt"
+      );
+      return gymProduct ? [{ ...gymProduct }] : [];
+    }
+    return [];
+  }
+
   const defaultFightCardsBySlug = {
     "2026-08-16-treasure-boxing-promotion-14": [
       {
@@ -990,6 +1010,7 @@
     normalizeFightCards,
     affiliateProductPool,
     selectAffiliateProductCards,
+    selectRelevantAffiliateProductCards,
     parseAffiliateLinks,
     isTweetUrl,
     getYouTubeVideoId,

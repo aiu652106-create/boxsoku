@@ -28,6 +28,7 @@ function hasAffiliatePromotion(article) {
   return (
     article.isAdvertorial ||
     (Array.isArray(article.affiliateLinks) && article.affiliateLinks.length > 0) ||
+    hasWowowAffiliateText(article) ||
     hasWowowAffiliateBanner(article) ||
     getPublicProductCards(article).length > 0
   );
@@ -36,25 +37,79 @@ function hasAffiliatePromotion(article) {
 function wowowAffiliateSettings() {
   const config = affiliateConfig.wowow || {};
   return {
-    linkUrl: safeAffiliateUrl(config.linkUrl),
-    imageUrl: safeAffiliateUrl(config.imageUrl),
-    impressionUrl: safeAffiliateUrl(config.impressionUrl),
-    width: Number(config.width) || 300,
-    height: Number(config.height) || 250
+    text: {
+      linkUrl: safeAffiliateUrl(config.text?.linkUrl),
+      label: String(config.text?.label || "").trim(),
+      impressionUrl: safeAffiliateUrl(config.text?.impressionUrl)
+    },
+    banner: {
+      linkUrl: safeAffiliateUrl(config.banner?.linkUrl),
+      imageUrl: safeAffiliateUrl(config.banner?.imageUrl),
+      impressionUrl: safeAffiliateUrl(config.banner?.impressionUrl),
+      width: Number(config.banner?.width) || 300,
+      height: Number(config.banner?.height) || 250
+    }
   };
 }
 
-function hasWowowAffiliateBanner(article) {
-  const config = wowowAffiliateSettings();
+function hasWowowAffiliateText(article) {
+  const text = wowowAffiliateSettings().text;
   return (
     articleCategoryText(article) === "WOWOWエキサイトマッチ" &&
-    Boolean(config.linkUrl && config.imageUrl && config.impressionUrl)
+    Boolean(text.linkUrl && text.label && text.impressionUrl)
   );
+}
+
+function hasWowowAffiliateBanner(article) {
+  const banner = wowowAffiliateSettings().banner;
+  return (
+    articleCategoryText(article) === "WOWOWエキサイトマッチ" &&
+    Boolean(banner.linkUrl && banner.imageUrl && banner.impressionUrl)
+  );
+}
+
+function createWowowAffiliateText(article) {
+  if (!hasWowowAffiliateText(article)) return null;
+  const config = wowowAffiliateSettings().text;
+  const section = document.createElement("aside");
+  section.className = "affiliate-teaser";
+  section.setAttribute("aria-label", "WOWOWオンデマンド PR");
+
+  const copy = document.createElement("div");
+  copy.className = "affiliate-teaser-copy";
+  const label = document.createElement("span");
+  label.className = "affiliate-teaser-label";
+  label.textContent = "PR・配信サービス";
+  const heading = document.createElement("strong");
+  heading.textContent = "WOWOWオンデマンドの視聴情報を確認";
+  const note = document.createElement("span");
+  note.className = "affiliate-teaser-note";
+  note.textContent = "料金・配信内容・視聴条件はリンク先でご確認ください。";
+  copy.append(label, heading, note);
+
+  const link = document.createElement("a");
+  link.href = config.linkUrl;
+  link.target = "_blank";
+  link.rel = "sponsored nofollow noopener noreferrer";
+  link.dataset.affiliateService = "wowow";
+  link.dataset.affiliatePlacement = "article-top-text";
+  link.textContent = config.label;
+
+  const impression = document.createElement("img");
+  impression.className = "wowow-affiliate-tracking-pixel";
+  impression.src = config.impressionUrl;
+  impression.width = 1;
+  impression.height = 1;
+  impression.alt = "";
+  impression.setAttribute("aria-hidden", "true");
+
+  section.append(copy, link, impression);
+  return section;
 }
 
 function createWowowAffiliateBanner(article) {
   if (!hasWowowAffiliateBanner(article)) return null;
-  const config = wowowAffiliateSettings();
+  const config = wowowAffiliateSettings().banner;
   const section = document.createElement("aside");
   section.className = "wowow-affiliate-banner";
   section.setAttribute("aria-label", "WOWOWオンデマンド PR");
@@ -67,6 +122,8 @@ function createWowowAffiliateBanner(article) {
   link.href = config.linkUrl;
   link.target = "_blank";
   link.rel = "sponsored nofollow noopener noreferrer";
+  link.dataset.affiliateService = "wowow";
+  link.dataset.affiliatePlacement = "article-bottom-banner";
   link.setAttribute("aria-label", "WOWOWオンデマンドを確認する");
 
   const image = document.createElement("img");
@@ -169,11 +226,14 @@ function createRelatedArticles(article, articles) {
 }
 
 function getPublicProductCards(article) {
-  const selectProducts = window.BoxingData?.selectAffiliateProductCards;
-  if (selectProducts) {
-    return selectProducts(article?.slug || article?.id || "");
+  if (Array.isArray(article?.productCards) && article.productCards.length) {
+    return article.productCards;
   }
-  return Array.isArray(article?.productCards) ? article.productCards : [];
+  const selectProducts = window.BoxingData?.selectRelevantAffiliateProductCards;
+  if (selectProducts) {
+    return selectProducts(article);
+  }
+  return [];
 }
 
 function safeAffiliateUrl(value) {
@@ -279,6 +339,8 @@ function appendArticleText(parent, value) {
     link.href = leminoAffiliateUrl;
     link.target = "_blank";
     link.rel = "sponsored noopener noreferrer";
+    link.dataset.affiliateService = "lemino";
+    link.dataset.affiliatePlacement = "article-body";
     link.textContent = `${matched}で視聴する`;
     element.append(link, document.createTextNode(text.slice(index + matched.length)));
   };
@@ -319,12 +381,25 @@ function appendArticleText(parent, value) {
 }
 
 function createAffiliateLinks(article) {
+  const seenUrls = new Set();
   const links = (Array.isArray(article.affiliateLinks)
     ? article.affiliateLinks
     : []
   )
-    .map((item) => ({ ...item, url: safeAffiliateUrl(item?.url) }))
-    .filter((item) => item.label && item.url);
+    .map((item) => {
+      const source = `${item?.label || ""}\n${item?.url || ""}`;
+      const targetUrl = /Lemino|affiliate-sp\.docomo\.ne\.jp/i.test(source)
+        ? leminoAffiliateUrl
+        : /WOWOW/i.test(source)
+          ? wowowAffiliateSettings().text.linkUrl
+          : item?.url;
+      return { ...item, url: safeAffiliateUrl(targetUrl) };
+    })
+    .filter((item) => {
+      if (!item.label || !item.url || seenUrls.has(item.url)) return false;
+      seenUrls.add(item.url);
+      return true;
+    });
   if (!links.length) return null;
   const section = document.createElement("aside");
   section.className = "affiliate-links";
@@ -337,6 +412,12 @@ function createAffiliateLinks(article) {
     link.href = item.url;
     link.target = "_blank";
     link.rel = "sponsored noopener noreferrer";
+    link.dataset.affiliateService = /affiliate-sp\.docomo\.ne\.jp/i.test(item.url)
+      ? "lemino"
+      : /px\.a8\.net/i.test(item.url)
+        ? "wowow"
+        : "other";
+    link.dataset.affiliatePlacement = "article-streaming-links";
     link.textContent = item.label;
     section.appendChild(link);
   });
@@ -369,6 +450,8 @@ function createProductCards(article) {
     card.href = item.url;
     card.target = "_blank";
     card.rel = "sponsored nofollow noopener";
+    card.dataset.affiliateService = "rakuten";
+    card.dataset.affiliatePlacement = "article-product";
 
     const image = document.createElement("img");
     image.src = item.image;
@@ -713,6 +796,7 @@ function renderArticle(article, articles = []) {
   commentsMount.className = "retro-comments-mount";
 
   const affiliateLinks = createAffiliateLinks(article);
+  const wowowAffiliateText = createWowowAffiliateText(article);
   const wowowAffiliateBanner = createWowowAffiliateBanner(article);
   const productCards = createProductCards(article);
   const fightCards = createFightCards(article);
@@ -720,6 +804,7 @@ function renderArticle(article, articles = []) {
   container.append(breadcrumb, titleRow, category, trust);
   container.appendChild(imageContent);
   if (disclosure) container.appendChild(disclosure);
+  if (wowowAffiliateText) container.appendChild(wowowAffiliateText);
   container.appendChild(body);
   if (affiliateLinks) container.appendChild(affiliateLinks);
   container.appendChild(topAd);

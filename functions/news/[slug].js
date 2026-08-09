@@ -100,11 +100,19 @@ const tweetEmbedHtml = (url) =>
 const leminoAffiliateUrl =
   "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2";
 const wowowAffiliate = {
-  linkUrl: "https://px.a8.net/svt/ejp?a8mat=4B9XTD+FXXWPM+5DFW+5YZ75",
-  imageUrl:
-    "https://www22.a8.net/svt/bgt?aid=260804209964&wid=002&eno=01&mid=s00000025070001003000&mc=1",
-  impressionUrl:
-    "https://www13.a8.net/0.gif?a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"
+  text: {
+    linkUrl: "https://px.a8.net/svt/ejp?a8mat=4B9XTD+FXXWPM+5DFW+5YJRM",
+    label: "【映画・スポーツ・海外ドラマみるなら】WOWOWオンデマンド",
+    impressionUrl:
+      "https://www13.a8.net/0.gif?a8mat=4B9XTD+FXXWPM+5DFW+5YJRM"
+  },
+  banner: {
+    linkUrl: "https://px.a8.net/svt/ejp?a8mat=4B9XTD+FXXWPM+5DFW+5YZ75",
+    imageUrl:
+      "https://www24.a8.net/svt/bgt?aid=260804209964&wid=002&eno=01&mid=s00000025070001003000&mc=1",
+    impressionUrl:
+      "https://www14.a8.net/0.gif?a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"
+  }
 };
 
 const stripSimpleMarkdown = (value = "") =>
@@ -122,11 +130,11 @@ const linkLeminoText = (value) =>
   String(value || "")
     .replaceAll(
       "配信：Lemino",
-      `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer">配信：Leminoで視聴する</a>`
+      `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer" data-affiliate-service="lemino" data-affiliate-placement="article-body">配信：Leminoで視聴する</a>`
     )
     .replaceAll(
       "配信: Lemino",
-      `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer">配信: Leminoで視聴する</a>`
+      `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer" data-affiliate-service="lemino" data-affiliate-placement="article-body">配信: Leminoで視聴する</a>`
     );
 
 const articleInlineHtml = (value) =>
@@ -364,6 +372,31 @@ const selectAffiliateProductCards = (slug, limit = 4) => {
   return selected;
 };
 
+const articleAffiliateSearchText = (article) => {
+  const fightCards = jsonArray(article?.affiliate_links).find(
+    (item) => item && item.type === "fight_cards" && Array.isArray(item.cards)
+  );
+  const fighterNames = (fightCards?.cards || [])
+    .flatMap((card) => [card?.left?.name, card?.right?.name])
+    .filter(Boolean)
+    .join(" ");
+  return `${article?.title || ""}\n${article?.summary || ""}\n${
+    article?.body || ""
+  }\n${fighterNames}`;
+};
+
+const selectRelevantAffiliateProductCards = (article) => {
+  const source = articleAffiliateSearchText(article);
+  if (/井上\s*尚弥|Naoya\s+Inoue|ノニト[・\s]*ドネア|Nonito\s+Donaire|ネリ戦/i.test(source)) {
+    return selectAffiliateProductCards(article?.slug || article?.id || "", 4);
+  }
+  if (/大橋(?:ボクシング)?ジム|PHOENIX\s+BATTLE|フェニックスバトル/i.test(source)) {
+    const gymProduct = affiliateProductPool.find((item) => item.family === "gym-shirt");
+    return gymProduct ? [{ ...gymProduct }] : [];
+  }
+  return [];
+};
+
 const isNewsArticle = (article) => {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
   const declaredCategory = String(article?.category || "").toLowerCase();
@@ -378,7 +411,14 @@ const articleCategoryText = (article) => {
 
 const wowowAffiliateBannerHtml = (article) => {
   if (articleCategoryText(article) !== "WOWOWエキサイトマッチ") return "";
-  return `<aside class="wowow-affiliate-banner" aria-label="WOWOWオンデマンド PR"><span class="wowow-affiliate-banner-label">PR</span><a href="${wowowAffiliate.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" aria-label="WOWOWオンデマンドを確認する"><img class="wowow-affiliate-banner-image" src="${wowowAffiliate.imageUrl}" width="300" height="250" alt="WOWOWオンデマンド"></a><img class="wowow-affiliate-tracking-pixel" src="${wowowAffiliate.impressionUrl}" width="1" height="1" alt="" aria-hidden="true"></aside>`;
+  const banner = wowowAffiliate.banner;
+  return `<aside class="wowow-affiliate-banner" aria-label="WOWOWオンデマンド PR"><span class="wowow-affiliate-banner-label">PR</span><a href="${banner.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" aria-label="WOWOWオンデマンドを確認する" data-affiliate-service="wowow" data-affiliate-placement="article-bottom-banner"><img class="wowow-affiliate-banner-image" src="${banner.imageUrl}" width="300" height="250" alt="WOWOWオンデマンド"></a><img class="wowow-affiliate-tracking-pixel" src="${banner.impressionUrl}" width="1" height="1" alt="" aria-hidden="true"></aside>`;
+};
+
+const wowowAffiliateTextHtml = (article) => {
+  if (articleCategoryText(article) !== "WOWOWエキサイトマッチ") return "";
+  const text = wowowAffiliate.text;
+  return `<aside class="affiliate-teaser" aria-label="WOWOWオンデマンド PR"><div class="affiliate-teaser-copy"><span class="affiliate-teaser-label">PR・配信サービス</span><strong>WOWOWオンデマンドの視聴情報を確認</strong><span class="affiliate-teaser-note">料金・配信内容・視聴条件はリンク先でご確認ください。</span></div><a href="${text.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" data-affiliate-service="wowow" data-affiliate-placement="article-top-text">${escapeHtml(text.label)}</a><img class="wowow-affiliate-tracking-pixel" src="${text.impressionUrl}" width="1" height="1" alt="" aria-hidden="true"></aside>`;
 };
 
 const articleCategoryPath = (article) => {
@@ -655,14 +695,28 @@ function videosHtml(article) {
 }
 
 function affiliateLinksHtml(article) {
+  const seenUrls = new Set();
   const links = jsonArray(article.affiliate_links)
     .filter((item) => item && item.label && item.url)
     .map((item) => {
-      const url = safeUrl(item.url, "#");
+      const source = `${item.label}\n${item.url}`;
+      const targetUrl = /Lemino|affiliate-sp\.docomo\.ne\.jp/i.test(source)
+        ? leminoAffiliateUrl
+        : /WOWOW/i.test(source)
+          ? wowowAffiliate.text.linkUrl
+          : item.url;
+      const url = safeUrl(targetUrl, "#");
       if (url === "#" || !url.startsWith("https://")) return "";
+      if (seenUrls.has(url)) return "";
+      seenUrls.add(url);
+      const service = /affiliate-sp\.docomo\.ne\.jp/i.test(url)
+        ? "lemino"
+        : /px\.a8\.net/i.test(url)
+          ? "wowow"
+          : "other";
       return `<a href="${escapeHtml(
         url
-      )}" target="_blank" rel="sponsored noopener noreferrer">${escapeHtml(
+      )}" target="_blank" rel="sponsored noopener noreferrer" data-affiliate-service="${service}" data-affiliate-placement="article-streaming-links">${escapeHtml(
         item.label
       )}</a>`;
     })
@@ -737,8 +791,8 @@ function productCardsHtml(article) {
   const stored = jsonArray(article?.affiliate_links).find(
     (item) => item && item.type === "product_cards" && Array.isArray(item.cards)
   );
-  const selected = selectAffiliateProductCards(article?.slug || article?.id || "");
-  const sourceCards = selected.length ? selected : stored?.cards || [];
+  const selected = selectRelevantAffiliateProductCards(article);
+  const sourceCards = stored?.cards?.length ? stored.cards : selected;
   const cards = sourceCards
     .map((item) => ({
       title: String(item?.title || "").trim(),
@@ -755,7 +809,7 @@ function productCardsHtml(article) {
     .map(
       (item) => `<a class="affiliate-product-card" href="${escapeHtml(
         item.url
-      )}" target="_blank" rel="sponsored nofollow noopener"><img src="${escapeHtml(
+      )}" target="_blank" rel="sponsored nofollow noopener" data-affiliate-service="rakuten" data-affiliate-placement="article-product"><img src="${escapeHtml(
         item.image
       )}" alt="${escapeHtml(item.title)}の商品画像" loading="lazy" referrerpolicy="no-referrer"><span class="affiliate-product-card-content"><strong>${escapeHtml(
         item.title
@@ -904,6 +958,7 @@ export async function onRequestGet(context) {
     (item) => item && item.label && item.url
   );
   const wowowBanner = wowowAffiliateBannerHtml(article);
+  const wowowTextAffiliate = wowowAffiliateTextHtml(article);
   const productCards = productCardsHtml(article);
   const hasProductCards = Boolean(productCards);
   const disclosure = article.is_advertorial || hasAffiliateLinks || wowowBanner || hasProductCards
@@ -978,7 +1033,7 @@ export async function onRequestGet(context) {
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ""}
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script type="application/ld+json">${structuredData}</script>
-   <link rel="stylesheet" href="/styles.css?v=20260809-wowow-affiliate1">
+   <link rel="stylesheet" href="/styles.css?v=20260809-revenue2">
   <script src="/config.js" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
@@ -1023,6 +1078,7 @@ export async function onRequestGet(context) {
             : ""
         }
         ${disclosure}
+        ${wowowTextAffiliate}
         <div class="retro-detail-body">${articleBodyHtml(article.body, article.title, summary)}${embedsHtml(article)}</div>
         ${affiliateLinksHtml(article)}
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>

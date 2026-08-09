@@ -48,7 +48,7 @@ const article = {
   affiliate_links: [
     {
       label: "Leminoプレミアムでライブ配信",
-      url: "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2"
+      url: "https://lemino.docomo.ne.jp/"
     },
     {
       type: "fight_cards",
@@ -136,6 +136,7 @@ assert.match(html, /編集・確認：ボクシング速報編集部/);
 assert.ok(
   html.includes("https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2")
 );
+assert.ok(!html.includes('href="https://lemino.docomo.ne.jp/"'));
 assert.ok(!html.includes("a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"));
 
 const wowowArticle = {
@@ -161,6 +162,22 @@ const wowowResponse = await onRequestGet(wowowContext);
 assert.equal(wowowResponse.status, 200);
 const wowowHtml = await wowowResponse.text();
 assert.match(wowowHtml, /class="wowow-affiliate-banner"/);
+assert.match(wowowHtml, /class="affiliate-teaser"/);
+assert.ok(
+  wowowHtml.includes(
+    "https://px.a8.net/svt/ejp?a8mat=4B9XTD+FXXWPM+5DFW+5YJRM"
+  )
+);
+assert.ok(
+  wowowHtml.includes(
+    "【映画・スポーツ・海外ドラマみるなら】WOWOWオンデマンド"
+  )
+);
+assert.ok(
+  wowowHtml.includes(
+    "https://www13.a8.net/0.gif?a8mat=4B9XTD+FXXWPM+5DFW+5YJRM"
+  )
+);
 assert.ok(
   wowowHtml.includes(
     "https://px.a8.net/svt/ejp?a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"
@@ -168,16 +185,23 @@ assert.ok(
 );
 assert.ok(
   wowowHtml.includes(
-    "https://www22.a8.net/svt/bgt?aid=260804209964&wid=002&eno=01&mid=s00000025070001003000&mc=1"
+    "https://www24.a8.net/svt/bgt?aid=260804209964&wid=002&eno=01&mid=s00000025070001003000&mc=1"
   )
 );
 assert.ok(
   wowowHtml.includes(
-    "https://www13.a8.net/0.gif?a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"
+    "https://www14.a8.net/0.gif?a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"
   )
 );
+assert.ok(!wowowHtml.includes("https://www22.a8.net/svt/bgt"));
 assert.match(wowowHtml, /rel="sponsored nofollow noopener noreferrer"/);
+assert.match(wowowHtml, /data-affiliate-service="wowow" data-affiliate-placement="article-top-text"/);
+assert.match(wowowHtml, /data-affiliate-service="wowow" data-affiliate-placement="article-bottom-banner"/);
 assert.match(wowowHtml, /class="affiliate-disclosure"/);
+assert.ok(
+  wowowHtml.indexOf('class="affiliate-teaser"') <
+    wowowHtml.indexOf('<div class="retro-detail-body">')
+);
 
 const bodyIndex = html.indexOf('<div class="retro-detail-body">');
 const streamingIndex = html.indexOf('<aside class="affiliate-links">');
@@ -187,9 +211,60 @@ const productsIndex = html.indexOf('<section class="affiliate-products"');
 assert.ok(bodyIndex >= 0 && bodyIndex < streamingIndex);
 assert.ok(streamingIndex < fightCardsIndex);
 assert.ok(fightCardsIndex < relatedIndex);
-assert.ok(relatedIndex < productsIndex);
+assert.equal(productsIndex, -1);
+assert.ok(!html.includes("hb.afl.rakuten.co.jp"));
 assert.match(html, /href="\/schedule"/);
 assert.ok(!html.includes('href="/about.html"'));
+
+const inoueArticle = {
+  ...article,
+  id: "inoue-article-1",
+  slug: "naoya-inoue-next-fight",
+  title: "井上尚弥の次戦予定",
+  body: "井上尚弥の次戦情報をまとめます。",
+  affiliate_links: []
+};
+globalThis.fetch = async (input) => {
+  const url = String(input);
+  if (url.includes("slug=eq.naoya-inoue-next-fight")) return Response.json([inoueArticle]);
+  if (url.includes("/rest/v1/articles?")) return Response.json([inoueArticle, listArticle]);
+  return new Response(null, { status: 204 });
+};
+const inoueContext = makeContext("GET");
+inoueContext.params = { slug: inoueArticle.slug };
+inoueContext.request = new Request(
+  `https://boxsoku.com/news/${inoueArticle.slug}?boxsoku_verify=1`
+);
+const inoueResponse = await onRequestGet(inoueContext);
+assert.equal(inoueResponse.status, 200);
+const inoueHtml = await inoueResponse.text();
+assert.equal((inoueHtml.match(/class="affiliate-product-card"/g) || []).length, 4);
+assert.match(inoueHtml, /data-affiliate-service="rakuten" data-affiliate-placement="article-product"/);
+
+const ohashiArticle = {
+  ...article,
+  id: "ohashi-article-1",
+  slug: "phoenix-battle",
+  title: "Lemino BOXING PHOENIX BATTLE",
+  body: "大橋ボクシングジム主催の興行です。",
+  affiliate_links: []
+};
+globalThis.fetch = async (input) => {
+  const url = String(input);
+  if (url.includes("slug=eq.phoenix-battle")) return Response.json([ohashiArticle]);
+  if (url.includes("/rest/v1/articles?")) return Response.json([ohashiArticle, listArticle]);
+  return new Response(null, { status: 204 });
+};
+const ohashiContext = makeContext("GET");
+ohashiContext.params = { slug: ohashiArticle.slug };
+ohashiContext.request = new Request(
+  `https://boxsoku.com/news/${ohashiArticle.slug}?boxsoku_verify=1`
+);
+const ohashiResponse = await onRequestGet(ohashiContext);
+assert.equal(ohashiResponse.status, 200);
+const ohashiHtml = await ohashiResponse.text();
+assert.equal((ohashiHtml.match(/class="affiliate-product-card"/g) || []).length, 1);
+assert.match(ohashiHtml, /大橋ボクシングジム コラボ HEATH Tシャツ/);
 
 const listingArticle = {
   ...article,
@@ -280,5 +355,21 @@ const aboutSource = fs.readFileSync(path.join(projectRoot, "about.html"), "utf8"
 assert.match(aboutSource, /情報の確認方法/);
 assert.match(aboutSource, /未確認の情報や推測は確定情報として掲載しません/);
 assert.match(aboutSource, /"@type": "Organization"/);
+
+const affiliateConfigSource = fs.readFileSync(
+  path.join(projectRoot, "config.js"),
+  "utf8"
+);
+for (const exactOwnerUrl of [
+  "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2",
+  "https://px.a8.net/svt/ejp?a8mat=4B9XTD+FXXWPM+5DFW+5YJRM",
+  "https://www13.a8.net/0.gif?a8mat=4B9XTD+FXXWPM+5DFW+5YJRM",
+  "https://px.a8.net/svt/ejp?a8mat=4B9XTD+FXXWPM+5DFW+5YZ75",
+  "https://www24.a8.net/svt/bgt?aid=260804209964&wid=002&eno=01&mid=s00000025070001003000&mc=1",
+  "https://www14.a8.net/0.gif?a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"
+]) {
+  assert.ok(affiliateConfigSource.includes(exactOwnerUrl));
+}
+assert.ok(!affiliateConfigSource.includes("https://www22.a8.net/svt/bgt"));
 
 console.log("SEO render checks passed");
