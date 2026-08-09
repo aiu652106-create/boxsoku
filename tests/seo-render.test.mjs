@@ -211,8 +211,9 @@ const productsIndex = html.indexOf('<section class="affiliate-products"');
 assert.ok(bodyIndex >= 0 && bodyIndex < streamingIndex);
 assert.ok(streamingIndex < fightCardsIndex);
 assert.ok(fightCardsIndex < relatedIndex);
-assert.equal(productsIndex, -1);
-assert.ok(!html.includes("hb.afl.rakuten.co.jp"));
+assert.ok(productsIndex > relatedIndex);
+assert.equal((html.match(/class="affiliate-product-card"/g) || []).length, 4);
+assert.ok(html.includes("hb.afl.rakuten.co.jp"));
 assert.match(html, /href="\/schedule"/);
 assert.ok(!html.includes('href="/about.html"'));
 
@@ -281,9 +282,10 @@ ohashiContext.request = new Request(
 const ohashiResponse = await onRequestGet(ohashiContext);
 assert.equal(ohashiResponse.status, 200);
 const ohashiHtml = await ohashiResponse.text();
-assert.equal((ohashiHtml.match(/class="affiliate-product-card"/g) || []).length, 1);
-assert.match(ohashiHtml, /大橋ボクシングジム コラボ HEATH Tシャツ/);
-assert.ok(!ohashiHtml.includes("井上尚弥 限定 WINNER Tシャツ"));
+assert.equal((ohashiHtml.match(/class="affiliate-product-card"/g) || []).length, 4);
+assert.match(ohashiHtml, /井上尚弥/);
+assert.ok(!ohashiHtml.includes("ohashi-owner-link"));
+assert.ok(!ohashiHtml.includes("inoue-owner-link"));
 
 const listingArticle = {
   ...article,
