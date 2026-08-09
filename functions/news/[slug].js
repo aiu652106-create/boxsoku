@@ -586,6 +586,67 @@ function articleSummary(article) {
     .slice(0, 500);
 }
 
+function articleBodyField(body, labelPattern) {
+  const match = String(body || "").match(
+    new RegExp(`(?:^|\\n)\\s*(?:[-*]\\s*)?(?:${labelPattern})\\s*[:：]\\s*([^\\n]+)`, "i")
+  );
+  return String(match?.[1] || "").replace(/^\s+|\s+$/g, "");
+}
+
+function sportsEventData(article, canonical, summary, image) {
+  if (articleCategoryText(article) !== "試合日程") return null;
+  const body = String(article?.body || "");
+  const dateSource =
+    articleBodyField(body, "開催日|日程") ||
+    body.split(/\n/).find((line) => /20\d{2}年\d{1,2}月\d{1,2}日/.test(line)) ||
+    "";
+  const dateMatch = dateSource.match(/(20\d{2})年(\d{1,2})月(\d{1,2})日/);
+  if (!dateMatch) return null;
+
+  const timeSource = articleBodyField(body, "開始|試合開始|開始時刻");
+  const timeMatch = timeSource.match(/(\d{1,2})時(?:(\d{1,2})分)?/);
+  const year = dateMatch[1];
+  const month = dateMatch[2].padStart(2, "0");
+  const day = dateMatch[3].padStart(2, "0");
+  const startDate = timeMatch
+    ? `${year}-${month}-${day}T${timeMatch[1].padStart(2, "0")}:${String(
+        timeMatch[2] || "00"
+      ).padStart(2, "0")}:00+09:00`
+    : `${year}-${month}-${day}`;
+  const venue = articleBodyField(body, "会場|開催地");
+  const fightCards = jsonArray(article?.affiliate_links).find(
+    (item) => item && item.type === "fight_cards" && Array.isArray(item.cards)
+  );
+  const performerNames = [...new Set(
+    (fightCards?.cards || [])
+      .flatMap((card) => [card?.left?.name, card?.right?.name])
+      .map((name) => String(name || "").trim())
+      .filter(Boolean)
+  )];
+
+  return {
+    "@type": "SportsEvent",
+    name: article.title,
+    description: summary,
+    startDate,
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    ...(venue
+      ? { location: { "@type": "Place", name: venue } }
+      : {}),
+    ...(image ? { image: [image] } : {}),
+    ...(performerNames.length
+      ? {
+          performer: performerNames.map((name) => ({
+            "@type": "Person",
+            name
+          }))
+        }
+      : {}),
+    url: canonical
+  };
+}
+
 function youtubeId(value) {
   try {
     const url = new URL(value);
@@ -658,6 +719,67 @@ function affiliateLinksHtml(article) {
   return links
     ? `<aside class="affiliate-links"><strong>この試合を配信サイトで見る</strong>${links}<p class="affiliate-links-note">料金・配信内容・視聴条件はリンク先の公式ページでご確認ください。</p></aside>`
     : "";
+}
+
+function scheduleEventData(article, canonical, summary, image) {
+  if (articleCategoryText(article) !== "試合日程") return null;
+  const body = String(article?.body || "").replace(/\r\n?/g, "\n");
+  const dateMatch = body.match(
+    /(?:開催日|日程)\s*[:：]\s*(20\d{2})年\s*(\d{1,2})月\s*(\d{1,2})日/
+  );
+  if (!dateMatch) return null;
+
+  const startMatch = body.match(
+    /(?:開始|試合開始|開始時刻)\s*[:：]\s*(\d{1,2})時(?:\s*(\d{1,2})分)?/
+  );
+  const [, year, month, day] = dateMatch;
+  const date = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  const startDate = startMatch
+    ? `${date}T${startMatch[1].padStart(2, "0")}:${String(
+        startMatch[2] || "0"
+      ).padStart(2, "0")}:00+09:00`
+    : date;
+  const venueMatch = body.match(/(?:会場|開催地)\s*[:：]\s*([^\n]+)/);
+  const venue = venueMatch
+    ? stripSimpleMarkdown(venueMatch[1]).replace(/\s*[-*]\s*$/, "").trim()
+    : "";
+  const fightCards = jsonArray(article?.affiliate_links).find(
+    (item) => item && item.type === "fight_cards" && Array.isArray(item.cards)
+  );
+  const performerNames = [...new Set(
+    (fightCards?.cards || [])
+      .flatMap((card) => [card?.left?.name, card?.right?.name])
+      .map((name) => String(name || "").trim())
+      .filter(Boolean)
+  )];
+
+  return {
+    "@type": "SportsEvent",
+    name: article.title,
+    description: summary,
+    url: canonical,
+    startDate,
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    ...(venue
+      ? {
+          location: {
+            "@type": "Place",
+            name: venue,
+            address: { "@type": "PostalAddress", addressCountry: "JP" }
+          }
+        }
+      : {}),
+    ...(image ? { image: [image] } : {}),
+    ...(performerNames.length
+      ? {
+          performer: performerNames.map((name) => ({
+            "@type": "Person",
+            name
+          }))
+        }
+      : {})
+  };
 }
 
 function productCardsHtml(article) {
@@ -840,9 +962,18 @@ export async function onRequestGet(context) {
     : "";
   const categoryPath = articleCategoryPath(article);
   const categoryText = articleCategoryText(article);
+  const organizationId = `${siteUrl}/#organization`;
+  const eventData = scheduleEventData(article, canonical, summary, image);
   const structuredData = JSON.stringify({
     "@context": "https://schema.org",
     "@graph": [
+      {
+        "@type": "Organization",
+        "@id": organizationId,
+        name: siteName,
+        url: siteUrl,
+        email: "bokusoku446@gmail.com"
+      },
       {
         "@type": isNewsArticle(article) ? "NewsArticle" : "Article",
         headline: article.title,
@@ -851,16 +982,8 @@ export async function onRequestGet(context) {
         datePublished: article.published_at,
         dateModified: article.updated_at || article.published_at,
         mainEntityOfPage: canonical,
-        author: {
-          "@type": "Organization",
-          name: siteName,
-          url: siteUrl
-        },
-        publisher: {
-          "@type": "Organization",
-          name: siteName,
-          url: siteUrl
-        }
+        author: { "@id": organizationId },
+        publisher: { "@id": organizationId }
       },
       {
         "@type": "BreadcrumbList",
@@ -874,7 +997,8 @@ export async function onRequestGet(context) {
           },
           { "@type": "ListItem", position: 3, name: article.title, item: canonical }
         ]
-      }
+      },
+      ...(eventData ? [eventData] : [])
     ]
   }).replaceAll("<", "\\u003c");
 

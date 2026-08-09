@@ -128,6 +128,9 @@ assert.match(html, /<h2>大会概要<\/h2>/);
 assert.match(html, /<ul><li>開催日：2026年9月2日<\/li>/);
 assert.match(html, /"@type":"Article"/);
 assert.match(html, /"@type":"BreadcrumbList"/);
+assert.match(html, /"@type":"SportsEvent"/);
+assert.match(html, /"startDate":"2026-09-02"/);
+assert.match(html, /"@type":"Organization"/);
 assert.match(html, /class="public-breadcrumb"/);
 assert.match(html, /編集・確認：ボクシング速報編集部/);
 assert.ok(
@@ -172,6 +175,7 @@ assert.match(listingHtml, /<h1 class="feed-heading">ボクシング試合予定<
 assert.match(listingHtml, /<h2><a href="\/news\/seo-test">9月2日のボクシング試合予定<\/a><\/h2>/);
 assert.match(listingHtml, /"@type":"CollectionPage"/);
 assert.match(listingHtml, /"@type":"ItemList"/);
+assert.match(listingHtml, /"@type":"Organization"/);
 assert.ok(!listingHtml.includes("記事を読み込んでいます"));
 
 const listingHead = await renderListingPage(

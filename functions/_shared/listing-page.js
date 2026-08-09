@@ -268,11 +268,19 @@ export async function renderListingPage(context, pageKey = "home") {
     "@context": "https://schema.org",
     "@graph": [
       {
+        "@type": "Organization",
+        "@id": `${siteUrl}/#organization`,
+        name: siteName,
+        url: siteUrl,
+        email: "bokusoku446@gmail.com"
+      },
+      {
         "@type": "WebSite",
         "@id": `${siteUrl}/#website`,
         url: `${siteUrl}/`,
         name: siteName,
-        inLanguage: "ja"
+        inLanguage: "ja",
+        publisher: { "@id": `${siteUrl}/#organization` }
       },
       {
         "@type": "CollectionPage",
