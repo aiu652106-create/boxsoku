@@ -6665,3 +6665,116 @@ body.retro-blog .affiliate-product-action,
     padding-top: 0 !important;
   }
 }
+
+/* Search landing pages and article trust signals. */
+body.retro-blog .feed-intro {
+  max-width: 760px;
+  margin: 0 0 18px;
+  color: #444;
+  font-size: 14px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+body.retro-blog .public-breadcrumb {
+  display: block;
+  margin: 0 0 16px;
+  color: #666;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+body.retro-blog .public-breadcrumb a {
+  color: #8e1b1b;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+body.retro-blog .article-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0 0 16px;
+  color: #555;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+body.retro-blog .article-trust span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+body.retro-blog .related-section {
+  margin: 28px 0 8px;
+  padding: 20px 0 0;
+  border-top: 3px solid #8e1b1b;
+}
+
+body.retro-blog .related-section h2 {
+  margin: 0 0 12px;
+  color: #111;
+  font-size: 20px;
+  line-height: 1.4;
+}
+
+body.retro-blog .related-section ul {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+body.retro-blog .related-section li {
+  margin: 0;
+  padding: 0 0 9px;
+  border-bottom: 1px solid #ddd;
+}
+
+body.retro-blog .related-section a {
+  color: #202020;
+  font-weight: 700;
+  line-height: 1.65;
+  text-decoration: underline;
+  text-decoration-color: #b58a37;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+body.retro-blog .retro-title-row h1,
+body.retro-blog .retro-title-row h2,
+body.retro-blog .retro-title-row a,
+body.retro-blog .retro-summary {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+@media (max-width: 720px) {
+  body.retro-blog .feed-intro {
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+
+  body.retro-blog .public-breadcrumb {
+    margin-bottom: 12px;
+    font-size: 11px;
+  }
+
+  body.retro-blog .article-trust {
+    display: grid;
+    gap: 2px;
+    margin-bottom: 14px;
+  }
+
+  body.retro-blog .related-section {
+    margin-top: 22px;
+    padding-top: 16px;
+  }
+
+  body.retro-blog .related-section h2 {
+    font-size: 18px;
+  }
+}

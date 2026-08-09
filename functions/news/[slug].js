@@ -369,6 +369,18 @@ const articleCategoryText = (article) => {
   return isNewsArticle(article) ? "NEWS" : "試合日程";
 };
 
+const articleCategoryPath = (article) => {
+  const category = articleCategoryText(article);
+  if (category === "WOWOWエキサイトマッチ") return "/wowow-excite-match";
+  if (category === "NEWS") return "/boxing-news";
+  return "/schedule";
+};
+
+const formatArticleDate = (value) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("ja-JP");
+};
+
 const featuredFightCards = {
   "2026-08-16-treasure-boxing-promotion-14": [
     {
@@ -714,6 +726,27 @@ function sidebarHtml(articles, ranked = false) {
     .join("");
 }
 
+function relatedArticlesHtml(article, articles) {
+  const currentCategory = articleCategoryText(article);
+  const related = articles
+    .filter((candidate) => candidate.slug !== article.slug)
+    .sort((left, right) => {
+      const leftSame = articleCategoryText(left) === currentCategory ? 1 : 0;
+      const rightSame = articleCategoryText(right) === currentCategory ? 1 : 0;
+      return rightSame - leftSame || new Date(right.published_at) - new Date(left.published_at);
+    })
+    .slice(0, 3);
+  if (!related.length) return "";
+  return `<section class="related-section" aria-labelledby="related-heading"><h2 id="related-heading">関連記事</h2><ul>${related
+    .map(
+      (candidate) =>
+        `<li><a href="/news/${encodeURIComponent(candidate.slug)}">${escapeHtml(
+          candidate.title
+        )}</a></li>`
+    )
+    .join("")}</ul></section>`;
+}
+
 async function supabaseRows(env, query) {
   let response = await fetch(`${env.SUPABASE_URL}/rest/v1/${query}`, {
     headers: {
@@ -805,25 +838,44 @@ export async function onRequestGet(context) {
           "この記事には配信サービスのアフィリエイトリンクが含まれています。"
       )}</span></aside>`
     : "";
+  const categoryPath = articleCategoryPath(article);
+  const categoryText = articleCategoryText(article);
   const structuredData = JSON.stringify({
     "@context": "https://schema.org",
-    "@type": isNewsArticle(article) ? "NewsArticle" : "Article",
-    headline: article.title,
-    description: summary,
-    ...(image ? { image: [image] } : {}),
-    datePublished: article.published_at,
-    dateModified: article.updated_at || article.published_at,
-    mainEntityOfPage: canonical,
-    author: {
-      "@type": "Organization",
-      name: siteName,
-      url: siteUrl
-    },
-    publisher: {
-      "@type": "Organization",
-      name: siteName,
-      url: siteUrl
-    }
+    "@graph": [
+      {
+        "@type": isNewsArticle(article) ? "NewsArticle" : "Article",
+        headline: article.title,
+        description: summary,
+        ...(image ? { image: [image] } : {}),
+        datePublished: article.published_at,
+        dateModified: article.updated_at || article.published_at,
+        mainEntityOfPage: canonical,
+        author: {
+          "@type": "Organization",
+          name: siteName,
+          url: siteUrl
+        },
+        publisher: {
+          "@type": "Organization",
+          name: siteName,
+          url: siteUrl
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "ホーム", item: `${siteUrl}/` },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: categoryText,
+            item: `${siteUrl}${categoryPath}`
+          },
+          { "@type": "ListItem", position: 3, name: article.title, item: canonical }
+        ]
+      }
+    ]
   }).replaceAll("<", "\\u003c");
 
   const html = `<!doctype html>
@@ -850,32 +902,43 @@ export async function onRequestGet(context) {
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ""}
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script type="application/ld+json">${structuredData}</script>
-   <link rel="stylesheet" href="/styles.css?v=20260809-seo-human-first1">
+   <link rel="stylesheet" href="/styles.css?v=20260809-search-hubs1">
   <script src="/config.js" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
   <script src="/ads.js" defer></script>
 </head>
 <body class="retro-blog">
-  <div class="retro-top"><div><span data-site-tagline>ボクシングのニュースと話題</span><a href="/about.html">運営者情報</a></div></div>
+  <div class="retro-top"><div><span data-site-tagline>ボクシングのニュースと話題</span><a href="/about">運営者情報</a></div></div>
   <header class="retro-header"><a class="retro-logo" href="/"><strong data-site-name>${escapeHtml(
     siteName
   )}</strong><span>BOXING NEWS</span></a></header>
   <div class="retro-page-layout">
-    <aside class="retro-sidebar retro-sidebar-popular"><nav class="retro-category-nav retro-category-sidebar" aria-label="記事カテゴリー"><a href="/?category=schedule" data-category-filter="schedule">試合日程</a><a href="/?category=news" data-category-filter="news">NEWS</a><a href="/?category=wowow" data-category-filter="wowow">WOWOWエキサイトマッチ</a></nav><section class="retro-sidebar-panel"><h2>人気記事</h2><ol class="retro-sidebar-list retro-ranking-list">${sidebarHtml(
+    <aside class="retro-sidebar retro-sidebar-popular"><nav class="retro-category-nav retro-category-sidebar" aria-label="記事カテゴリー"><a href="/schedule" data-category-filter="schedule">試合日程</a><a href="/boxing-news" data-category-filter="news">NEWS</a><a href="/wowow-excite-match" data-category-filter="wowow">WOWOWエキサイトマッチ</a></nav><section class="retro-sidebar-panel"><h2>人気記事</h2><ol class="retro-sidebar-list retro-ranking-list">${sidebarHtml(
       popular,
       true
     )}</ol></section></aside>
     <main class="retro-feed">
       <article class="retro-post retro-detail">
+        <nav class="public-breadcrumb" aria-label="パンくずリスト"><a href="/">ホーム</a> &gt; <a href="${categoryPath}">${escapeHtml(
+          categoryText
+        )}</a> &gt; <span aria-current="page">${escapeHtml(article.title)}</span></nav>
         <div class="retro-title-row"><h1>${escapeHtml(
           article.title
         )}</h1><a class="retro-tweet-link" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(
           article.title
         )}&url=${encodeURIComponent(canonical)}" target="_blank" rel="noopener noreferrer">Tweet</a></div>
-          <p class="retro-category">カテゴリ：${escapeHtml(
-            articleCategoryText(article)
-          )}</p>
+          <p class="retro-category">カテゴリ：${escapeHtml(categoryText)}</p>
+        <div class="article-trust"><span>公開日：<time datetime="${escapeHtml(
+          article.published_at
+        )}">${escapeHtml(formatArticleDate(article.published_at))}</time></span>${
+          formatArticleDate(article.updated_at) &&
+          formatArticleDate(article.updated_at) !== formatArticleDate(article.published_at)
+            ? `<span>更新日：<time datetime="${escapeHtml(
+                article.updated_at
+              )}">${escapeHtml(formatArticleDate(article.updated_at))}</time></span>`
+            : ""
+        }<span>編集・確認：ボクシング速報編集部</span></div>
         ${
           image
             ? `<img class="retro-post-image retro-detail-image" src="${escapeHtml(
@@ -889,6 +952,7 @@ export async function onRequestGet(context) {
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         ${fightCardsHtml(article)}
         ${videosHtml(article)}
+        ${relatedArticlesHtml(article, latest)}
         ${productCards}
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>
         <div class="retro-meta"><time>${escapeHtml(
@@ -906,7 +970,7 @@ export async function onRequestGet(context) {
       latest
     )}</ul><aside class="ad-slot sidebar-ad" data-ad-slot-name="sidebar" aria-label="広告"></aside></section></aside>
   </div>
-  <footer class="retro-footer"><a href="/">TOP PAGEへ</a><nav><a href="/about.html">運営者情報</a><a href="/privacy.html">プライバシーポリシー</a><a href="/disclaimer.html">免責事項</a><a href="/contact.html">お問い合わせ</a></nav><small>copyright &copy; <span data-current-year></span> <span data-site-name>${escapeHtml(
+  <footer class="retro-footer"><a href="/">TOP PAGEへ</a><nav><a href="/about">運営者情報</a><a href="/privacy">プライバシーポリシー</a><a href="/disclaimer">免責事項</a><a href="/contact">お問い合わせ</a></nav><small>copyright &copy; <span data-current-year></span> <span data-site-name>${escapeHtml(
     siteName
   )}</span> all rights reserved.</small></footer>
   ${

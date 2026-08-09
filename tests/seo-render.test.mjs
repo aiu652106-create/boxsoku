@@ -16,6 +16,18 @@ fs.writeFileSync(temporaryModule, functionSource, "utf8");
 const { onRequestGet, onRequestHead } = await import(temporaryModule);
 fs.unlinkSync(temporaryModule);
 
+const listingSource = fs.readFileSync(
+  path.join(projectRoot, "functions", "_shared", "listing-page.js"),
+  "utf8"
+);
+const temporaryListingModule = path.join(
+  os.tmpdir(),
+  `boxsoku-listing-function-${Date.now()}.mjs`
+);
+fs.writeFileSync(temporaryListingModule, listingSource, "utf8");
+const { renderListingPage } = await import(temporaryListingModule);
+fs.unlinkSync(temporaryListingModule);
+
 const article = {
   id: "article-1",
   slug: "seo-test",
@@ -64,6 +76,13 @@ const listArticle = {
   accent: article.accent,
   published_at: article.published_at
 };
+const relatedListArticle = {
+  slug: "related-schedule",
+  title: "8月19日のボクシング試合予定",
+  image_url: "https://example.com/related.jpg",
+  accent: "gold",
+  published_at: "2026-08-04T00:00:00.000Z"
+};
 
 const requestedUrls = [];
 globalThis.fetch = async (input) => {
@@ -73,7 +92,7 @@ globalThis.fetch = async (input) => {
     return Response.json([article]);
   }
   if (url.includes("/rest/v1/articles?")) {
-    return Response.json([listArticle]);
+    return Response.json([listArticle, relatedListArticle]);
   }
   return new Response(null, { status: 204 });
 };
@@ -108,14 +127,58 @@ assert.ok(!description.includes("##"));
 assert.match(html, /<h2>大会概要<\/h2>/);
 assert.match(html, /<ul><li>開催日：2026年9月2日<\/li>/);
 assert.match(html, /"@type":"Article"/);
+assert.match(html, /"@type":"BreadcrumbList"/);
+assert.match(html, /class="public-breadcrumb"/);
+assert.match(html, /編集・確認：ボクシング速報編集部/);
+assert.ok(
+  html.includes("https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2")
+);
 
 const bodyIndex = html.indexOf('<div class="retro-detail-body">');
 const streamingIndex = html.indexOf('<aside class="affiliate-links">');
 const fightCardsIndex = html.indexOf('<section class="retro-fight-cards"');
+const relatedIndex = html.indexOf('<section class="related-section"');
 const productsIndex = html.indexOf('<section class="affiliate-products"');
 assert.ok(bodyIndex >= 0 && bodyIndex < streamingIndex);
 assert.ok(streamingIndex < fightCardsIndex);
-assert.ok(fightCardsIndex < productsIndex);
+assert.ok(fightCardsIndex < relatedIndex);
+assert.ok(relatedIndex < productsIndex);
+assert.match(html, /href="\/schedule"/);
+assert.ok(!html.includes('href="/about.html"'));
+
+const listingArticle = {
+  ...article,
+  view_count: 10
+};
+globalThis.fetch = async (input) => {
+  const url = String(input);
+  requestedUrls.push(url);
+  if (url.includes("/rest/v1/articles?")) {
+    return Response.json([listingArticle, { ...relatedListArticle, body: "", view_count: 3 }]);
+  }
+  return new Response(null, { status: 204 });
+};
+
+const listingContext = {
+  env,
+  request: new Request("https://boxsoku.com/schedule"),
+  waitUntil() {}
+};
+const listingResponse = await renderListingPage(listingContext, "schedule");
+assert.equal(listingResponse.status, 200);
+const listingHtml = await listingResponse.text();
+assert.match(listingHtml, /<title>ボクシング試合予定・今日の試合と配信情報｜ボクシング速報<\/title>/);
+assert.match(listingHtml, /<h1 class="feed-heading">ボクシング試合予定<\/h1>/);
+assert.match(listingHtml, /<h2><a href="\/news\/seo-test">9月2日のボクシング試合予定<\/a><\/h2>/);
+assert.match(listingHtml, /"@type":"CollectionPage"/);
+assert.match(listingHtml, /"@type":"ItemList"/);
+assert.ok(!listingHtml.includes("記事を読み込んでいます"));
+
+const listingHead = await renderListingPage(
+  { ...listingContext, request: new Request("https://boxsoku.com/schedule", { method: "HEAD" }) },
+  "schedule"
+);
+assert.equal(await listingHead.text(), "");
 
 requestedUrls.length = 0;
 const headResponse = await onRequestHead(makeContext("HEAD"));
@@ -148,7 +211,7 @@ const sitemapSource = fs.readFileSync(
 );
 assert.match(
   sitemapSource,
-  /const staticPages = \["", "\/about", "\/privacy", "\/disclaimer", "\/contact"\]/
+  /"\/schedule"[\s\S]*?"\/boxing-news"[\s\S]*?"\/wowow-excite-match"/
 );
 assert.ok(!sitemapSource.includes("/about.html"));
 

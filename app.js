@@ -140,9 +140,15 @@ async function initialize() {
   try {
     const articles = await window.BoxingData.getArticles();
     const requestedCategory = new URLSearchParams(window.location.search).get("category");
-    const activeCategory = ["wowow", "schedule", "news"].includes(requestedCategory)
-      ? requestedCategory
-      : null;
+    const pathCategory = {
+      "/schedule": "schedule",
+      "/boxing-news": "news",
+      "/wowow-excite-match": "wowow"
+    }[window.location.pathname.replace(/\/$/, "") || "/"];
+    const activeCategory = pathCategory ||
+      (["wowow", "schedule", "news"].includes(requestedCategory)
+        ? requestedCategory
+        : null);
     updateCategoryNav(activeCategory);
     const visibleArticles = activeCategory
       ? articles.filter((article) => articleCategoryKey(article) === activeCategory)

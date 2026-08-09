@@ -32,6 +32,85 @@ function hasAffiliatePromotion(article) {
   );
 }
 
+function articleCategoryPath(article) {
+  const category = articleCategoryText(article);
+  if (category === "WOWOWエキサイトマッチ") return "/wowow-excite-match";
+  if (category === "NEWS") return "/boxing-news";
+  return "/schedule";
+}
+
+function formatArticleDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("ja-JP");
+}
+
+function createBreadcrumb(article) {
+  const breadcrumb = document.createElement("nav");
+  breadcrumb.className = "public-breadcrumb";
+  breadcrumb.setAttribute("aria-label", "パンくずリスト");
+  const home = document.createElement("a");
+  home.href = "/";
+  home.textContent = "ホーム";
+  const category = document.createElement("a");
+  category.href = articleCategoryPath(article);
+  category.textContent = articleCategoryText(article);
+  const current = document.createElement("span");
+  current.setAttribute("aria-current", "page");
+  current.textContent = article.title;
+  breadcrumb.append(home, document.createTextNode(" > "), category, document.createTextNode(" > "), current);
+  return breadcrumb;
+}
+
+function createArticleTrust(article) {
+  const trust = document.createElement("div");
+  trust.className = "article-trust";
+  const published = formatArticleDate(article.publishedAt);
+  const updated = formatArticleDate(article.updatedAt);
+  if (published) {
+    const item = document.createElement("span");
+    item.textContent = `公開日：${published}`;
+    trust.appendChild(item);
+  }
+  if (updated && updated !== published) {
+    const item = document.createElement("span");
+    item.textContent = `更新日：${updated}`;
+    trust.appendChild(item);
+  }
+  const editor = document.createElement("span");
+  editor.textContent = "編集・確認：ボクシング速報編集部";
+  trust.appendChild(editor);
+  return trust;
+}
+
+function createRelatedArticles(article, articles) {
+  const currentCategory = articleCategoryText(article);
+  const related = articles
+    .filter((candidate) => candidate.slug !== article.slug && candidate.id !== article.id)
+    .sort((left, right) => {
+      const leftSame = articleCategoryText(left) === currentCategory ? 1 : 0;
+      const rightSame = articleCategoryText(right) === currentCategory ? 1 : 0;
+      return rightSame - leftSame || new Date(right.publishedAt) - new Date(left.publishedAt);
+    })
+    .slice(0, 3);
+  if (!related.length) return null;
+
+  const section = document.createElement("section");
+  section.className = "related-section";
+  const heading = document.createElement("h2");
+  heading.textContent = "関連記事";
+  const list = document.createElement("ul");
+  related.forEach((candidate) => {
+    const item = document.createElement("li");
+    const link = document.createElement("a");
+    link.href = window.BoxingData.articleUrl(candidate);
+    link.textContent = candidate.title;
+    item.appendChild(link);
+    list.appendChild(item);
+  });
+  section.append(heading, list);
+  return section;
+}
+
 function getPublicProductCards(article) {
   const selectProducts = window.BoxingData?.selectAffiliateProductCards;
   if (selectProducts) {
@@ -448,30 +527,48 @@ function updateMetadata(article) {
   }
   structuredData.textContent = JSON.stringify({
     "@context": "https://schema.org",
-    "@type": isNewsArticle(article) ? "NewsArticle" : "Article",
-    headline: article.title,
-    description: summary,
-    ...(imageUrl ? { image: [imageUrl] } : {}),
-    datePublished: article.publishedAt || undefined,
-    dateModified: article.updatedAt || article.publishedAt || undefined,
-    mainEntityOfPage: pageUrl,
-    author: {
-      "@type": "Organization",
-      name: siteName,
-      url: siteUrl
-    },
-    publisher: {
-      "@type": "Organization",
-      name: siteName,
-      url: siteUrl
-    }
+    "@graph": [
+      {
+        "@type": isNewsArticle(article) ? "NewsArticle" : "Article",
+        headline: article.title,
+        description: summary,
+        ...(imageUrl ? { image: [imageUrl] } : {}),
+        datePublished: article.publishedAt || undefined,
+        dateModified: article.updatedAt || article.publishedAt || undefined,
+        mainEntityOfPage: pageUrl,
+        author: {
+          "@type": "Organization",
+          name: siteName,
+          url: siteUrl
+        },
+        publisher: {
+          "@type": "Organization",
+          name: siteName,
+          url: siteUrl
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "ホーム", item: `${siteUrl}/` },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: articleCategoryText(article),
+            item: new URL(articleCategoryPath(article), siteUrl).href
+          },
+          { "@type": "ListItem", position: 3, name: article.title, item: pageUrl }
+        ]
+      }
+    ]
   });
 }
 
-function renderArticle(article) {
+function renderArticle(article, articles = []) {
   updateMetadata(article);
   container.innerHTML = "";
 
+  const breadcrumb = createBreadcrumb(article);
   const disclosure = createAffiliateDisclosure(article);
 
   const titleRow = document.createElement("div");
@@ -491,6 +588,7 @@ function renderArticle(article) {
   const category = document.createElement("p");
   category.className = "retro-category";
   category.textContent = `カテゴリ：${articleCategoryText(article)}`;
+  const trust = createArticleTrust(article);
 
   const image = document.createElement("img");
   image.className = "retro-post-image retro-detail-image";
@@ -551,7 +649,7 @@ function renderArticle(article) {
   const back = document.createElement("p");
   back.className = "retro-back";
   const backLink = document.createElement("a");
-  backLink.href = "index.html";
+  backLink.href = "/";
   backLink.textContent = "トップページへ戻る";
   back.appendChild(backLink);
   const commentsMount = document.createElement("div");
@@ -560,7 +658,8 @@ function renderArticle(article) {
   const affiliateLinks = createAffiliateLinks(article);
   const productCards = createProductCards(article);
   const fightCards = createFightCards(article);
-  container.append(titleRow, category);
+  const relatedArticles = createRelatedArticles(article, articles);
+  container.append(breadcrumb, titleRow, category, trust);
   container.appendChild(imageContent);
   if (disclosure) container.appendChild(disclosure);
   container.appendChild(body);
@@ -568,6 +667,7 @@ function renderArticle(article) {
   container.appendChild(topAd);
   if (fightCards) container.appendChild(fightCards);
   if (videoEmbeds.childElementCount) container.appendChild(videoEmbeds);
+  if (relatedArticles) container.appendChild(relatedArticles);
   if (productCards) container.appendChild(productCards);
   container.append(meta, commentsMount, back);
   window.BoxingAds?.render(container);
@@ -586,11 +686,11 @@ async function initialize() {
     const article = await window.BoxingData.findArticle(identifier || "sample-world-title");
     if (!article) {
       container.innerHTML =
-        '<h1>記事が見つかりません</h1><p>記事が削除されたか、URLが変更されています。</p><p class="retro-back"><a href="index.html">トップページへ戻る</a></p>';
+        '<h1>記事が見つかりません</h1><p>記事が削除されたか、URLが変更されています。</p><p class="retro-back"><a href="/">トップページへ戻る</a></p>';
       return;
     }
-    renderArticle(article);
     const articles = await window.BoxingData.getArticles();
+    renderArticle(article, articles);
     await window.BoxingUI.renderSidebars(articles);
     if (params.get("boxsoku_verify") !== "1") {
       window.BoxingData.incrementView(article.slug).catch(() => {});
