@@ -218,6 +218,7 @@ assert.match(
   /"\/schedule"[\s\S]*?"\/boxing-news"[\s\S]*?"\/wowow-excite-match"/
 );
 assert.ok(!sitemapSource.includes("/about.html"));
+assert.match(sitemapSource, /siteUrl \+ \(path \|\| "\/"\)/);
 
 const staticCanonicalPages = new Map([
   ["index.html", "https://boxsoku.com/"],

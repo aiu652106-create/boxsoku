@@ -37,7 +37,7 @@ export async function onRequestGet({ env, request }) {
 
   const urls = [
     ...staticPages.map(
-      (path) => `<url><loc>${escapeXml(siteUrl + path)}</loc></url>`
+      (path) => `<url><loc>${escapeXml(siteUrl + (path || "/"))}</loc></url>`
     ),
     ...articles.map(
       (article) =>
