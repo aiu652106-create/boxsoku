@@ -82,6 +82,8 @@ For article pages, keep the event/program lead image separate from fight-card me
 
 For SEO and discovery changes, use one fixed production gate: confirm GET and HEAD both return `200`, Googlebot and OAI-SearchBot receive the same canonical content without visitor cookies or analytics writes, the sitemap contains the canonical URL, and metadata contains plain text without Markdown markers. Keep the useful article body before general product promotions, while placing streaming affiliate links next to the visible streaming information. Verify the server-rendered HTML and the client fallback use the same order and schema type.
 
+Sitemap, canonical, Open Graph URLs, and internal links must use the final public URL that returns `200`; never publish a redirecting `.html` URL when Cloudflare Pages serves the canonical page extensionless. Crawl every sitemap URL with both GET and HEAD before deployment is considered complete.
+
 Treat any reference page named by the user as a task-specific comparison target, not as a permanent template. First obey the current request and its explicit non-goals; use reference pages only to validate the requested behavior or appearance, and do not copy unrelated labels, structure, links, or content.
 
 Do not treat a correction as learned merely because the current output was fixed. The workflow, test, or documented rule must change so the same failure mode has a new detection or prevention step.

@@ -142,4 +142,28 @@ const robotsSource = fs.readFileSync(
 assert.match(robotsSource, /User-agent: OAI-SearchBot\nAllow: \//);
 assert.match(robotsSource, /User-agent: Googlebot\nAllow: \//);
 
+const sitemapSource = fs.readFileSync(
+  path.join(projectRoot, "functions", "sitemap.xml.js"),
+  "utf8"
+);
+assert.match(
+  sitemapSource,
+  /const staticPages = \["", "\/about", "\/privacy", "\/disclaimer", "\/contact"\]/
+);
+assert.ok(!sitemapSource.includes("/about.html"));
+
+const staticCanonicalPages = new Map([
+  ["index.html", "https://boxsoku.com/"],
+  ["about.html", "https://boxsoku.com/about"],
+  ["privacy.html", "https://boxsoku.com/privacy"],
+  ["disclaimer.html", "https://boxsoku.com/disclaimer"],
+  ["contact.html", "https://boxsoku.com/contact"]
+]);
+for (const [fileName, canonicalUrl] of staticCanonicalPages) {
+  const pageSource = fs.readFileSync(path.join(projectRoot, fileName), "utf8");
+  assert.ok(pageSource.includes(`<link rel="canonical" href="${canonicalUrl}"`));
+  assert.ok(pageSource.includes(`<meta property="og:url" content="${canonicalUrl}"`));
+  assert.ok(!/href="(?:index|about|privacy|disclaimer|contact)\.html"/.test(pageSource));
+}
+
 console.log("SEO render checks passed");

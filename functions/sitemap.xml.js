@@ -8,7 +8,7 @@ const escapeXml = (value = "") =>
 
 export async function onRequestGet({ env, request }) {
   const siteUrl = String(env.SITE_URL || new URL(request.url).origin).replace(/\/$/, "");
-  const staticPages = ["", "/about.html", "/privacy.html", "/disclaimer.html", "/contact.html"];
+  const staticPages = ["", "/about", "/privacy", "/disclaimer", "/contact"];
   let articles = [];
 
   if (env.SUPABASE_URL && env.SUPABASE_ANON_KEY) {
