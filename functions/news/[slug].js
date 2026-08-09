@@ -385,16 +385,34 @@ const articleAffiliateSearchText = (article) => {
   }\n${fighterNames}`;
 };
 
-const selectRelevantAffiliateProductCards = (article) => {
+const selectRelevantAffiliateProductCards = (article, storedCards = []) => {
   const source = articleAffiliateSearchText(article);
-  if (/井上\s*尚弥|Naoya\s+Inoue|ノニト[・\s]*ドネア|Nonito\s+Donaire|ネリ戦/i.test(source)) {
-    return selectAffiliateProductCards(article?.slug || article?.id || "", 4);
+  const stored = jsonArray(storedCards);
+  const inoueRelated =
+    /井上\s*尚弥|Naoya\s+Inoue|ノニト[・\s]*ドネア|Nonito\s+Donaire|ネリ戦/i.test(source);
+  const ohashiRelated =
+    /大橋(?:ボクシング)?ジム|PHOENIX\s+BATTLE|フェニックスバトル/i.test(source);
+  if (inoueRelated) {
+    return stored.length
+      ? stored.slice(0, 4)
+      : selectAffiliateProductCards(article?.slug || article?.id || "", 4);
   }
-  if (/大橋(?:ボクシング)?ジム|PHOENIX\s+BATTLE|フェニックスバトル/i.test(source)) {
+  if (ohashiRelated) {
+    const storedOhashiProducts = stored.filter((item) =>
+      /大橋(?:ボクシング)?ジム|HEATH/i.test(String(item?.title || ""))
+    );
+    if (storedOhashiProducts.length) return storedOhashiProducts.slice(0, 2);
     const gymProduct = affiliateProductPool.find((item) => item.family === "gym-shirt");
     return gymProduct ? [{ ...gymProduct }] : [];
   }
-  return [];
+  return stored
+    .filter(
+      (item) =>
+        !/井上\s*尚弥|ドネア|大橋(?:ボクシング)?ジム|HEATH/i.test(
+          String(item?.title || "")
+        )
+    )
+    .slice(0, 2);
 };
 
 const isNewsArticle = (article) => {
@@ -791,8 +809,7 @@ function productCardsHtml(article) {
   const stored = jsonArray(article?.affiliate_links).find(
     (item) => item && item.type === "product_cards" && Array.isArray(item.cards)
   );
-  const selected = selectRelevantAffiliateProductCards(article);
-  const sourceCards = stored?.cards?.length ? stored.cards : selected;
+  const sourceCards = selectRelevantAffiliateProductCards(article, stored?.cards);
   const cards = sourceCards
     .map((item) => ({
       title: String(item?.title || "").trim(),

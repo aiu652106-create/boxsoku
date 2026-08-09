@@ -226,9 +226,6 @@ function createRelatedArticles(article, articles) {
 }
 
 function getPublicProductCards(article) {
-  if (Array.isArray(article?.productCards) && article.productCards.length) {
-    return article.productCards;
-  }
   const selectProducts = window.BoxingData?.selectRelevantAffiliateProductCards;
   if (selectProducts) {
     return selectProducts(article);

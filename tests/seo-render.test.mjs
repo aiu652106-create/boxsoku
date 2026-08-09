@@ -247,7 +247,25 @@ const ohashiArticle = {
   slug: "phoenix-battle",
   title: "Lemino BOXING PHOENIX BATTLE",
   body: "大橋ボクシングジム主催の興行です。",
-  affiliate_links: []
+  affiliate_links: [
+    {
+      type: "product_cards",
+      cards: [
+        {
+          title: "大橋ボクシングジム コラボ HEATH Tシャツ メンズ 半袖",
+          image: "https://example.com/ohashi-shirt.jpg",
+          url: "https://hb.afl.rakuten.co.jp/ichiba/ohashi-owner-link/",
+          price: "4,900円"
+        },
+        {
+          title: "井上尚弥 限定 WINNER Tシャツ",
+          image: "https://example.com/inoue-shirt.jpg",
+          url: "https://hb.afl.rakuten.co.jp/ichiba/inoue-owner-link/",
+          price: "4,400円"
+        }
+      ]
+    }
+  ]
 };
 globalThis.fetch = async (input) => {
   const url = String(input);
@@ -265,6 +283,7 @@ assert.equal(ohashiResponse.status, 200);
 const ohashiHtml = await ohashiResponse.text();
 assert.equal((ohashiHtml.match(/class="affiliate-product-card"/g) || []).length, 1);
 assert.match(ohashiHtml, /大橋ボクシングジム コラボ HEATH Tシャツ/);
+assert.ok(!ohashiHtml.includes("井上尚弥 限定 WINNER Tシャツ"));
 
 const listingArticle = {
   ...article,

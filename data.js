@@ -272,16 +272,34 @@
     const source = `${article?.title || ""}\n${article?.summary || ""}\n${
       article?.body || ""
     }\n${fighterNames}`;
-    if (/井上\s*尚弥|Naoya\s+Inoue|ノニト[・\s]*ドネア|Nonito\s+Donaire|ネリ戦/i.test(source)) {
-      return selectAffiliateProductCards(article?.slug || article?.id || "", 4);
+    const stored = Array.isArray(article?.productCards) ? article.productCards : [];
+    const inoueRelated =
+      /井上\s*尚弥|Naoya\s+Inoue|ノニト[・\s]*ドネア|Nonito\s+Donaire|ネリ戦/i.test(source);
+    const ohashiRelated =
+      /大橋(?:ボクシング)?ジム|PHOENIX\s+BATTLE|フェニックスバトル/i.test(source);
+    if (inoueRelated) {
+      return stored.length
+        ? stored.slice(0, 4)
+        : selectAffiliateProductCards(article?.slug || article?.id || "", 4);
     }
-    if (/大橋(?:ボクシング)?ジム|PHOENIX\s+BATTLE|フェニックスバトル/i.test(source)) {
+    if (ohashiRelated) {
+      const storedOhashiProducts = stored.filter((item) =>
+        /大橋(?:ボクシング)?ジム|HEATH/i.test(String(item?.title || ""))
+      );
+      if (storedOhashiProducts.length) return storedOhashiProducts.slice(0, 2);
       const gymProduct = affiliateProductPool.find(
         (item) => item.family === "gym-shirt"
       );
       return gymProduct ? [{ ...gymProduct }] : [];
     }
-    return [];
+    return stored
+      .filter(
+        (item) =>
+          !/井上\s*尚弥|ドネア|大橋(?:ボクシング)?ジム|HEATH/i.test(
+            String(item?.title || "")
+          )
+      )
+      .slice(0, 2);
   }
 
   const defaultFightCardsBySlug = {
