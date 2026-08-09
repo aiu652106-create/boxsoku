@@ -8,6 +8,11 @@ const escapeHtml = (value = "") =>
 
 const visitorCookieName = "boxsoku_visitor";
 
+const isCrawlerRequest = (request) =>
+  /(?:bot|crawler|spider|slurp|bingpreview|facebookexternalhit|preview)/i.test(
+    String(request.headers.get("User-Agent") || "")
+  );
+
 const readCookie = (header, name) => {
   const item = String(header || "")
     .split(";")
@@ -105,6 +110,11 @@ const linkLeminoText = (value) =>
       `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer">配信: Leminoで視聴する</a>`
     );
 
+const articleInlineHtml = (value) =>
+  linkLeminoText(
+    escapeHtml(String(value || "")).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+  );
+
 const articleBodyHtml = (body, title = "", lead = "") => {
   const paragraphs = String(body || "")
     .split(/\n\s*\n/)
@@ -137,8 +147,18 @@ const articleBodyHtml = (body, title = "", lead = "") => {
       if (isTweetUrl(paragraph.trim())) {
         return `${tweetEmbedHtml(paragraph.trim())}${ad}`;
       }
-      const escapedParagraph = escapeHtml(paragraph).replaceAll("\n", "<br>");
-      return `<p>${linkLeminoText(escapedParagraph)}</p>${ad}`;
+      const heading = firstLine.match(/^#{2,6}\s+(.+)$/);
+      if (heading && lines.length === 1) {
+        return `<h2>${articleInlineHtml(heading[1])}</h2>${ad}`;
+      }
+      if (lines.every((line) => /^[-*+]\s+/.test(line.trim()))) {
+        const items = lines
+          .map((line) => line.trim().replace(/^[-*+]\s+/, ""))
+          .map((line) => `<li>${articleInlineHtml(line)}</li>`)
+          .join("");
+        return `<ul>${items}</ul>${ad}`;
+      }
+      return `<p>${articleInlineHtml(paragraph).replaceAll("\n", "<br>")}</p>${ad}`;
     })
     .join("");
 };
@@ -506,11 +526,28 @@ function articleSummary(article) {
   }
   const paragraphs = text
     .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+    .map((paragraph) => {
+      const lines = paragraph
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+      if (!lines.length) return "";
+      if (lines.length === 1 && /^#{1,6}\s+/.test(lines[0])) return "";
+      if (lines.every((line) => /^[-*+]\s+/.test(line))) return "";
+      return lines
+        .join(" ")
+        .replace(/^#{1,6}\s+/, "")
+        .replace(/\*\*(.+?)\*\*/g, "$1")
+        .trim();
+    })
     .filter(Boolean);
-  text = paragraphs[0] || text.replace(/\s+/g, " ").trim();
-  if (text.length < 70 && paragraphs[1]) {
-    text = text + " " + paragraphs[1];
+  text =
+    paragraphs.find((paragraph) => paragraph.length >= 40) ||
+    paragraphs[0] ||
+    text.replace(/\s+/g, " ").trim();
+  const currentIndex = paragraphs.indexOf(text);
+  if (text.length < 70 && paragraphs[currentIndex + 1]) {
+    text = text + " " + paragraphs[currentIndex + 1];
   }
   const maxLength = 500;
   if (text.length > maxLength) {
@@ -699,6 +736,8 @@ export async function onRequestGet(context) {
   const slug = String(params.slug || "");
   const isVerificationRequest =
     new URL(request.url).searchParams.get("boxsoku_verify") === "1";
+  const shouldSkipAnalytics =
+    isVerificationRequest || request.method === "HEAD" || isCrawlerRequest(request);
   const existingVisitorToken = readCookie(
     request.headers.get("Cookie"),
     visitorCookieName
@@ -756,9 +795,10 @@ export async function onRequestGet(context) {
           "この記事には配信サービスのアフィリエイトリンクが含まれています。"
       )}</span></aside>`
     : "";
+  const articleType = articleCategoryText(article) === "NEWS" ? "NewsArticle" : "Article";
   const structuredData = JSON.stringify({
     "@context": "https://schema.org",
-    "@type": "NewsArticle",
+    "@type": articleType,
     headline: article.title,
     description: summary,
     ...(image ? { image: [image] } : {}),
@@ -782,6 +822,7 @@ export async function onRequestGet(context) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <meta name="description" content="${escapeHtml(metaDescription)}">
   <link rel="canonical" href="${escapeHtml(canonical)}">
   <meta property="og:type" content="article">
@@ -800,7 +841,7 @@ export async function onRequestGet(context) {
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ""}
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script type="application/ld+json">${structuredData}</script>
-   <link rel="stylesheet" href="/styles.css?v=20260805-lemino-link2">
+   <link rel="stylesheet" href="/styles.css?v=20260809-seo-human-first1">
   <script src="/config.js" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
@@ -834,12 +875,12 @@ export async function onRequestGet(context) {
               )}" alt="${escapeHtml(article.title)}のアイキャッチ画像" loading="lazy">`
             : ""
         }
-        <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
-        ${affiliateLinksHtml(article)}
-        ${productCards}
         <div class="retro-detail-body">${articleBodyHtml(article.body, article.title, summary)}${embedsHtml(article)}</div>
+        <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         ${fightCardsHtml(article)}
         ${videosHtml(article)}
+        ${affiliateLinksHtml(article)}
+        ${productCards}
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>
         <div class="retro-meta"><time>${escapeHtml(
           new Date(article.published_at).toLocaleDateString("ja-JP")
@@ -881,7 +922,7 @@ export async function onRequestGet(context) {
 
   context.waitUntil(
     (async () => {
-      if (isVerificationRequest) return;
+      if (shouldSkipAnalytics) return;
       const headers = {
         apikey: env.SUPABASE_ANON_KEY,
         Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
@@ -912,7 +953,7 @@ export async function onRequestGet(context) {
     "Content-Type": "text/html; charset=UTF-8",
     "Cache-Control": "private, no-store"
   };
-  if (!existingVisitorToken && !isVerificationRequest) {
+  if (!existingVisitorToken && !shouldSkipAnalytics) {
     responseHeaders["Set-Cookie"] = `${visitorCookieName}=${encodeURIComponent(
       visitorToken
     )}; Max-Age=31536000; Path=/; SameSite=Lax; Secure`;
@@ -920,5 +961,13 @@ export async function onRequestGet(context) {
 
   return new Response(html, {
     headers: responseHeaders
+  });
+}
+
+export async function onRequestHead(context) {
+  const response = await onRequestGet(context);
+  return new Response(null, {
+    status: response.status,
+    headers: response.headers
   });
 }

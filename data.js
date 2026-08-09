@@ -509,11 +509,28 @@
     }
     const paragraphs = text
       .split(/\n\s*\n/)
-      .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+      .map((paragraph) => {
+        const lines = paragraph
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean);
+        if (!lines.length) return "";
+        if (lines.length === 1 && /^#{1,6}\s+/.test(lines[0])) return "";
+        if (lines.every((line) => /^[-*+]\s+/.test(line))) return "";
+        return lines
+          .join(" ")
+          .replace(/^#{1,6}\s+/, "")
+          .replace(/\*\*(.+?)\*\*/g, "$1")
+          .trim();
+      })
       .filter(Boolean);
-    text = paragraphs[0] || text.replace(/\s+/g, " ").trim();
-    if (text.length < 70 && paragraphs[1]) {
-      text = text + " " + paragraphs[1];
+    text =
+      paragraphs.find((paragraph) => paragraph.length >= 40) ||
+      paragraphs[0] ||
+      text.replace(/\s+/g, " ").trim();
+    const currentIndex = paragraphs.indexOf(text);
+    if (text.length < 70 && paragraphs[currentIndex + 1]) {
+      text = text + " " + paragraphs[currentIndex + 1];
     }
     const maxLength = 500;
     if (text.length > maxLength) {

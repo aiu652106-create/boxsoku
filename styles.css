@@ -6369,6 +6369,32 @@ body.retro-blog .affiliate-products,
   margin: 12px auto 26px;
 }
 
+body.retro-blog .retro-detail-body > h2,
+.preview-paper .retro-detail-body > h2 {
+  margin: 30px 0 14px;
+  padding: 0 0 8px;
+  border-bottom: 2px solid #b51f2e;
+  color: #181512;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+body.retro-blog .retro-detail-body > ul,
+.preview-paper .retro-detail-body > ul {
+  margin: 0 0 22px;
+  padding: 14px 18px 14px 38px;
+  border: 1px solid #e2ddd4;
+  background: #fbfaf7;
+}
+
+body.retro-blog .retro-detail-body > ul > li,
+.preview-paper .retro-detail-body > ul > li {
+  margin: 6px 0;
+  color: #2d2a27;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
 body.retro-blog .affiliate-product-card,
 .preview-paper .affiliate-product-card {
   display: grid;
