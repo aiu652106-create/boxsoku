@@ -1,7 +1,7 @@
 window.BOXING_CONFIG = {
   site: {
     name: "ボクシング速報",
-    tagline: "ボクシングのニュースと話題をわかりやすく紹介",
+    tagline: "ボクシングの試合予定と配信情報をわかりやすく紹介",
     url: "https://boxsoku.com",
     contactEmail: "bokusoku446@gmail.com"
   },

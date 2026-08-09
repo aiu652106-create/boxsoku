@@ -586,67 +586,6 @@ function articleSummary(article) {
     .slice(0, 500);
 }
 
-function articleBodyField(body, labelPattern) {
-  const match = String(body || "").match(
-    new RegExp(`(?:^|\\n)\\s*(?:[-*]\\s*)?(?:${labelPattern})\\s*[:：]\\s*([^\\n]+)`, "i")
-  );
-  return String(match?.[1] || "").replace(/^\s+|\s+$/g, "");
-}
-
-function sportsEventData(article, canonical, summary, image) {
-  if (articleCategoryText(article) !== "試合日程") return null;
-  const body = String(article?.body || "");
-  const dateSource =
-    articleBodyField(body, "開催日|日程") ||
-    body.split(/\n/).find((line) => /20\d{2}年\d{1,2}月\d{1,2}日/.test(line)) ||
-    "";
-  const dateMatch = dateSource.match(/(20\d{2})年(\d{1,2})月(\d{1,2})日/);
-  if (!dateMatch) return null;
-
-  const timeSource = articleBodyField(body, "開始|試合開始|開始時刻");
-  const timeMatch = timeSource.match(/(\d{1,2})時(?:(\d{1,2})分)?/);
-  const year = dateMatch[1];
-  const month = dateMatch[2].padStart(2, "0");
-  const day = dateMatch[3].padStart(2, "0");
-  const startDate = timeMatch
-    ? `${year}-${month}-${day}T${timeMatch[1].padStart(2, "0")}:${String(
-        timeMatch[2] || "00"
-      ).padStart(2, "0")}:00+09:00`
-    : `${year}-${month}-${day}`;
-  const venue = articleBodyField(body, "会場|開催地");
-  const fightCards = jsonArray(article?.affiliate_links).find(
-    (item) => item && item.type === "fight_cards" && Array.isArray(item.cards)
-  );
-  const performerNames = [...new Set(
-    (fightCards?.cards || [])
-      .flatMap((card) => [card?.left?.name, card?.right?.name])
-      .map((name) => String(name || "").trim())
-      .filter(Boolean)
-  )];
-
-  return {
-    "@type": "SportsEvent",
-    name: article.title,
-    description: summary,
-    startDate,
-    eventStatus: "https://schema.org/EventScheduled",
-    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    ...(venue
-      ? { location: { "@type": "Place", name: venue } }
-      : {}),
-    ...(image ? { image: [image] } : {}),
-    ...(performerNames.length
-      ? {
-          performer: performerNames.map((name) => ({
-            "@type": "Person",
-            name
-          }))
-        }
-      : {}),
-    url: canonical
-  };
-}
-
 function youtubeId(value) {
   try {
     const url = new URL(value);

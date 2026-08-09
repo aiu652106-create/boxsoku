@@ -233,4 +233,9 @@ for (const [fileName, canonicalUrl] of staticCanonicalPages) {
   assert.ok(!/href="(?:index|about|privacy|disclaimer|contact)\.html"/.test(pageSource));
 }
 
+const aboutSource = fs.readFileSync(path.join(projectRoot, "about.html"), "utf8");
+assert.match(aboutSource, /情報の確認方法/);
+assert.match(aboutSource, /未確認の情報や推測は確定情報として掲載しません/);
+assert.match(aboutSource, /"@type": "Organization"/);
+
 console.log("SEO render checks passed");
