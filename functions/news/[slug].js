@@ -99,6 +99,13 @@ const tweetEmbedHtml = (url) =>
 
 const leminoAffiliateUrl =
   "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2";
+const wowowAffiliate = {
+  linkUrl: "https://px.a8.net/svt/ejp?a8mat=4B9XTD+FXXWPM+5DFW+5YZ75",
+  imageUrl:
+    "https://www22.a8.net/svt/bgt?aid=260804209964&wid=002&eno=01&mid=s00000025070001003000&mc=1",
+  impressionUrl:
+    "https://www13.a8.net/0.gif?a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"
+};
 
 const stripSimpleMarkdown = (value = "") =>
   String(value)
@@ -367,6 +374,11 @@ const articleCategoryText = (article) => {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
   if (/WOWOW|エキサイトマッチ/i.test(source)) return "WOWOWエキサイトマッチ";
   return isNewsArticle(article) ? "NEWS" : "試合日程";
+};
+
+const wowowAffiliateBannerHtml = (article) => {
+  if (articleCategoryText(article) !== "WOWOWエキサイトマッチ") return "";
+  return `<aside class="wowow-affiliate-banner" aria-label="WOWOWオンデマンド PR"><span class="wowow-affiliate-banner-label">PR</span><a href="${wowowAffiliate.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" aria-label="WOWOWオンデマンドを確認する"><img class="wowow-affiliate-banner-image" src="${wowowAffiliate.imageUrl}" width="300" height="250" alt="WOWOWオンデマンド"></a><img class="wowow-affiliate-tracking-pixel" src="${wowowAffiliate.impressionUrl}" width="1" height="1" alt="" aria-hidden="true"></aside>`;
 };
 
 const articleCategoryPath = (article) => {
@@ -891,9 +903,10 @@ export async function onRequestGet(context) {
   const hasAffiliateLinks = jsonArray(article.affiliate_links).some(
     (item) => item && item.label && item.url
   );
+  const wowowBanner = wowowAffiliateBannerHtml(article);
   const productCards = productCardsHtml(article);
   const hasProductCards = Boolean(productCards);
-  const disclosure = article.is_advertorial || hasAffiliateLinks || hasProductCards
+  const disclosure = article.is_advertorial || hasAffiliateLinks || wowowBanner || hasProductCards
     ? `<aside class="affiliate-disclosure"><span class="affiliate-disclosure-badge">PR</span><span>${escapeHtml(
         article.affiliate_disclosure ||
           "この記事には配信サービスのアフィリエイトリンクが含まれています。"
@@ -965,7 +978,7 @@ export async function onRequestGet(context) {
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ""}
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script type="application/ld+json">${structuredData}</script>
-   <link rel="stylesheet" href="/styles.css?v=20260809-search-hubs1">
+   <link rel="stylesheet" href="/styles.css?v=20260809-wowow-affiliate1">
   <script src="/config.js" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
@@ -1015,6 +1028,7 @@ export async function onRequestGet(context) {
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         ${fightCardsHtml(article)}
         ${videosHtml(article)}
+        ${wowowBanner}
         ${relatedArticlesHtml(article, latest)}
         ${productCards}
         <aside class="ad-slot" data-ad-slot-name="articleBottom" aria-label="広告"></aside>

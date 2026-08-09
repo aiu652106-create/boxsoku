@@ -136,6 +136,48 @@ assert.match(html, /編集・確認：ボクシング速報編集部/);
 assert.ok(
   html.includes("https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2")
 );
+assert.ok(!html.includes("a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"));
+
+const wowowArticle = {
+  ...article,
+  id: "wowow-article-1",
+  slug: "wowow-seo-test",
+  title: "8月22日のWOWOWエキサイトマッチ",
+  body: "放送日時：8月22日（土）午前5時40分\n\n番組：エキサイトマッチ～世界プロボクシング #19",
+  affiliate_links: []
+};
+globalThis.fetch = async (input) => {
+  const url = String(input);
+  if (url.includes("slug=eq.wowow-seo-test")) return Response.json([wowowArticle]);
+  if (url.includes("/rest/v1/articles?")) return Response.json([wowowArticle, listArticle]);
+  return new Response(null, { status: 204 });
+};
+const wowowContext = makeContext("GET");
+wowowContext.params = { slug: wowowArticle.slug };
+wowowContext.request = new Request(
+  `https://boxsoku.com/news/${wowowArticle.slug}?boxsoku_verify=1`
+);
+const wowowResponse = await onRequestGet(wowowContext);
+assert.equal(wowowResponse.status, 200);
+const wowowHtml = await wowowResponse.text();
+assert.match(wowowHtml, /class="wowow-affiliate-banner"/);
+assert.ok(
+  wowowHtml.includes(
+    "https://px.a8.net/svt/ejp?a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"
+  )
+);
+assert.ok(
+  wowowHtml.includes(
+    "https://www22.a8.net/svt/bgt?aid=260804209964&wid=002&eno=01&mid=s00000025070001003000&mc=1"
+  )
+);
+assert.ok(
+  wowowHtml.includes(
+    "https://www13.a8.net/0.gif?a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"
+  )
+);
+assert.match(wowowHtml, /rel="sponsored nofollow noopener noreferrer"/);
+assert.match(wowowHtml, /class="affiliate-disclosure"/);
 
 const bodyIndex = html.indexOf('<div class="retro-detail-body">');
 const streamingIndex = html.indexOf('<aside class="affiliate-links">');
@@ -206,8 +248,8 @@ const robotsSource = fs.readFileSync(
   path.join(projectRoot, "functions", "robots.txt.js"),
   "utf8"
 );
-assert.match(robotsSource, /User-agent: OAI-SearchBot\nAllow: \//);
-assert.match(robotsSource, /User-agent: Googlebot\nAllow: \//);
+assert.match(robotsSource, /User-agent: OAI-SearchBot\r?\nAllow: \//);
+assert.match(robotsSource, /User-agent: Googlebot\r?\nAllow: \//);
 
 const sitemapSource = fs.readFileSync(
   path.join(projectRoot, "functions", "sitemap.xml.js"),

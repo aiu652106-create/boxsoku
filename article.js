@@ -28,8 +28,65 @@ function hasAffiliatePromotion(article) {
   return (
     article.isAdvertorial ||
     (Array.isArray(article.affiliateLinks) && article.affiliateLinks.length > 0) ||
+    hasWowowAffiliateBanner(article) ||
     getPublicProductCards(article).length > 0
   );
+}
+
+function wowowAffiliateSettings() {
+  const config = affiliateConfig.wowow || {};
+  return {
+    linkUrl: safeAffiliateUrl(config.linkUrl),
+    imageUrl: safeAffiliateUrl(config.imageUrl),
+    impressionUrl: safeAffiliateUrl(config.impressionUrl),
+    width: Number(config.width) || 300,
+    height: Number(config.height) || 250
+  };
+}
+
+function hasWowowAffiliateBanner(article) {
+  const config = wowowAffiliateSettings();
+  return (
+    articleCategoryText(article) === "WOWOWエキサイトマッチ" &&
+    Boolean(config.linkUrl && config.imageUrl && config.impressionUrl)
+  );
+}
+
+function createWowowAffiliateBanner(article) {
+  if (!hasWowowAffiliateBanner(article)) return null;
+  const config = wowowAffiliateSettings();
+  const section = document.createElement("aside");
+  section.className = "wowow-affiliate-banner";
+  section.setAttribute("aria-label", "WOWOWオンデマンド PR");
+
+  const label = document.createElement("span");
+  label.className = "wowow-affiliate-banner-label";
+  label.textContent = "PR";
+
+  const link = document.createElement("a");
+  link.href = config.linkUrl;
+  link.target = "_blank";
+  link.rel = "sponsored nofollow noopener noreferrer";
+  link.setAttribute("aria-label", "WOWOWオンデマンドを確認する");
+
+  const image = document.createElement("img");
+  image.className = "wowow-affiliate-banner-image";
+  image.src = config.imageUrl;
+  image.width = config.width;
+  image.height = config.height;
+  image.alt = "WOWOWオンデマンド";
+  link.appendChild(image);
+
+  const impression = document.createElement("img");
+  impression.className = "wowow-affiliate-tracking-pixel";
+  impression.src = config.impressionUrl;
+  impression.width = 1;
+  impression.height = 1;
+  impression.alt = "";
+  impression.setAttribute("aria-hidden", "true");
+
+  section.append(label, link, impression);
+  return section;
 }
 
 function articleCategoryPath(article) {
@@ -656,6 +713,7 @@ function renderArticle(article, articles = []) {
   commentsMount.className = "retro-comments-mount";
 
   const affiliateLinks = createAffiliateLinks(article);
+  const wowowAffiliateBanner = createWowowAffiliateBanner(article);
   const productCards = createProductCards(article);
   const fightCards = createFightCards(article);
   const relatedArticles = createRelatedArticles(article, articles);
@@ -667,6 +725,7 @@ function renderArticle(article, articles = []) {
   container.appendChild(topAd);
   if (fightCards) container.appendChild(fightCards);
   if (videoEmbeds.childElementCount) container.appendChild(videoEmbeds);
+  if (wowowAffiliateBanner) container.appendChild(wowowAffiliateBanner);
   if (relatedArticles) container.appendChild(relatedArticles);
   if (productCards) container.appendChild(productCards);
   container.append(meta, commentsMount, back);

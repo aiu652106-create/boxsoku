@@ -3991,6 +3991,45 @@ button {
   line-height: 1.7;
 }
 
+.wowow-affiliate-banner {
+  display: grid;
+  width: min(680px, 100%);
+  margin: 18px auto 28px;
+  justify-items: center;
+  gap: 6px;
+}
+
+.wowow-affiliate-banner-label {
+  width: min(300px, 100%);
+  color: #777;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: left;
+}
+
+.wowow-affiliate-banner > a {
+  display: block;
+  max-width: 100%;
+  line-height: 0;
+}
+
+.wowow-affiliate-banner-image {
+  display: block;
+  width: 300px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 6 / 5;
+}
+
+.wowow-affiliate-tracking-pixel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
 .affiliate-links > div {
   display: grid;
   gap: 10px;
