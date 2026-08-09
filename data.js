@@ -229,6 +229,7 @@
         "https://hb.afl.rakuten.co.jp/ichiba/56735f5d.198cf9f9.56735f5e.de85ab88/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fbook%2F16958291%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D",
       price: "1,540円（税込、送料無料）",
       family: "tenshin-book",
+      audience: "tenshin",
       checkedAt: "2026/8/9"
     }
   ];
@@ -247,45 +248,34 @@
     }
   };
 
-  const affiliateProductPool = rawAffiliateProductPool.map((item) => ({
+  const affiliateProductPool = [
+    ...rawAffiliateProductPool,
+    ...(globalThis.BoxingAffiliateSupplementalProducts || [])
+  ].map((item) => ({
     ...item,
     url: normalizeRakutenAffiliateUrl(item.url),
     checkedAt: item.checkedAt || "2026/8/5"
   }));
 
-  function affiliateProductSeed(value) {
-    return [...String(value || "affiliate-products")].reduce(
-      (hash, character) => (hash * 31 + character.charCodeAt(0)) >>> 0,
-      7
-    );
-  }
-
   function selectAffiliateProductCards(slug, limit = 4) {
-    const seed = affiliateProductSeed(slug);
-    const inoueProducts = affiliateProductPool.filter((item) =>
-      /井上\s*尚弥/.test(item.title)
-    );
-    const otherProducts = affiliateProductPool.filter(
-      (item) => !/井上\s*尚弥/.test(item.title)
-    );
-    const pick = (pool, count, start) => {
-      const selected = [];
-      const usedFamilies = new Set();
-      for (let offset = 0; offset < pool.length && selected.length < count; offset += 1) {
-        const item = pool[(start + offset * 7) % pool.length];
-        if (usedFamilies.has(item.family)) continue;
-        usedFamilies.add(item.family);
-        selected.push({ ...item });
-      }
-      return selected;
-    };
-    const inoue = pick(inoueProducts, Math.min(2, limit), seed);
-    const others = pick(otherProducts, Math.max(0, limit - inoue.length), seed + 3);
-    return [inoue[0], others[0], inoue[1], others[1]].filter(Boolean).slice(0, limit);
+    return selectRelevantAffiliateProductCards({ slug }, limit);
   }
 
-  function selectRelevantAffiliateProductCards(article) {
-    return selectAffiliateProductCards(article?.slug || article?.id || "", 4);
+  function selectRelevantAffiliateProductCards(article, limit = 4) {
+    const selector = globalThis.BoxingAffiliateSelector?.select;
+    if (selector) {
+      return selector({ article, baseProducts: affiliateProductPool, limit });
+    }
+    const source = `${article?.title || ""}\n${article?.body || ""}`;
+    const isTenshinArticle = /那須川\s*天心|TENSHIN/i.test(source);
+    return affiliateProductPool
+      .filter(
+        (item) =>
+          isTenshinArticle ||
+          (item.audience !== "tenshin" && !/那須川\s*天心|天心語録|TENSHIN/i.test(item.title))
+      )
+      .slice(0, limit)
+      .map((item) => ({ ...item }));
   }
 
   const defaultFightCardsBySlug = {

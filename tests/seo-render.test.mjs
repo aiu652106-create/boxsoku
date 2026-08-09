@@ -9,7 +9,9 @@ const functionSource = fs.readFileSync(
   "utf8"
 );
 const temporaryModule = path.join(
-  os.tmpdir(),
+  projectRoot,
+  "functions",
+  "news",
   `boxsoku-seo-function-${Date.now()}.mjs`
 );
 fs.writeFileSync(temporaryModule, functionSource, "utf8");
@@ -214,6 +216,8 @@ assert.ok(fightCardsIndex < relatedIndex);
 assert.ok(productsIndex > relatedIndex);
 assert.equal((html.match(/class="affiliate-product-card"/g) || []).length, 4);
 assert.ok(html.includes("hb.afl.rakuten.co.jp"));
+assert.ok(!html.includes("那須川天心"));
+assert.ok(!html.includes("天心語録"));
 assert.match(html, /href="\/schedule"/);
 assert.ok(!html.includes('href="/about.html"'));
 
@@ -239,7 +243,12 @@ inoueContext.request = new Request(
 const inoueResponse = await onRequestGet(inoueContext);
 assert.equal(inoueResponse.status, 200);
 const inoueHtml = await inoueResponse.text();
+const inoueProductsHtml =
+  inoueHtml.match(/<section class="affiliate-products"[\s\S]*?<\/section>/)?.[0] || "";
 assert.equal((inoueHtml.match(/class="affiliate-product-card"/g) || []).length, 4);
+assert.equal((inoueProductsHtml.match(/<strong>[^<]*井上尚弥[^<]*<\/strong>/g) || []).length, 3);
+assert.ok(!inoueHtml.includes("那須川天心"));
+assert.ok(!inoueHtml.includes("天心語録"));
 assert.match(inoueHtml, /data-affiliate-service="rakuten" data-affiliate-placement="article-product"/);
 
 const ohashiArticle = {
@@ -282,13 +291,47 @@ ohashiContext.request = new Request(
 const ohashiResponse = await onRequestGet(ohashiContext);
 assert.equal(ohashiResponse.status, 200);
 const ohashiHtml = await ohashiResponse.text();
+const ohashiProductsHtml =
+  ohashiHtml.match(/<section class="affiliate-products"[\s\S]*?<\/section>/)?.[0] || "";
 assert.equal((ohashiHtml.match(/class="affiliate-product-card"/g) || []).length, 4);
-assert.equal((ohashiHtml.match(/<strong>[^<]*井上尚弥[^<]*<\/strong>/g) || []).length, 2);
+assert.equal((ohashiProductsHtml.match(/<strong>[^<]*井上尚弥[^<]*<\/strong>/g) || []).length, 2);
 assert.match(ohashiHtml, /大橋ボクシングジム コラボ HEATH Tシャツ/);
-assert.match(ohashiHtml, /天心語録 \[ 那須川 天心 \]/);
-assert.match(ohashiHtml, /56735f5d\.198cf9f9\.56735f5e\.de85ab88/);
+assert.match(ohashiHtml, /data-affiliate-item="boxing-/);
+assert.match(ohashiHtml, /56736(?:9|a)[0-9a-z.]*/);
+assert.ok(!ohashiHtml.includes("那須川天心"));
+assert.ok(!ohashiHtml.includes("天心語録"));
 assert.ok(!ohashiHtml.includes("ohashi-owner-link"));
 assert.ok(!ohashiHtml.includes("inoue-owner-link"));
+
+const tenshinArticle = {
+  ...article,
+  id: "tenshin-article-1",
+  slug: "tenshin-next-fight",
+  title: "那須川天心の次戦・試合予定",
+  body: "那須川天心が出場するボクシング興行です。",
+  affiliate_links: []
+};
+globalThis.fetch = async (input) => {
+  const url = String(input);
+  if (url.includes("slug=eq.tenshin-next-fight")) return Response.json([tenshinArticle]);
+  if (url.includes("/rest/v1/articles?")) return Response.json([tenshinArticle, listArticle]);
+  return new Response(null, { status: 204 });
+};
+const tenshinContext = makeContext("GET");
+tenshinContext.params = { slug: tenshinArticle.slug };
+tenshinContext.request = new Request(
+  `https://boxsoku.com/news/${tenshinArticle.slug}?boxsoku_verify=1`
+);
+const tenshinResponse = await onRequestGet(tenshinContext);
+assert.equal(tenshinResponse.status, 200);
+const tenshinHtml = await tenshinResponse.text();
+const tenshinProductsHtml =
+  tenshinHtml.match(/<section class="affiliate-products"[\s\S]*?<\/section>/)?.[0] || "";
+assert.equal((tenshinHtml.match(/class="affiliate-product-card"/g) || []).length, 4);
+assert.equal((tenshinProductsHtml.match(/data-affiliate-item="tenshin-/g) || []).length, 3);
+assert.equal((tenshinProductsHtml.match(/<strong>[^<]*(?:那須川天心|天心|TENSHIN)[^<]*<\/strong>/g) || []).length, 3);
+assert.match(tenshinHtml, /data-affiliate-item="boxing-/);
+assert.ok(!tenshinHtml.includes("井上尚弥"));
 
 const listingArticle = {
   ...article,

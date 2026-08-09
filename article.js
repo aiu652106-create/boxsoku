@@ -449,6 +449,7 @@ function createProductCards(article) {
     card.rel = "sponsored nofollow noopener";
     card.dataset.affiliateService = "rakuten";
     card.dataset.affiliatePlacement = "article-product";
+    card.dataset.affiliateItem = item.family || "";
 
     const image = document.createElement("img");
     image.src = item.image;

@@ -1,3 +1,5 @@
+import "../../affiliate-products.js";
+
 const escapeHtml = (value = "") =>
   String(value)
     .replaceAll("&", "&amp;")
@@ -356,47 +358,24 @@ const affiliateProductPool = [
       "https://hbb.afl.rakuten.co.jp/hgb/56735f5d.198cf9f9.56735f5e.de85ab88/?me_id=1213310&item_id=20521680&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fbook%2Fcabinet%2F5072%2F9784910315072_1_65.jpg%3F_ex%3D128x128&s=128x128&t=picttext",
     price: "1,540円（税込、送料無料）",
     family: "tenshin-book",
+    audience: "tenshin",
     partner: rakutenBooksPartner,
     checkedAt: "2026/8/9"
   }
-].map((item) => ({
+]
+  .concat(globalThis.BoxingAffiliateSupplementalProducts || [])
+  .map((item) => ({
   ...item,
-  url: rakutenAffiliateUrl(item.partner, item.itemUrl),
+  url: item.url || rakutenAffiliateUrl(item.partner, item.itemUrl),
   checkedAt: item.checkedAt || "2026/8/5"
 }));
 
-const affiliateProductSeed = (value) =>
-  [...String(value || "affiliate-products")].reduce(
-    (hash, character) => (hash * 31 + character.charCodeAt(0)) >>> 0,
-    7
-  );
-
-const selectAffiliateProductCards = (slug, limit = 4) => {
-  const seed = affiliateProductSeed(slug);
-  const inoueProducts = affiliateProductPool.filter((item) =>
-    /井上\s*尚弥/.test(item.title)
-  );
-  const otherProducts = affiliateProductPool.filter(
-    (item) => !/井上\s*尚弥/.test(item.title)
-  );
-  const pick = (pool, count, start) => {
-    const selected = [];
-    const usedFamilies = new Set();
-    for (let offset = 0; offset < pool.length && selected.length < count; offset += 1) {
-      const item = pool[(start + offset * 7) % pool.length];
-      if (usedFamilies.has(item.family)) continue;
-      usedFamilies.add(item.family);
-      selected.push({ ...item });
-    }
-    return selected;
-  };
-  const inoue = pick(inoueProducts, Math.min(2, limit), seed);
-  const others = pick(otherProducts, Math.max(0, limit - inoue.length), seed + 3);
-  return [inoue[0], others[0], inoue[1], others[1]].filter(Boolean).slice(0, limit);
-};
-
-const selectRelevantAffiliateProductCards = (article) =>
-  selectAffiliateProductCards(article?.slug || article?.id || "", 4);
+const selectRelevantAffiliateProductCards = (article, limit = 4) =>
+  globalThis.BoxingAffiliateSelector.select({
+    article,
+    baseProducts: affiliateProductPool,
+    limit
+  });
 
 const isNewsArticle = (article) => {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
@@ -796,7 +775,8 @@ function productCardsHtml(article) {
       image: safeHttpsUrl(item?.image),
       url: safeHttpsUrl(item?.url),
       price: String(item?.price || "").trim(),
-      checkedAt: String(item?.checkedAt || "").trim()
+      checkedAt: String(item?.checkedAt || "").trim(),
+      family: String(item?.family || "").trim()
     }))
     .filter((item) => item.title && item.image && item.url)
     .slice(0, 4);
@@ -806,7 +786,9 @@ function productCardsHtml(article) {
     .map(
       (item) => `<a class="affiliate-product-card" href="${escapeHtml(
         item.url
-      )}" target="_blank" rel="sponsored nofollow noopener" data-affiliate-service="rakuten" data-affiliate-placement="article-product"><img src="${escapeHtml(
+      )}" target="_blank" rel="sponsored nofollow noopener" data-affiliate-service="rakuten" data-affiliate-placement="article-product" data-affiliate-item="${escapeHtml(
+        item.family
+      )}"><img src="${escapeHtml(
         item.image
       )}" alt="${escapeHtml(item.title)}の商品画像" loading="lazy" referrerpolicy="no-referrer"><span class="affiliate-product-card-content"><strong>${escapeHtml(
         item.title
