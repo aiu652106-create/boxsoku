@@ -317,7 +317,7 @@ export async function renderListingPage(context, pageKey = "home") {
   <meta name="twitter:image" content="${escapeHtml(defaultImage)}">
   <title>${escapeHtml(page.title)}</title>
   <script type="application/ld+json">${structuredData}</script>
-  <link rel="stylesheet" href="/styles.css?v=20260809-search-hubs1">
+  <link rel="stylesheet" href="/styles.css?v=20260809-public-readability1">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/config.js?v=20260805-lemino-link1" defer></script>
   <script src="/site.js" defer></script>

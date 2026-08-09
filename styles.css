@@ -6817,3 +6817,105 @@ body.retro-blog .retro-summary {
     font-size: 18px;
   }
 }
+
+/* Public readability baseline. Keep the editorial layout compact without tiny type. */
+body.retro-blog {
+  font-size: 16px;
+}
+
+body.retro-blog .retro-top > div > span,
+body.retro-blog .retro-top a {
+  font-size: 12px;
+}
+
+body.retro-blog .feed-heading {
+  font-size: 18px !important;
+}
+
+body.retro-blog .feed-intro {
+  font-size: 16px;
+  line-height: 1.85;
+}
+
+body.retro-blog .retro-title-row h2,
+body.retro-blog .retro-title-row h2 a {
+  font-size: clamp(25px, 3vw, 32px) !important;
+}
+
+body.retro-blog .retro-summary {
+  font-size: 16px !important;
+}
+
+body.retro-blog .affiliate-disclosure {
+  font-size: 13px;
+}
+
+body.retro-blog .affiliate-teaser-label,
+body.retro-blog .affiliate-teaser-note {
+  font-size: 12px !important;
+}
+
+body.retro-blog .affiliate-teaser strong {
+  font-size: 15px;
+}
+
+body.retro-blog .affiliate-teaser > a,
+body.retro-blog .affiliate-links > a,
+body.retro-blog .retro-continue a {
+  font-size: 14px !important;
+}
+
+body.retro-blog .retro-sidebar-panel h2 {
+  font-size: 17px !important;
+}
+
+body.retro-blog .retro-sidebar-text strong {
+  font-size: 14px !important;
+}
+
+body.retro-blog .retro-sidebar-text time {
+  font-size: 11px;
+}
+
+body.retro-blog .retro-category-nav a,
+body.retro-blog .retro-category-sidebar a {
+  font-size: 14px;
+}
+
+body.retro-blog .retro-meta,
+body.retro-blog .retro-tags,
+body.retro-blog .article-trust,
+body.retro-blog .public-breadcrumb {
+  font-size: 12px !important;
+}
+
+body.retro-blog .retro-detail-body > p {
+  font-size: 17px !important;
+}
+
+@media (max-width: 720px) {
+  body.retro-blog {
+    font-size: 16px;
+  }
+
+  body.retro-blog .feed-heading {
+    font-size: 17px !important;
+  }
+
+  body.retro-blog .feed-intro {
+    font-size: 15px;
+  }
+
+  body.retro-blog .retro-title-row h2,
+  body.retro-blog .retro-title-row h2 a {
+    font-size: 24px !important;
+  }
+
+  body.retro-blog .retro-summary {
+    font-size: 15px !important;
+  }
+
+  body.retro-blog .retro-detail-body > p {
+    font-size: 16px !important;
+  }
+}
