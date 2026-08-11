@@ -362,6 +362,23 @@ assert.match(listingHtml, /"@type":"ItemList"/);
 assert.match(listingHtml, /"@type":"Organization"/);
 assert.ok(!listingHtml.includes("記事を読み込んでいます"));
 
+const leminoListingResponse = await renderListingPage(
+  {
+    ...listingContext,
+    request: new Request("https://boxsoku.com/lemino-boxing")
+  },
+  "lemino"
+);
+assert.equal(leminoListingResponse.status, 200);
+const leminoListingHtml = await leminoListingResponse.text();
+assert.match(
+  leminoListingHtml,
+  /<title>Leminoボクシング配信予定・対戦カード｜ボクシング速報<\/title>/
+);
+assert.match(leminoListingHtml, /<h1 class="feed-heading">Leminoボクシング配信予定<\/h1>/);
+assert.match(leminoListingHtml, /<h2><a href="\/news\/seo-test">9月2日のボクシング試合予定<\/a><\/h2>/);
+assert.match(leminoListingHtml, /<link rel="canonical" href="https:\/\/boxsoku.com\/lemino-boxing">/);
+
 const listingHead = await renderListingPage(
   { ...listingContext, request: new Request("https://boxsoku.com/schedule", { method: "HEAD" }) },
   "schedule"
@@ -399,7 +416,7 @@ const sitemapSource = fs.readFileSync(
 );
 assert.match(
   sitemapSource,
-  /"\/schedule"[\s\S]*?"\/boxing-news"[\s\S]*?"\/wowow-excite-match"/
+  /"\/schedule"[\s\S]*?"\/lemino-boxing"[\s\S]*?"\/boxing-news"[\s\S]*?"\/wowow-excite-match"/
 );
 assert.ok(!sitemapSource.includes("/about.html"));
 assert.match(sitemapSource, /siteUrl \+ \(path \|\| "\/"\)/);

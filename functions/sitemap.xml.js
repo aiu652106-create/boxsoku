@@ -11,6 +11,7 @@ export async function onRequestGet({ env, request }) {
   const staticPages = [
     "",
     "/schedule",
+    "/lemino-boxing",
     "/boxing-news",
     "/wowow-excite-match",
     "/about",

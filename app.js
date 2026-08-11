@@ -19,6 +19,14 @@ function articleCategoryKey(article) {
   return isNewsArticle(article) ? "news" : "schedule";
 }
 
+function matchesCategory(article, category) {
+  if (category === "lemino") {
+    const source = `${article?.title || ""}\n${article?.body || ""}`;
+    return /Lemino/i.test(source);
+  }
+  return articleCategoryKey(article) === category;
+}
+
 function updateCategoryNav(activeCategory) {
   document.querySelectorAll("[data-category-filter]").forEach((link) => {
     const isActive = link.dataset.categoryFilter === activeCategory;
@@ -142,16 +150,17 @@ async function initialize() {
     const requestedCategory = new URLSearchParams(window.location.search).get("category");
     const pathCategory = {
       "/schedule": "schedule",
+      "/lemino-boxing": "lemino",
       "/boxing-news": "news",
       "/wowow-excite-match": "wowow"
     }[window.location.pathname.replace(/\/$/, "") || "/"];
     const activeCategory = pathCategory ||
-      (["wowow", "schedule", "news"].includes(requestedCategory)
+      (["wowow", "lemino", "schedule", "news"].includes(requestedCategory)
         ? requestedCategory
         : null);
     updateCategoryNav(activeCategory);
     const visibleArticles = activeCategory
-      ? articles.filter((article) => articleCategoryKey(article) === activeCategory)
+      ? articles.filter((article) => matchesCategory(article, activeCategory))
       : articles;
     feed.replaceChildren(...visibleArticles.map(createArticle));
     await window.BoxingUI.renderSidebars(articles);

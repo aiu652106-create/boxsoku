@@ -19,6 +19,16 @@ const PAGE_DEFINITIONS = {
       "今後開催されるボクシング興行を日付順に掲載しています。各記事で対戦カード、試合順、会場、放送・配信情報を確認できます。",
     category: "schedule"
   },
+  lemino: {
+    path: "/lemino-boxing",
+    title: "Leminoボクシング配信予定・対戦カード｜ボクシング速報",
+    heading: "Leminoボクシング配信予定",
+    description:
+      "Leminoで配信予定のボクシング興行を日付順に掲載。配信日、開始時間、対戦カード、試合順、視聴情報を確認できます。",
+    intro:
+      "Leminoで視聴できるボクシング興行の予定と対戦カードをまとめています。各記事で開始時間、試合順、会場、配信情報を確認できます。",
+    category: "lemino"
+  },
   news: {
     path: "/boxing-news",
     title: "ボクシングニュース最新情報｜ボクシング速報",
@@ -86,6 +96,14 @@ function articleCategoryText(article) {
   if (category === "wowow") return "WOWOWエキサイトマッチ";
   if (category === "news") return "NEWS";
   return "試合日程";
+}
+
+function matchesPageCategory(article, category) {
+  if (category === "lemino") {
+    const source = `${article?.title || ""}\n${article?.body || ""}`;
+    return /Lemino/i.test(source);
+  }
+  return articleCategoryKey(article) === category;
 }
 
 function stripArticleMarkup(value) {
@@ -212,6 +230,7 @@ async function supabaseRows(env, query) {
 function categoryNav(activeCategory) {
   const items = [
     ["schedule", "/schedule", "試合日程"],
+    ["lemino", "/lemino-boxing", "Leminoボクシング"],
     ["news", "/boxing-news", "NEWS"],
     ["wowow", "/wowow-excite-match", "WOWOWエキサイトマッチ"]
   ];
@@ -243,7 +262,7 @@ export async function renderListingPage(context, pageKey = "home") {
     `articles?select=${select}&status=eq.published&published_at=lte.${now}&order=published_at.desc&limit=100`
   );
   const visibleArticles = page.category
-    ? articles.filter((article) => articleCategoryKey(article) === page.category)
+    ? articles.filter((article) => matchesPageCategory(article, page.category))
     : articles;
   const popular = [...articles]
     .sort(
@@ -324,7 +343,7 @@ export async function renderListingPage(context, pageKey = "home") {
   <script src="/site.js" defer></script>
   <script src="/data.js?v=20260809-seo-human-first1" defer></script>
   <script src="/sidebar.js?v=20260804-content-polish" defer></script>
-  <script src="/app.js?v=20260809-search-hubs1" defer></script>
+  <script src="/app.js?v=20260811-lemino-hub1" defer></script>
   <script src="/ads.js" defer></script>
 </head>
 <body class="retro-blog">
