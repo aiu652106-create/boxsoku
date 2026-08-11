@@ -316,6 +316,7 @@ export async function renderListingPage(context, pageKey = "home") {
   <meta name="twitter:description" content="${escapeHtml(page.description)}">
   <meta name="twitter:image" content="${escapeHtml(defaultImage)}">
   <title>${escapeHtml(page.title)}</title>
+  <script async data-boxing-adsense="true" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5867435180256987" crossorigin="anonymous"></script>
   <script type="application/ld+json">${structuredData}</script>
   <link rel="stylesheet" href="/styles.css?v=20260809-search-hubs1">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
