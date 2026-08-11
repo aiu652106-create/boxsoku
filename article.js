@@ -28,209 +28,16 @@ function hasAffiliatePromotion(article) {
   return (
     article.isAdvertorial ||
     (Array.isArray(article.affiliateLinks) && article.affiliateLinks.length > 0) ||
-    hasWowowAffiliateText(article) ||
-    hasWowowAffiliateBanner(article) ||
     getPublicProductCards(article).length > 0
   );
 }
 
-function wowowAffiliateSettings() {
-  const config = affiliateConfig.wowow || {};
-  return {
-    text: {
-      linkUrl: safeAffiliateUrl(config.text?.linkUrl),
-      label: String(config.text?.label || "").trim(),
-      impressionUrl: safeAffiliateUrl(config.text?.impressionUrl)
-    },
-    banner: {
-      linkUrl: safeAffiliateUrl(config.banner?.linkUrl),
-      imageUrl: safeAffiliateUrl(config.banner?.imageUrl),
-      impressionUrl: safeAffiliateUrl(config.banner?.impressionUrl),
-      width: Number(config.banner?.width) || 300,
-      height: Number(config.banner?.height) || 250
-    }
-  };
-}
-
-function hasWowowAffiliateText(article) {
-  const text = wowowAffiliateSettings().text;
-  return (
-    articleCategoryText(article) === "WOWOWエキサイトマッチ" &&
-    Boolean(text.linkUrl && text.label && text.impressionUrl)
-  );
-}
-
-function hasWowowAffiliateBanner(article) {
-  const banner = wowowAffiliateSettings().banner;
-  return (
-    articleCategoryText(article) === "WOWOWエキサイトマッチ" &&
-    Boolean(banner.linkUrl && banner.imageUrl && banner.impressionUrl)
-  );
-}
-
-function createWowowAffiliateText(article) {
-  if (!hasWowowAffiliateText(article)) return null;
-  const config = wowowAffiliateSettings().text;
-  const section = document.createElement("aside");
-  section.className = "affiliate-teaser";
-  section.setAttribute("aria-label", "WOWOWオンデマンド PR");
-
-  const copy = document.createElement("div");
-  copy.className = "affiliate-teaser-copy";
-  const label = document.createElement("span");
-  label.className = "affiliate-teaser-label";
-  label.textContent = "PR・配信サービス";
-  const heading = document.createElement("strong");
-  heading.textContent = "WOWOWオンデマンドの視聴情報を確認";
-  const note = document.createElement("span");
-  note.className = "affiliate-teaser-note";
-  note.textContent = "料金・配信内容・視聴条件はリンク先でご確認ください。";
-  copy.append(label, heading, note);
-
-  const link = document.createElement("a");
-  link.href = config.linkUrl;
-  link.target = "_blank";
-  link.rel = "sponsored nofollow noopener noreferrer";
-  link.dataset.affiliateService = "wowow";
-  link.dataset.affiliatePlacement = "article-top-text";
-  link.textContent = config.label;
-
-  const impression = document.createElement("img");
-  impression.className = "wowow-affiliate-tracking-pixel";
-  impression.src = config.impressionUrl;
-  impression.width = 1;
-  impression.height = 1;
-  impression.alt = "";
-  impression.setAttribute("aria-hidden", "true");
-
-  section.append(copy, link, impression);
-  return section;
-}
-
-function createWowowAffiliateBanner(article) {
-  if (!hasWowowAffiliateBanner(article)) return null;
-  const config = wowowAffiliateSettings().banner;
-  const section = document.createElement("aside");
-  section.className = "wowow-affiliate-banner";
-  section.setAttribute("aria-label", "WOWOWオンデマンド PR");
-
-  const label = document.createElement("span");
-  label.className = "wowow-affiliate-banner-label";
-  label.textContent = "PR";
-
-  const link = document.createElement("a");
-  link.href = config.linkUrl;
-  link.target = "_blank";
-  link.rel = "sponsored nofollow noopener noreferrer";
-  link.dataset.affiliateService = "wowow";
-  link.dataset.affiliatePlacement = "article-bottom-banner";
-  link.setAttribute("aria-label", "WOWOWオンデマンドを確認する");
-
-  const image = document.createElement("img");
-  image.className = "wowow-affiliate-banner-image";
-  image.src = config.imageUrl;
-  image.width = config.width;
-  image.height = config.height;
-  image.alt = "WOWOWオンデマンド";
-  link.appendChild(image);
-
-  const impression = document.createElement("img");
-  impression.className = "wowow-affiliate-tracking-pixel";
-  impression.src = config.impressionUrl;
-  impression.width = 1;
-  impression.height = 1;
-  impression.alt = "";
-  impression.setAttribute("aria-hidden", "true");
-
-  section.append(label, link, impression);
-  return section;
-}
-
-function articleCategoryPath(article) {
-  const category = articleCategoryText(article);
-  if (category === "WOWOWエキサイトマッチ") return "/wowow-excite-match";
-  if (category === "NEWS") return "/boxing-news";
-  return "/schedule";
-}
-
-function formatArticleDate(value) {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("ja-JP");
-}
-
-function createBreadcrumb(article) {
-  const breadcrumb = document.createElement("nav");
-  breadcrumb.className = "public-breadcrumb";
-  breadcrumb.setAttribute("aria-label", "パンくずリスト");
-  const home = document.createElement("a");
-  home.href = "/";
-  home.textContent = "ホーム";
-  const category = document.createElement("a");
-  category.href = articleCategoryPath(article);
-  category.textContent = articleCategoryText(article);
-  const current = document.createElement("span");
-  current.setAttribute("aria-current", "page");
-  current.textContent = article.title;
-  breadcrumb.append(home, document.createTextNode(" > "), category, document.createTextNode(" > "), current);
-  return breadcrumb;
-}
-
-function createArticleTrust(article) {
-  const trust = document.createElement("div");
-  trust.className = "article-trust";
-  const published = formatArticleDate(article.publishedAt);
-  const updated = formatArticleDate(article.updatedAt);
-  if (published) {
-    const item = document.createElement("span");
-    item.textContent = `公開日：${published}`;
-    trust.appendChild(item);
-  }
-  if (updated && updated !== published) {
-    const item = document.createElement("span");
-    item.textContent = `更新日：${updated}`;
-    trust.appendChild(item);
-  }
-  const editor = document.createElement("span");
-  editor.textContent = "編集・確認：ボクシング速報編集部";
-  trust.appendChild(editor);
-  return trust;
-}
-
-function createRelatedArticles(article, articles) {
-  const currentCategory = articleCategoryText(article);
-  const related = articles
-    .filter((candidate) => candidate.slug !== article.slug && candidate.id !== article.id)
-    .sort((left, right) => {
-      const leftSame = articleCategoryText(left) === currentCategory ? 1 : 0;
-      const rightSame = articleCategoryText(right) === currentCategory ? 1 : 0;
-      return rightSame - leftSame || new Date(right.publishedAt) - new Date(left.publishedAt);
-    })
-    .slice(0, 3);
-  if (!related.length) return null;
-
-  const section = document.createElement("section");
-  section.className = "related-section";
-  const heading = document.createElement("h2");
-  heading.textContent = "関連記事";
-  const list = document.createElement("ul");
-  related.forEach((candidate) => {
-    const item = document.createElement("li");
-    const link = document.createElement("a");
-    link.href = window.BoxingData.articleUrl(candidate);
-    link.textContent = candidate.title;
-    item.appendChild(link);
-    list.appendChild(item);
-  });
-  section.append(heading, list);
-  return section;
-}
-
 function getPublicProductCards(article) {
-  const selectProducts = window.BoxingData?.selectRelevantAffiliateProductCards;
+  const selectProducts = window.BoxingData?.selectAffiliateProductCards;
   if (selectProducts) {
-    return selectProducts(article);
+    return selectProducts(article?.slug || article?.id || "");
   }
-  return [];
+  return Array.isArray(article?.productCards) ? article.productCards : [];
 }
 
 function safeAffiliateUrl(value) {
@@ -313,90 +120,60 @@ function appendInstagram(parent, url) {
   parent.appendChild(slot);
 }
 
-function appendArticleText(parent, value) {
-  const stripSimpleMarkdown = (text) =>
-    String(text || "")
-      .replace(/(\*\*|__|`)(.*?)\1/g, "$2")
-      .trim();
-  const appendLinkedText = (element, valueToAppend) => {
-    const text = stripSimpleMarkdown(valueToAppend);
-    const marker = "配信：Lemino";
-    const alternateMarker = "配信: Lemino";
-    const markerIndex = text.indexOf(marker);
-    const alternateIndex = text.indexOf(alternateMarker);
-    const index = markerIndex >= 0 ? markerIndex : alternateIndex;
-    const matched = markerIndex >= 0 ? marker : alternateMarker;
-    if (index < 0 || !leminoAffiliateUrl) {
-      element.textContent = text;
-      return;
-    }
-    element.append(document.createTextNode(text.slice(0, index)));
-    const link = document.createElement("a");
-    link.className = "affiliate-streaming-link";
-    link.href = leminoAffiliateUrl;
-    link.target = "_blank";
-    link.rel = "sponsored noopener noreferrer";
-    link.dataset.affiliateService = "lemino";
-    link.dataset.affiliatePlacement = "article-body";
-    link.textContent = `${matched}で視聴する`;
-    element.append(link, document.createTextNode(text.slice(index + matched.length)));
-  };
-
-  const text = String(value || "").trim();
-  const lines = text.split("\n");
-  const heading = String(lines[0] || "").trim().match(/^#{2,6}\s+(.+)$/);
-  if (heading) {
-    const title = document.createElement("h2");
-    title.textContent = stripSimpleMarkdown(heading[1]);
-    parent.appendChild(title);
-    const rest = lines.slice(1).join("\n").trim();
-    if (rest) {
-      const paragraph = document.createElement("p");
-      appendLinkedText(paragraph, rest);
-      parent.appendChild(paragraph);
-    }
+function appendArticleInlineText(parent, value) {
+  const text = String(value || "").replaceAll("**", "");
+  const marker = "配信：Lemino";
+  const alternateMarker = "配信: Lemino";
+  const markerIndex = text.indexOf(marker);
+  const alternateIndex = text.indexOf(alternateMarker);
+  const index = markerIndex >= 0 ? markerIndex : alternateIndex;
+  const matched = markerIndex >= 0 ? marker : alternateMarker;
+  if (index < 0 || !leminoAffiliateUrl) {
+    parent.appendChild(document.createTextNode(text));
     return;
   }
+  parent.append(document.createTextNode(text.slice(0, index)));
+  const link = document.createElement("a");
+  link.className = "affiliate-streaming-link";
+  link.href = leminoAffiliateUrl;
+  link.target = "_blank";
+  link.rel = "sponsored noopener noreferrer";
+  link.textContent = `${matched}で視聴する`;
+  parent.append(link, document.createTextNode(text.slice(index + matched.length)));
+}
 
-  const listItems = lines
-    .map((line) => line.match(/^\s*[-*+]\s+(.+)$/)?.[1] || "")
-    .filter(Boolean);
-  if (listItems.length === lines.filter((line) => line.trim()).length) {
+function appendArticleText(parent, value) {
+  const text = String(value || "");
+  const lines = text.split(/\r?\n/);
+  const heading = String(lines[0] || "").trim().match(/^#{2,6}\s+(.+)$/);
+  if (heading && lines.length === 1) {
+    const element = document.createElement("h2");
+    appendArticleInlineText(element, heading[1]);
+    parent.appendChild(element);
+    return;
+  }
+  if (lines.length && lines.every((line) => /^[-*+]\s+/.test(line.trim()))) {
     const list = document.createElement("ul");
-    listItems.forEach((item) => {
-      const listItem = document.createElement("li");
-      appendLinkedText(listItem, item);
-      list.appendChild(listItem);
+    lines.forEach((line) => {
+      const item = document.createElement("li");
+      appendArticleInlineText(item, line.trim().replace(/^[-*+]\s+/, ""));
+      list.appendChild(item);
     });
     parent.appendChild(list);
     return;
   }
-
   const paragraph = document.createElement("p");
-  appendLinkedText(paragraph, text);
+  appendArticleInlineText(paragraph, text);
   parent.appendChild(paragraph);
 }
 
 function createAffiliateLinks(article) {
-  const seenUrls = new Set();
   const links = (Array.isArray(article.affiliateLinks)
     ? article.affiliateLinks
     : []
   )
-    .map((item) => {
-      const source = `${item?.label || ""}\n${item?.url || ""}`;
-      const targetUrl = /Lemino|affiliate-sp\.docomo\.ne\.jp/i.test(source)
-        ? leminoAffiliateUrl
-        : /WOWOW/i.test(source)
-          ? wowowAffiliateSettings().text.linkUrl
-          : item?.url;
-      return { ...item, url: safeAffiliateUrl(targetUrl) };
-    })
-    .filter((item) => {
-      if (!item.label || !item.url || seenUrls.has(item.url)) return false;
-      seenUrls.add(item.url);
-      return true;
-    });
+    .map((item) => ({ ...item, url: safeAffiliateUrl(item?.url) }))
+    .filter((item) => item.label && item.url);
   if (!links.length) return null;
   const section = document.createElement("aside");
   section.className = "affiliate-links";
@@ -409,12 +186,6 @@ function createAffiliateLinks(article) {
     link.href = item.url;
     link.target = "_blank";
     link.rel = "sponsored noopener noreferrer";
-    link.dataset.affiliateService = /affiliate-sp\.docomo\.ne\.jp/i.test(item.url)
-      ? "lemino"
-      : /px\.a8\.net/i.test(item.url)
-        ? "wowow"
-        : "other";
-    link.dataset.affiliatePlacement = "article-streaming-links";
     link.textContent = item.label;
     section.appendChild(link);
   });
@@ -447,9 +218,6 @@ function createProductCards(article) {
     card.href = item.url;
     card.target = "_blank";
     card.rel = "sponsored nofollow noopener";
-    card.dataset.affiliateService = "rakuten";
-    card.dataset.affiliatePlacement = "article-product";
-    card.dataset.affiliateItem = item.family || "";
 
     const image = document.createElement("img");
     image.src = item.image;
@@ -577,12 +345,6 @@ function createFightCards(article) {
         photo.appendChild(imageElement);
         fighterCard.appendChild(photo);
       }
-      if (fighter.ranking) {
-        const ranking = document.createElement("p");
-        ranking.className = "retro-fighter-ranking";
-        ranking.textContent = fighter.ranking;
-        fighterCard.appendChild(ranking);
-      }
       if (fighter.name) {
         const name = document.createElement("a");
         name.className = `retro-fighter-name retro-fighter-name-${side}`;
@@ -598,6 +360,12 @@ function createFightCards(article) {
           plainName.textContent = name.textContent;
           fighterCard.appendChild(plainName);
         }
+      }
+      if (fighter.ranking) {
+        const ranking = document.createElement("p");
+        ranking.className = "retro-fighter-ranking";
+        ranking.textContent = fighter.ranking;
+        fighterCard.appendChild(ranking);
       }
       if (profile) {
         const linkHint = document.createElement("small");
@@ -665,49 +433,32 @@ function updateMetadata(article) {
   }
   structuredData.textContent = JSON.stringify({
     "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": isNewsArticle(article) ? "NewsArticle" : "Article",
-        headline: article.title,
-        description: summary,
-        ...(imageUrl ? { image: [imageUrl] } : {}),
-        datePublished: article.publishedAt || undefined,
-        dateModified: article.updatedAt || article.publishedAt || undefined,
-        mainEntityOfPage: pageUrl,
-        author: {
-          "@type": "Organization",
-          name: siteName,
-          url: siteUrl
-        },
-        publisher: {
-          "@type": "Organization",
-          name: siteName,
-          url: siteUrl
-        }
-      },
-      {
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          { "@type": "ListItem", position: 1, name: "ホーム", item: `${siteUrl}/` },
-          {
-            "@type": "ListItem",
-            position: 2,
-            name: articleCategoryText(article),
-            item: new URL(articleCategoryPath(article), siteUrl).href
-          },
-          { "@type": "ListItem", position: 3, name: article.title, item: pageUrl }
-        ]
-      }
-    ]
+    "@type": articleCategoryText(article) === "NEWS" ? "NewsArticle" : "Article",
+    headline: article.title,
+    description: summary,
+    ...(imageUrl ? { image: [imageUrl] } : {}),
+    datePublished: article.publishedAt || undefined,
+    dateModified: article.updatedAt || article.publishedAt || undefined,
+    mainEntityOfPage: pageUrl,
+    author: {
+      "@type": "Organization",
+      name: siteName,
+      url: siteUrl
+    },
+    publisher: {
+      "@type": "Organization",
+      name: siteName,
+      url: siteUrl
+    }
   });
 }
 
-function renderArticle(article, articles = []) {
+function renderArticle(article) {
   updateMetadata(article);
   container.innerHTML = "";
 
-  const breadcrumb = createBreadcrumb(article);
   const disclosure = createAffiliateDisclosure(article);
+  if (disclosure) container.appendChild(disclosure);
 
   const titleRow = document.createElement("div");
   titleRow.className = "retro-title-row";
@@ -726,7 +477,6 @@ function renderArticle(article, articles = []) {
   const category = document.createElement("p");
   category.className = "retro-category";
   category.textContent = `カテゴリ：${articleCategoryText(article)}`;
-  const trust = createArticleTrust(article);
 
   const image = document.createElement("img");
   image.className = "retro-post-image retro-detail-image";
@@ -787,29 +537,22 @@ function renderArticle(article, articles = []) {
   const back = document.createElement("p");
   back.className = "retro-back";
   const backLink = document.createElement("a");
-  backLink.href = "/";
+  backLink.href = "index.html";
   backLink.textContent = "トップページへ戻る";
   back.appendChild(backLink);
   const commentsMount = document.createElement("div");
   commentsMount.className = "retro-comments-mount";
 
   const affiliateLinks = createAffiliateLinks(article);
-  const wowowAffiliateText = createWowowAffiliateText(article);
-  const wowowAffiliateBanner = createWowowAffiliateBanner(article);
   const productCards = createProductCards(article);
   const fightCards = createFightCards(article);
-  const relatedArticles = createRelatedArticles(article, articles);
-  container.append(breadcrumb, titleRow, category, trust);
+  container.append(titleRow, category);
   container.appendChild(imageContent);
-  if (disclosure) container.appendChild(disclosure);
-  if (wowowAffiliateText) container.appendChild(wowowAffiliateText);
   container.appendChild(body);
-  if (affiliateLinks) container.appendChild(affiliateLinks);
   container.appendChild(topAd);
   if (fightCards) container.appendChild(fightCards);
   if (videoEmbeds.childElementCount) container.appendChild(videoEmbeds);
-  if (wowowAffiliateBanner) container.appendChild(wowowAffiliateBanner);
-  if (relatedArticles) container.appendChild(relatedArticles);
+  if (affiliateLinks) container.appendChild(affiliateLinks);
   if (productCards) container.appendChild(productCards);
   container.append(meta, commentsMount, back);
   window.BoxingAds?.render(container);
@@ -828,11 +571,11 @@ async function initialize() {
     const article = await window.BoxingData.findArticle(identifier || "sample-world-title");
     if (!article) {
       container.innerHTML =
-        '<h1>記事が見つかりません</h1><p>記事が削除されたか、URLが変更されています。</p><p class="retro-back"><a href="/">トップページへ戻る</a></p>';
+        '<h1>記事が見つかりません</h1><p>記事が削除されたか、URLが変更されています。</p><p class="retro-back"><a href="index.html">トップページへ戻る</a></p>';
       return;
     }
+    renderArticle(article);
     const articles = await window.BoxingData.getArticles();
-    renderArticle(article, articles);
     await window.BoxingUI.renderSidebars(articles);
     if (params.get("boxsoku_verify") !== "1") {
       window.BoxingData.incrementView(article.slug).catch(() => {});

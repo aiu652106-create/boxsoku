@@ -448,12 +448,6 @@ function renderPreviewFightCards(cards) {
         photo.appendChild(imageElement);
         side.appendChild(photo);
       }
-      if (fighter.ranking) {
-        const ranking = document.createElement("p");
-        ranking.className = "preview-fight-ranking";
-        ranking.textContent = fighter.ranking;
-        side.appendChild(ranking);
-      }
       const name = document.createElement("p");
       name.className = "preview-fight-name";
       if (profile) {
@@ -468,6 +462,12 @@ function renderPreviewFightCards(cards) {
         name.textContent = fighter.name || "選手名";
       }
       side.appendChild(name);
+      if (fighter.ranking) {
+        const ranking = document.createElement("p");
+        ranking.className = "preview-fight-ranking";
+        ranking.textContent = fighter.ranking;
+        side.appendChild(ranking);
+      }
       if (profile) {
         const linkHint = document.createElement("small");
         linkHint.className = "preview-fighter-link-note";
