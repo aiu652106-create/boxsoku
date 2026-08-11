@@ -11,7 +11,7 @@ window.BOXING_CONFIG = {
     imageBucket: "article-images"
   },
   adsense: {
-    client: "",
+    client: "ca-pub-5867435180256987",
     slots: {
       homeTop: "",
       articleTop: "",

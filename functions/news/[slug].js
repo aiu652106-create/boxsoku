@@ -840,9 +840,10 @@ export async function onRequestGet(context) {
   <meta name="twitter:description" content="${escapeHtml(metaDescription)}">
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ""}
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
+  <script async data-boxing-adsense="true" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5867435180256987" crossorigin="anonymous"></script>
   <script type="application/ld+json">${structuredData}</script>
    <link rel="stylesheet" href="/styles.css?v=20260809-seo-human-first1">
-  <script src="/config.js" defer></script>
+  <script src="/config.js?v=20260811-adsense-link1" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
   <script src="/ads.js" defer></script>
