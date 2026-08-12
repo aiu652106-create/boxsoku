@@ -6073,6 +6073,11 @@ body.retro-blog .retro-sidebar-thumbnail > img {
   object-fit: cover !important;
 }
 
+/* Keep the complete editorial image visible in NEWS article lists. */
+body.retro-blog .retro-post-news > a.retro-post-image > img {
+  object-fit: contain !important;
+}
+
 body.retro-blog .retro-post-image {
   display: block !important;
   max-width: 100% !important;

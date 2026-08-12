@@ -156,7 +156,7 @@ function articleCardHtml(article) {
     Boolean(article.is_advertorial) || Boolean(affiliate) ||
     jsonArray(article.affiliate_links).some((item) => item?.type === "product_cards");
 
-  return `<article class="retro-post">
+  return `<article class="retro-post retro-post-${articleCategoryKey(article)}">
     ${
       hasCommercialContent
         ? `<aside class="affiliate-disclosure">${escapeHtml(
@@ -337,13 +337,13 @@ export async function renderListingPage(context, pageKey = "home") {
   <title>${escapeHtml(page.title)}</title>
   <script async data-boxing-adsense="true" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5867435180256987" crossorigin="anonymous"></script>
   <script type="application/ld+json">${structuredData}</script>
-  <link rel="stylesheet" href="/styles.css?v=20260809-search-hubs1">
+  <link rel="stylesheet" href="/styles.css?v=20260813-feed-images-contain1">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/config.js?v=20260805-lemino-link1" defer></script>
   <script src="/site.js" defer></script>
   <script src="/data.js?v=20260809-seo-human-first1" defer></script>
   <script src="/sidebar.js?v=20260804-content-polish" defer></script>
-  <script src="/app.js?v=20260811-lemino-hub1" defer></script>
+  <script src="/app.js?v=20260813-news-card-class1" defer></script>
   <script src="/ads.js" defer></script>
 </head>
 <body class="retro-blog">

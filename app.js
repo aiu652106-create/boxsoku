@@ -51,7 +51,7 @@ function affiliateItems(article) {
 
 function createArticle(article) {
   const post = document.createElement("article");
-  post.className = "retro-post";
+  post.className = `retro-post retro-post-${articleCategoryKey(article)}`;
   const links = affiliateItems(article);
 
   if (article.isAdvertorial || links.length) {
