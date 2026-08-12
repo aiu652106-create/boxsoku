@@ -71,6 +71,19 @@ const article = {
   updated_at: "2026-08-09T00:00:00.000Z"
 };
 
+const tweetArticle = {
+  ...article,
+  slug: "tweet-position-test",
+  title: "藤木勇我の近況",
+  body: [
+    "## 藤木勇我が次戦へ向けて近況を報告",
+    "藤木勇我は自身のXを更新しました。",
+    "## 次戦情報",
+    "9月2日に出場します。"
+  ].join("\n\n"),
+  tweets: ["https://x.com/fujikiyuga/status/2087518427124731943"]
+};
+
 const listArticle = {
   slug: article.slug,
   title: article.title,
@@ -140,6 +153,31 @@ assert.ok(
 );
 assert.ok(!html.includes('href="https://lemino.docomo.ne.jp/"'));
 assert.ok(!html.includes("a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"));
+
+globalThis.fetch = async (input) => {
+  const url = String(input);
+  if (url.includes("slug=eq.tweet-position-test")) return Response.json([tweetArticle]);
+  if (url.includes("/rest/v1/articles?")) return Response.json([tweetArticle, listArticle]);
+  return new Response(null, { status: 204 });
+};
+const tweetContext = makeContext("GET");
+tweetContext.params = { slug: tweetArticle.slug };
+tweetContext.request = new Request(
+  `https://boxsoku.com/news/${tweetArticle.slug}?boxsoku_verify=1`
+);
+const tweetResponse = await onRequestGet(tweetContext);
+assert.equal(tweetResponse.status, 200);
+const tweetHtml = await tweetResponse.text();
+const tweetBodyHtml = tweetHtml.slice(
+  tweetHtml.indexOf('<div class="retro-detail-body">'),
+  tweetHtml.indexOf('<aside class="ad-slot" data-ad-slot-name="articleTop"')
+);
+const tweetHeadingIndex = tweetBodyHtml.indexOf("藤木勇我が次戦へ向けて近況を報告");
+const tweetEmbedIndex = tweetBodyHtml.indexOf("2087518427124731943");
+const tweetLeadIndex = tweetBodyHtml.indexOf("藤木勇我は自身のXを更新しました。");
+assert.ok(tweetHeadingIndex >= 0 && tweetHeadingIndex < tweetEmbedIndex);
+assert.ok(tweetEmbedIndex < tweetLeadIndex);
+assert.equal((tweetBodyHtml.match(/2087518427124731943/g) || []).length, 1);
 
 const wowowArticle = {
   ...article,
@@ -229,6 +267,7 @@ const inoueArticle = {
   body: "井上尚弥の次戦情報をまとめます。",
   affiliate_links: []
 };
+
 globalThis.fetch = async (input) => {
   const url = String(input);
   if (url.includes("slug=eq.naoya-inoue-next-fight")) return Response.json([inoueArticle]);

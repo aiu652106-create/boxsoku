@@ -147,7 +147,7 @@ const articleInlineHtml = (value) =>
       .replace(/`(.+?)`/g, "<code>$1</code>")
   );
 
-const articleBodyHtml = (body, title = "", lead = "") => {
+const articleBodyHtml = (body, title = "", lead = "", tweets = []) => {
   const paragraphs = String(body || "")
     .split(/\n\s*\n/)
     .filter(
@@ -162,7 +162,9 @@ const articleBodyHtml = (body, title = "", lead = "") => {
     .filter(Boolean);
   const middleAdIndex =
     paragraphs.length >= 4 ? Math.ceil(paragraphs.length / 2) - 1 : -1;
-  return paragraphs
+  const tweetUrls = jsonArray(tweets).filter((url) => isTweetUrl(url));
+  return (
+    paragraphs
     .map((paragraph, index) => {
       const ad =
         index === middleAdIndex
@@ -174,10 +176,12 @@ const articleBodyHtml = (body, title = "", lead = "") => {
         const rest = lines.slice(1).join("\n").trim();
         return `${tweetEmbedHtml(firstLine)}${
           rest ? `<p>${escapeHtml(rest).replaceAll("\n", "<br>")}</p>` : ""
-        }${ad}`;
+        }${tweetUrls[index] ? tweetEmbedHtml(tweetUrls[index]) : ""}${ad}`;
       }
       if (isTweetUrl(paragraph.trim())) {
-        return `${tweetEmbedHtml(paragraph.trim())}${ad}`;
+        return `${tweetEmbedHtml(paragraph.trim())}${
+          tweetUrls[index] ? tweetEmbedHtml(tweetUrls[index]) : ""
+        }${ad}`;
       }
       const heading = firstLine.match(/^#{2,6}\s+(.+)$/);
       if (heading) {
@@ -186,7 +190,7 @@ const articleBodyHtml = (body, title = "", lead = "") => {
           rest
             ? `<p>${articleInlineHtml(rest).replaceAll("\n", "<br>")}</p>`
             : ""
-        }${ad}`;
+        }${tweetUrls[index] ? tweetEmbedHtml(tweetUrls[index]) : ""}${ad}`;
       }
       const listItems = lines
         .map((line) => line.match(/^\s*[-*+]\s+(.+)$/)?.[1] || "")
@@ -194,11 +198,18 @@ const articleBodyHtml = (body, title = "", lead = "") => {
       if (listItems.length === lines.filter((line) => line.trim()).length) {
         return `<ul>${listItems
           .map((item) => `<li>${articleInlineHtml(item)}</li>`)
-          .join("")}</ul>${ad}`;
+          .join("")}</ul>${tweetUrls[index] ? tweetEmbedHtml(tweetUrls[index]) : ""}${ad}`;
       }
-      return `<p>${articleInlineHtml(paragraph).replaceAll("\n", "<br>")}</p>${ad}`;
+      return `<p>${articleInlineHtml(paragraph).replaceAll("\n", "<br>")}</p>${
+        tweetUrls[index] ? tweetEmbedHtml(tweetUrls[index]) : ""
+      }${ad}`;
     })
-    .join("");
+    .join("") +
+    tweetUrls
+      .slice(paragraphs.length)
+      .map((url) => tweetEmbedHtml(url))
+      .join("")
+  );
 };
 
 const jsonArray = (value) => (Array.isArray(value) ? value : []);
@@ -631,10 +642,6 @@ function youtubeId(value) {
 }
 
 function embedsHtml(article) {
-  const tweets = jsonArray(article.tweets)
-    .map((url) => tweetEmbedHtml(url))
-    .join("");
-
   const videos = jsonArray(article.youtube_urls)
     .map((url) => youtubeId(url))
     .filter(Boolean)
@@ -657,7 +664,7 @@ function embedsHtml(article) {
     )
     .join("");
 
-  return tweets + instagram;
+  return instagram;
 }
 
 function videosHtml(article) {
@@ -1072,7 +1079,12 @@ export async function onRequestGet(context) {
         }
         ${disclosure}
         ${wowowTextAffiliate}
-        <div class="retro-detail-body">${articleBodyHtml(article.body, article.title, summary)}${embedsHtml(article)}</div>
+        <div class="retro-detail-body">${articleBodyHtml(
+          article.body,
+          article.title,
+          summary,
+          article.tweets
+        )}${embedsHtml(article)}</div>
         ${affiliateLinksHtml(article)}
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         ${fightCardsHtml(article)}
