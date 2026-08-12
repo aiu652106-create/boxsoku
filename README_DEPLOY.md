@@ -28,6 +28,8 @@ values ('管理者ユーザーのUUID', '管理者メールアドレス');
 既に初期設定済みのサイトへコメント機能を追加する場合も、
 更新後の `supabase/schema.sql` をSQL Editorでもう一度実行してください。
 既存の記事データは削除されません。
+サイトアイコン設定を追加する場合も、同じSQLをもう一度実行すると
+`site_settings`テーブルと必要な権限が追加されます。
 
 ## 2. `config.js`を設定
 
@@ -93,6 +95,7 @@ https://boxsoku.com/admin
 
 Supabase Authenticationで作成したメールアドレスとパスワードを使用します。
 記事画像はSupabase Storageの`article-images`へ保存されます。
+サイトアイコンは管理画面の「サイト設定」からURL入力または画像アップロードで変更できます。
 
 ## 6. AdSense
 

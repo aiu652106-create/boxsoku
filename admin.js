@@ -9,6 +9,13 @@ const setupNotice = document.querySelector("#admin-setup-notice");
 const previewNotice = document.querySelector("#admin-preview-notice");
 const commentList = document.querySelector("#admin-comment-list");
 const commentEmpty = document.querySelector("#admin-comment-empty");
+const siteSettingsForm = document.querySelector("#site-settings-form");
+const siteIconUrlInput = document.querySelector("#site-icon-url");
+const siteIconFileInput = document.querySelector("#site-icon-file");
+const siteIconPreview = document.querySelector("#site-icon-preview");
+const siteSettingsStatus = document.querySelector("#site-settings-status");
+const siteSettingsMessage = document.querySelector("#site-settings-message");
+const siteSettingsSave = document.querySelector("#site-settings-save");
 let previewMode = false;
 const LOCAL_COMMENT_PREFIX = "boxing-comments:";
 
@@ -66,6 +73,37 @@ function distributionSiteOrder(label) {
 function setBusy(button, busy, label) {
   button.disabled = busy;
   button.textContent = busy ? "処理中..." : label;
+}
+
+function setSiteIconPreview(url) {
+  const value = String(url || "").trim();
+  if (!value) {
+    siteIconPreview.removeAttribute("src");
+    siteIconPreview.hidden = true;
+    return;
+  }
+  siteIconPreview.src = value;
+  siteIconPreview.hidden = false;
+}
+
+function setSiteSettingsMessage(message, isError = false) {
+  siteSettingsMessage.textContent = message || "";
+  siteSettingsMessage.classList.toggle("is-error", isError);
+}
+
+function setSiteSettingsDisabled(disabled) {
+  siteSettingsForm
+    .querySelectorAll("input, button")
+    .forEach((element) => {
+      element.disabled = disabled;
+    });
+}
+
+async function loadSiteSettings() {
+  const settings = await window.BoxingData.getSiteSettings();
+  siteIconUrlInput.value = settings.siteIconUrl || "";
+  setSiteIconPreview(settings.siteIconUrl);
+  siteSettingsStatus.textContent = "読み込み済み";
 }
 
 function createArticleRow(article) {
@@ -349,7 +387,13 @@ async function showDashboard() {
   }
   loginPanel.hidden = true;
   dashboard.hidden = false;
-  await Promise.all([loadArticles(), loadComments(), loadVisitStats()]);
+  setSiteSettingsDisabled(false);
+  await Promise.all([
+    loadArticles(),
+    loadComments(),
+    loadVisitStats(),
+    loadSiteSettings()
+  ]);
 }
 
 loginForm.addEventListener("submit", async (event) => {
@@ -376,6 +420,52 @@ logoutButton.addEventListener("click", async () => {
   loginPanel.hidden = false;
 });
 
+siteIconFileInput.addEventListener("change", () => {
+  const file = siteIconFileInput.files?.[0];
+  if (file) setSiteIconPreview(URL.createObjectURL(file));
+});
+
+siteSettingsForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  setSiteSettingsMessage("");
+  setBusy(siteSettingsSave, true, "設定を保存");
+  let uploadedImage = null;
+
+  try {
+    const file = siteIconFileInput.files?.[0];
+    let iconUrl = siteIconUrlInput.value.trim();
+
+    if (file) {
+      if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+        throw new Error("PNG・JPEG・WebPのみアップロードできます。");
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("画像は5MB以内にしてください。");
+      }
+      const user = await window.BoxingData.getCurrentUser();
+      if (!user?.id) throw new Error("ログイン状態を確認できません。");
+      uploadedImage = await window.BoxingData.uploadArticleImage(file, user.id);
+      iconUrl = uploadedImage.url;
+      siteIconUrlInput.value = iconUrl;
+    }
+
+    const saved = await window.BoxingData.saveSiteSettings({
+      siteIconUrl: iconUrl
+    });
+    setSiteIconPreview(saved.siteIconUrl);
+    siteIconFileInput.value = "";
+    siteSettingsStatus.textContent = "保存済み";
+    setSiteSettingsMessage("サイトアイコンを保存しました。");
+  } catch (error) {
+    if (uploadedImage?.path) {
+      await window.BoxingData.removeArticleImage(uploadedImage.path).catch(() => {});
+    }
+    setSiteSettingsMessage(error.message || "保存に失敗しました。", true);
+  } finally {
+    setBusy(siteSettingsSave, false, "設定を保存");
+  }
+});
+
 async function initialize() {
   if (!window.BoxingData.configured) {
     previewMode = true;
@@ -392,8 +482,11 @@ async function initialize() {
     await Promise.all([
       loadArticles(window.BoxingData.sampleArticles),
       loadComments(),
-      loadVisitStats()
+      loadVisitStats(),
+      loadSiteSettings()
     ]);
+    setSiteSettingsDisabled(true);
+    setSiteSettingsMessage("Supabase接続後に保存できます。");
     return;
   }
 

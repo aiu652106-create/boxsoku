@@ -6,10 +6,12 @@
     <meta name="robots" content="noindex,nofollow" />
     <title>管理画面 | ボクシング速報</title>
     <link rel="stylesheet" href="styles.css?v=20260804-admin-visitstats3" />
+    <link rel="icon" data-site-icon="true" type="image/png" href="/assets/boxsoku-icon.png" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="config.js" defer></script>
-    <script src="data.js?v=20260805-product-cards1" defer></script>
-    <script src="admin.js?v=20260804-admin-grouped1" defer></script>
+    <script src="config.js?v=20260813-site-icon-settings1" defer></script>
+    <script src="data.js?v=20260813-site-icon-settings1" defer></script>
+    <script src="site-icon.js?v=20260813-site-icon-settings1" defer></script>
+    <script src="admin.js?v=20260813-site-icon-settings1" defer></script>
   </head>
   <body class="admin-page">
     <header class="admin-header">
@@ -55,6 +57,7 @@
         <nav>
           <a class="is-active" href="admin.html">記事管理</a>
           <a href="#comments">コメント管理</a>
+          <a href="#site-settings">サイト設定</a>
           <a id="sidebar-new-article" href="editor.html">新規記事</a>
           <button id="logout-button" type="button">ログアウト</button>
         </nav>
@@ -82,6 +85,46 @@
           <div><span>コメント</span><strong id="comment-count">0</strong></div>
           <div><span>今日の訪問者</span><strong id="today-visitor-count">未設定</strong></div>
           <div><span>今月の訪問者</span><strong id="month-visitor-count">未設定</strong></div>
+        </section>
+
+        <section id="site-settings" class="admin-settings-panel" aria-labelledby="site-settings-heading">
+          <div class="admin-settings-heading">
+            <div>
+              <span>SITE SETTINGS</span>
+              <h2 id="site-settings-heading">サイト設定</h2>
+            </div>
+            <span id="site-settings-status" role="status"></span>
+          </div>
+          <form id="site-settings-form" class="admin-settings-form">
+            <div class="admin-settings-grid">
+              <div>
+                <label class="admin-settings-field">
+                  <span>サイトアイコンURL</span>
+                  <input
+                    id="site-icon-url"
+                    type="text"
+                    inputmode="url"
+                    autocomplete="off"
+                    placeholder="/assets/boxsoku-icon.png"
+                  />
+                  <small>公開URLを直接入力するか、画像をアップロードできます。</small>
+                </label>
+                <label class="admin-settings-field">
+                  <span>画像をアップロード</span>
+                  <input id="site-icon-file" type="file" accept="image/png,image/jpeg,image/webp" />
+                  <small>PNG・JPEG・WebP、5MB以内。</small>
+                </label>
+              </div>
+              <div class="admin-site-icon-preview">
+                <span>PREVIEW</span>
+                <img id="site-icon-preview" alt="サイトアイコンのプレビュー" hidden />
+              </div>
+            </div>
+            <p id="site-settings-message" class="admin-settings-message" role="status"></p>
+            <button id="site-settings-save" class="admin-settings-save" type="submit">
+              設定を保存
+            </button>
+          </form>
         </section>
 
         <section class="admin-list-panel">

@@ -40,6 +40,16 @@ create table if not exists public.comments (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.site_settings (
+  id text primary key check (id = 'global'),
+  site_icon_url text not null default '/assets/boxsoku-icon.png',
+  updated_at timestamptz not null default now()
+);
+
+insert into public.site_settings (id)
+values ('global')
+on conflict (id) do nothing;
+
 create table if not exists public.site_visitors (
   visitor_hash text primary key check (visitor_hash ~ '^[a-f0-9]{64}$'),
   first_seen timestamptz not null default now(),
@@ -139,6 +149,11 @@ create trigger articles_set_updated_at
 before update on public.articles
 for each row execute function public.set_updated_at();
 
+drop trigger if exists site_settings_set_updated_at on public.site_settings;
+create trigger site_settings_set_updated_at
+before update on public.site_settings
+for each row execute function public.set_updated_at();
+
 create or replace function public.increment_article_view(article_slug text)
 returns void
 language sql
@@ -209,6 +224,7 @@ alter table public.articles enable row level security;
 alter table public.comments enable row level security;
 alter table public.site_visitors enable row level security;
 alter table public.article_unique_views enable row level security;
+alter table public.site_settings enable row level security;
 
 drop policy if exists "Admins can read own membership" on public.admin_users;
 create policy "Admins can read own membership"
@@ -278,6 +294,25 @@ on public.comments for delete
 to authenticated
 using (public.is_admin());
 
+drop policy if exists "Public can read site settings" on public.site_settings;
+create policy "Public can read site settings"
+on public.site_settings for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Admins can insert site settings" on public.site_settings;
+create policy "Admins can insert site settings"
+on public.site_settings for insert
+to authenticated
+with check (public.is_admin());
+
+drop policy if exists "Admins can update site settings" on public.site_settings;
+create policy "Admins can update site settings"
+on public.site_settings for update
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
 drop policy if exists "Admins can read visitor stats" on public.site_visitors;
 create policy "Admins can read visitor stats"
 on public.site_visitors for select
@@ -297,6 +332,8 @@ grant select, insert on public.comments to anon, authenticated;
 grant delete on public.comments to authenticated;
 grant usage, select on sequence public.comments_id_seq to anon, authenticated;
 grant select on public.admin_users to authenticated;
+grant select on public.site_settings to anon, authenticated;
+grant insert, update on public.site_settings to authenticated;
 grant execute on function public.is_admin() to anon, authenticated;
 grant execute on function public.increment_article_view(text) to anon, authenticated;
 grant execute on function public.record_article_view(text, text) to anon, authenticated;

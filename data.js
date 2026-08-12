@@ -813,6 +813,61 @@
     if (error) throw error;
   }
 
+  const defaultSiteIconUrl = String(
+    config.site?.iconUrl || "/assets/boxsoku-icon.png"
+  ).trim();
+
+  function normalizeSiteSettings(row) {
+    return {
+      siteIconUrl:
+        String(row?.site_icon_url || defaultSiteIconUrl).trim() ||
+        defaultSiteIconUrl
+    };
+  }
+
+  async function getSiteSettings() {
+    const fallback = { siteIconUrl: defaultSiteIconUrl };
+    if (!client) return fallback;
+
+    const { data, error } = await client
+      .from("site_settings")
+      .select("id,site_icon_url")
+      .eq("id", "global")
+      .maybeSingle();
+    if (error) return fallback;
+    return normalizeSiteSettings(data);
+  }
+
+  async function saveSiteSettings(settings) {
+    requireConfigured();
+    const siteIconUrl = String(settings?.siteIconUrl || "").trim();
+    const isRelativePath = /^\/(?!\/)/.test(siteIconUrl);
+    const isHttpsUrl = /^https:\/\//i.test(siteIconUrl);
+    if (!siteIconUrl || siteIconUrl.length > 2048) {
+      throw new Error("サイトアイコンURLを入力してください。");
+    }
+    if (!isRelativePath && !isHttpsUrl) {
+      throw new Error(
+        "サイトアイコンURLはhttps://または/から入力してください。"
+      );
+    }
+
+    const { data, error } = await client
+      .from("site_settings")
+      .upsert(
+        {
+          id: "global",
+          site_icon_url: siteIconUrl,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: "id" }
+      )
+      .select("id,site_icon_url")
+      .single();
+    if (error) throw error;
+    return normalizeSiteSettings(data);
+  }
+
   async function incrementView(slug) {
     if (!client || !slug) return;
     await client.rpc("increment_article_view", { article_slug: slug });
@@ -992,6 +1047,8 @@
     signOut,
     uploadArticleImage,
     removeArticleImage,
+    getSiteSettings,
+    saveSiteSettings,
     incrementView,
     articleUrl,
     articleDate,
