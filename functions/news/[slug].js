@@ -101,6 +101,10 @@ const tweetEmbedHtml = (url) =>
 
 const leminoAffiliateUrl =
   "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2";
+const leminoAffiliateBanner = {
+  linkUrl: "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/52",
+  imageUrl: "https://img.affiliate-sp.docomo.ne.jp/ad/d0000000236/52.jpg"
+};
 const wowowAffiliate = {
   text: {
     linkUrl: "https://px.a8.net/svt/ejp?a8mat=4B9XTD+FXXWPM+5DFW+5YJRM",
@@ -213,6 +217,12 @@ const articleBodyHtml = (body, title = "", lead = "", tweets = []) => {
 };
 
 const jsonArray = (value) => (Array.isArray(value) ? value : []);
+
+const hasTweetEmbeds = (article) =>
+  jsonArray(article?.tweets).some((url) => isTweetUrl(url)) ||
+  String(article?.body || "")
+    .split(/\n/)
+    .some((line) => isTweetUrl(line.trim()));
 
 const rakutenPictTextToken =
   "eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIxMjh4MTI4IiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D";
@@ -410,6 +420,14 @@ const wowowAffiliateTextHtml = (article) => {
   if (articleCategoryText(article) !== "WOWOWエキサイトマッチ") return "";
   const text = wowowAffiliate.text;
   return `<aside class="affiliate-teaser" aria-label="WOWOWオンデマンド PR"><div class="affiliate-teaser-copy"><span class="affiliate-teaser-label">PR・配信サービス</span><strong>WOWOWオンデマンドの視聴情報を確認</strong><span class="affiliate-teaser-note">料金・配信内容・視聴条件はリンク先でご確認ください。</span></div><a href="${text.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" data-affiliate-service="wowow" data-affiliate-placement="article-top-text">${escapeHtml(text.label)}</a><img class="wowow-affiliate-tracking-pixel" src="${text.impressionUrl}" width="1" height="1" alt="" aria-hidden="true"></aside>`;
+};
+
+const leminoAffiliateBannerHtml = (article) => {
+  const hasLeminoAffiliate = jsonArray(article?.affiliate_links).some((item) =>
+    /Lemino|affiliate-sp\.docomo\.ne\.jp/i.test(`${item?.label || ""}\n${item?.url || ""}`)
+  );
+  if (!hasLeminoAffiliate) return "";
+  return `<aside class="wowow-affiliate-banner lemino-affiliate-banner" aria-label="Leminoプレミアム PR"><span class="wowow-affiliate-banner-label">PR</span><a href="${leminoAffiliateBanner.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" aria-label="Leminoプレミアムを確認する" data-affiliate-service="lemino" data-affiliate-placement="article-bottom-banner"><img class="wowow-affiliate-banner-image lemino-affiliate-banner-image" src="${leminoAffiliateBanner.imageUrl}" width="300" height="250" alt="Leminoプレミアム"></a></aside>`;
 };
 
 const articleCategoryPath = (article) => {
@@ -957,6 +975,7 @@ export async function onRequestGet(context) {
     (item) => item && item.label && item.url
   );
   const wowowBanner = wowowAffiliateBannerHtml(article);
+  const leminoBanner = leminoAffiliateBannerHtml(article);
   const wowowTextAffiliate = wowowAffiliateTextHtml(article);
   const productCards = productCardsHtml(article);
   const hasProductCards = Boolean(productCards);
@@ -1089,6 +1108,7 @@ export async function onRequestGet(context) {
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         ${fightCardsHtml(article)}
         ${videosHtml(article)}
+        ${leminoBanner}
         ${wowowBanner}
         ${relatedArticlesHtml(article, latest)}
         ${productCards}
@@ -1112,7 +1132,7 @@ export async function onRequestGet(context) {
     siteName
   )}</span> all rights reserved.</small></footer>
   ${
-    jsonArray(article.tweets).length
+    hasTweetEmbeds(article)
       ? '<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>'
       : ""
   }

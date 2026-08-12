@@ -76,12 +76,13 @@ const tweetArticle = {
   slug: "tweet-position-test",
   title: "藤木勇我の近況",
   body: [
-    "## 藤木勇我が次戦へ向けて近況を報告",
-    "藤木勇我は自身のXを更新しました。",
+    "## 藤木勇我の次戦は9月2日\nLeminoで配信予定です。",
+    "## 藤木勇我が次戦へ向けて近況を報告\n藤木勇我は自身のXを更新しました。",
+    "https://x.com/fujikiyuga/status/2087518427124731943",
     "## 次戦情報",
     "9月2日に出場します。"
   ].join("\n\n"),
-  tweets: ["https://x.com/fujikiyuga/status/2087518427124731943"]
+  tweets: []
 };
 
 const listArticle = {
@@ -151,6 +152,17 @@ assert.match(html, /編集・確認：ボクシング速報編集部/);
 assert.ok(
   html.includes("https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2")
 );
+assert.ok(
+  html.includes("https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/52")
+);
+assert.ok(
+  html.includes("https://img.affiliate-sp.docomo.ne.jp/ad/d0000000236/52.jpg")
+);
+assert.match(html, /class="wowow-affiliate-banner lemino-affiliate-banner"/);
+assert.match(
+  html,
+  /data-affiliate-service="lemino" data-affiliate-placement="article-bottom-banner"/
+);
 assert.ok(!html.includes('href="https://lemino.docomo.ne.jp/"'));
 assert.ok(!html.includes("a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"));
 
@@ -173,11 +185,14 @@ const tweetBodyHtml = tweetHtml.slice(
   tweetHtml.indexOf('<aside class="ad-slot" data-ad-slot-name="articleTop"')
 );
 const tweetHeadingIndex = tweetBodyHtml.indexOf("藤木勇我が次戦へ向けて近況を報告");
-const tweetEmbedIndex = tweetBodyHtml.indexOf("2087518427124731943");
 const tweetLeadIndex = tweetBodyHtml.indexOf("藤木勇我は自身のXを更新しました。");
-assert.ok(tweetHeadingIndex >= 0 && tweetHeadingIndex < tweetEmbedIndex);
-assert.ok(tweetEmbedIndex < tweetLeadIndex);
+const tweetEmbedIndex = tweetBodyHtml.indexOf("2087518427124731943");
+const tweetNextHeadingIndex = tweetBodyHtml.indexOf("次戦情報");
+assert.ok(tweetHeadingIndex >= 0 && tweetHeadingIndex < tweetLeadIndex);
+assert.ok(tweetLeadIndex < tweetEmbedIndex);
+assert.ok(tweetEmbedIndex < tweetNextHeadingIndex);
 assert.equal((tweetBodyHtml.match(/2087518427124731943/g) || []).length, 1);
+assert.match(tweetHtml, /platform\.twitter\.com\/widgets\.js/);
 
 const wowowArticle = {
   ...article,

@@ -558,7 +558,10 @@ function renderArticle(article) {
   window.BoxingAds?.render(container);
   window.BoxingComments?.mount(commentsMount, article);
 
-  if (article.tweets.length) {
+  const hasInlineTweet = String(article.body || "")
+    .split(/\n/)
+    .some((line) => window.BoxingData.isTweetUrl(line.trim()));
+  if (article.tweets.length || hasInlineTweet) {
     addExternalScript("https://platform.twitter.com/widgets.js");
   }
   if (article.instagramUrls.length) {

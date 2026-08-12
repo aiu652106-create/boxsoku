@@ -40,6 +40,8 @@ For high-risk facts, deployment, persistence, rights, and user-visible layout, p
 
 Use this cycle for every affiliate change, even when the edit appears small:
 
+Apply it to every article creation and article edit whenever any affiliate URL is present. Before saving, compare the entered URL character-for-character with the user-provided approved URL. After saving, inspect the production anchor and confirm the exact `href`, visible label, `rel="sponsored"`, and final click destination. Do not declare completion if either check was skipped.
+
 1. Identify the program, the exact approved tracking URL, the visible text or image that should link, and the intended article or page scope.
 2. Check whether the current link is missing, official, duplicated, or already affiliated; do not replace another service or add a second CTA by inference.
 3. Implement the smallest change with the existing article, template, and disclosure patterns. Keep `target`, `rel="sponsored"`, and the visible destination wording correct.
@@ -111,6 +113,10 @@ Do not treat a correction as learned merely because the current output was fixed
 - Tags are retired from the public article UI; use the confirmed article category and verify the category navigation instead.
 - Keep unique visitors separate from PV. Verify that a new visitor token adds one unique visitor, a repeated token adds only PV, and the admin fallback remains readable before the migration is applied.
 - Use `boxsoku_verify=1` for agent QA visits to article URLs; verification requests must skip PV and visitor RPCs so checks do not pollute analytics.
+- When the user specifies where an SNS quote belongs, treat the position as part of the requested content. Unless the user says otherwise, place it as `target heading -> explanatory text -> embed -> following heading or paragraph`. Verify that exact production DOM order, confirm there is exactly one embed, and do not report completion after only editing or removing a neighboring section.
+- For SPA account pages such as AdSense, do not wait indefinitely for a generic load event after navigation. Verify the target URL and a page-specific visible marker, use a disposable tab when possible, and after a timeout inspect the tab URL before reporting navigation success.
+- When the user names a specific browser page to inspect, keep verification and actions scoped to that page; do not inspect or modify another site as a workaround unless explicitly requested.
+- Optimize article decisions for the user's stated objective of qualified search traffic and affiliate revenue. If a requested tactic clearly works against that objective, say so directly, explain the user's likely intent, and offer the closest evidence-based alternative before editing; do not agree merely to be agreeable.
 
 ## Stop conditions
 
