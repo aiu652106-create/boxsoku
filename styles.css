@@ -6074,6 +6074,10 @@ body.retro-blog .retro-sidebar-thumbnail > img {
 }
 
 /* Keep the complete editorial image visible in article lists. */
+body.retro-blog .retro-post > a.retro-post-image {
+  background-image: none !important;
+}
+
 body.retro-blog .retro-post > a.retro-post-image > img {
   object-fit: contain !important;
 }
