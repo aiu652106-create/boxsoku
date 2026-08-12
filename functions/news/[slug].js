@@ -143,13 +143,61 @@ const linkLeminoText = (value) =>
       `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer" data-affiliate-service="lemino" data-affiliate-placement="article-body">配信: Leminoで視聴する</a>`
     );
 
-const articleInlineHtml = (value) =>
-  linkLeminoText(
-    escapeHtml(String(value || ""))
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/__(.+?)__/g, "<strong>$1</strong>")
-      .replace(/`(.+?)`/g, "<code>$1</code>")
-  );
+const safeArticleLinkUrl = (value) => {
+  try {
+    const url = new URL(String(value || ""));
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
+};
+
+const articleAffiliateService = (value) => {
+  try {
+    const host = new URL(value).hostname.toLowerCase();
+    if (host === "amzn.to" || /(^|\.)amazon\.co\.jp$/.test(host)) return "amazon";
+    if (host === "hb.afl.rakuten.co.jp") return "rakuten";
+    if (host === "tr.affiliate-sp.docomo.ne.jp") return "lemino";
+    if (/(^|\.)a8\.net$/.test(host)) return "a8";
+  } catch {}
+  return "";
+};
+
+const basicArticleInlineHtml = (value) =>
+  escapeHtml(String(value || ""))
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/__(.+?)__/g, "<strong>$1</strong>")
+    .replace(/`(.+?)`/g, "<code>$1</code>");
+
+const articleInlineHtml = (value) => {
+  const source = String(value || "");
+  const linkPattern = /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/gi;
+  let html = "";
+  let lastIndex = 0;
+
+  for (const match of source.matchAll(linkPattern)) {
+    html += linkLeminoText(basicArticleInlineHtml(source.slice(lastIndex, match.index)));
+    const href = safeArticleLinkUrl(match[2]);
+    if (!href) {
+      html += basicArticleInlineHtml(match[0]);
+    } else {
+      const service = articleAffiliateService(href);
+      const className = service ? ' class="affiliate-streaming-link"' : "";
+      const rel = service
+        ? "sponsored noopener noreferrer"
+        : "noopener noreferrer";
+      const affiliateData = service
+        ? ` data-affiliate-service="${service}" data-affiliate-placement="article-body"`
+        : "";
+      html += `<a${className} href="${escapeHtml(href)}" target="_blank" rel="${rel}"${affiliateData}>${basicArticleInlineHtml(
+        match[1]
+      )}</a>`;
+    }
+    lastIndex = match.index + match[0].length;
+  }
+
+  return html + linkLeminoText(basicArticleInlineHtml(source.slice(lastIndex)));
+};
 
 const articleBodyHtml = (body, title = "", lead = "", tweets = []) => {
   const paragraphs = String(body || "")

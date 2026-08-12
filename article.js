@@ -120,8 +120,27 @@ function appendInstagram(parent, url) {
   parent.appendChild(slot);
 }
 
-function appendArticleInlineText(parent, value) {
-  const text = String(value || "").replaceAll("**", "");
+function safeArticleLinkUrl(value) {
+  try {
+    const url = new URL(String(value || ""));
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
+function articleAffiliateService(value) {
+  try {
+    const host = new URL(value).hostname.toLowerCase();
+    if (host === "amzn.to" || /(^|\.)amazon\.co\.jp$/.test(host)) return "amazon";
+    if (host === "hb.afl.rakuten.co.jp") return "rakuten";
+    if (host === "tr.affiliate-sp.docomo.ne.jp") return "lemino";
+    if (/(^|\.)a8\.net$/.test(host)) return "a8";
+  } catch {}
+  return "";
+}
+
+function appendPlainArticleText(parent, text) {
   const marker = "配信：Lemino";
   const alternateMarker = "配信: Lemino";
   const markerIndex = text.indexOf(marker);
@@ -140,6 +159,38 @@ function appendArticleInlineText(parent, value) {
   link.rel = "sponsored noopener noreferrer";
   link.textContent = `${matched}で視聴する`;
   parent.append(link, document.createTextNode(text.slice(index + matched.length)));
+}
+
+function appendArticleInlineText(parent, value) {
+  const text = String(value || "").replaceAll("**", "");
+  const linkPattern = /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/gi;
+  let lastIndex = 0;
+
+  for (const match of text.matchAll(linkPattern)) {
+    appendPlainArticleText(parent, text.slice(lastIndex, match.index));
+    const href = safeArticleLinkUrl(match[2]);
+    if (!href) {
+      appendPlainArticleText(parent, match[0]);
+    } else {
+      const service = articleAffiliateService(href);
+      const link = document.createElement("a");
+      if (service) {
+        link.className = "affiliate-streaming-link";
+        link.dataset.affiliateService = service;
+        link.dataset.affiliatePlacement = "article-body";
+      }
+      link.href = href;
+      link.target = "_blank";
+      link.rel = service
+        ? "sponsored noopener noreferrer"
+        : "noopener noreferrer";
+      link.textContent = match[1];
+      parent.appendChild(link);
+    }
+    lastIndex = match.index + match[0].length;
+  }
+
+  appendPlainArticleText(parent, text.slice(lastIndex));
 }
 
 function appendArticleText(parent, value) {

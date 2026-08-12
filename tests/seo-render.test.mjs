@@ -38,7 +38,7 @@ const article = {
   body: [
     "## 大会概要",
     "2026年9月2日、横浜BUNTAIでボクシング興行が開催されます。",
-    "- 開催日：2026年9月2日\n- 会場：横浜BUNTAI",
+    "- 開催日：2026年9月2日\n- 会場：横浜BUNTAI\n- 配信：[Prime Video独占ライブ配信](https://amzn.to/4qhu5Mj)",
     "## 配信情報",
     "配信：Lemino"
   ].join("\n\n"),
@@ -142,6 +142,11 @@ assert.ok(description?.startsWith("2026年9月2日"));
 assert.ok(!description.includes("##"));
 assert.match(html, /<h2>大会概要<\/h2>/);
 assert.match(html, /<ul><li>開催日：2026年9月2日<\/li>/);
+assert.match(
+  html,
+  /<a class="affiliate-streaming-link" href="https:\/\/amzn\.to\/4qhu5Mj" target="_blank" rel="sponsored noopener noreferrer" data-affiliate-service="amazon" data-affiliate-placement="article-body">Prime Video独占ライブ配信<\/a>/
+);
+assert.ok(!html.includes("[Prime Video独占ライブ配信]"));
 assert.match(html, /"@type":"Article"/);
 assert.match(html, /"@type":"BreadcrumbList"/);
 assert.match(html, /"@type":"SportsEvent"/);
