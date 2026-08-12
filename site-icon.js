@@ -22,10 +22,10 @@
     const iconUrl = resolveIconUrl(value) || resolveIconUrl(fallbackIconUrl);
     if (!iconUrl) return;
 
-    let link = document.querySelector("link[data-site-icon]");
+    let link = document.querySelector("link[data-boxsoku-site-icon]");
     if (!link) {
       link = document.createElement("link");
-      link.dataset.siteIcon = "true";
+      link.dataset.boxsokuSiteIcon = "true";
       link.rel = "icon";
       link.type = "image/png";
       document.head.appendChild(link);

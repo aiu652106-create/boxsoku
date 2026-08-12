@@ -134,6 +134,7 @@ Stop instead of guessing when:
 
 - Confirm the active repository before editing.
 - Before editing a deployed site, compare the local branch with the remote deployment branch and inspect the production asset versions; do not start from an older local checkout.
+- Namespace custom DOM data attributes so browser tooling or extensions cannot accidentally select and overwrite site-owned elements.
 - Keep unrelated files and existing user changes untouched.
 - Keep public layout unchanged unless the request explicitly includes a layout change.
 - Prefer existing project patterns and avoid unnecessary dependencies.
