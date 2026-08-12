@@ -82,7 +82,7 @@ const tweetArticle = {
     "## 次戦情報",
     "9月2日に出場します。"
   ].join("\n\n"),
-  tweets: []
+  tweets: ["https://x.com/fujikiyuga/status/2087518427124731943"]
 };
 
 const listArticle = {

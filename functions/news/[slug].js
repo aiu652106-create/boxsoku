@@ -166,7 +166,14 @@ const articleBodyHtml = (body, title = "", lead = "", tweets = []) => {
     .filter(Boolean);
   const middleAdIndex =
     paragraphs.length >= 4 ? Math.ceil(paragraphs.length / 2) - 1 : -1;
-  const tweetUrls = jsonArray(tweets).filter((url) => isTweetUrl(url));
+  const inlineTweetUrls = new Set(
+    paragraphs
+      .map((paragraph) => String(paragraph).trim())
+      .filter((url) => isTweetUrl(url))
+  );
+  const tweetUrls = jsonArray(tweets).filter(
+    (url) => isTweetUrl(url) && !inlineTweetUrls.has(String(url).trim())
+  );
   return (
     paragraphs
     .map((paragraph, index) => {

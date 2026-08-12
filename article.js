@@ -506,6 +506,14 @@ function renderArticle(article) {
     .filter(Boolean);
   const middleAdIndex =
     paragraphs.length >= 4 ? Math.ceil(paragraphs.length / 2) - 1 : -1;
+  const inlineTweetUrls = new Set(
+    paragraphs
+      .map((paragraph) => String(paragraph).trim())
+      .filter((url) => window.BoxingData.isTweetUrl(url))
+  );
+  const externalTweets = article.tweets.filter(
+    (url) => !inlineTweetUrls.has(String(url).trim())
+  );
   paragraphs.forEach((paragraph, index) => {
     const lines = paragraph.split(/\n/);
     const firstLine = String(lines[0] || "").trim();
@@ -522,10 +530,10 @@ function renderArticle(article) {
     } else {
       appendArticleText(body, paragraph);
     }
-    if (index < article.tweets.length) appendTweet(body, article.tweets[index]);
+    if (index < externalTweets.length) appendTweet(body, externalTweets[index]);
     if (index === middleAdIndex) body.appendChild(createAdSlot("articleMiddle"));
   });
-  article.tweets.slice(paragraphs.length).forEach((url) => appendTweet(body, url));
+  externalTweets.slice(paragraphs.length).forEach((url) => appendTweet(body, url));
   article.youtubeUrls.forEach((url) => appendYouTube(videoEmbeds, url));
   article.instagramUrls.forEach((url) => appendInstagram(body, url));
 

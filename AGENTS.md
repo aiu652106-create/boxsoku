@@ -117,6 +117,7 @@ Do not treat a correction as learned merely because the current output was fixed
 - For SPA account pages such as AdSense, do not wait indefinitely for a generic load event after navigation. Verify the target URL and a page-specific visible marker, use a disposable tab when possible, and after a timeout inspect the tab URL before reporting navigation success.
 - When the user names a specific browser page to inspect, keep verification and actions scoped to that page; do not inspect or modify another site as a workaround unless explicitly requested.
 - Optimize article decisions for the user's stated objective of qualified search traffic and affiliate revenue. If a requested tactic clearly works against that objective, say so directly, explain the user's likely intent, and offer the closest evidence-based alternative before editing; do not agree merely to be agreeable.
+- When moving an SNS URL from a dedicated embed field into article body content, assume an empty field may preserve the old stored array. Deduplicate identical normalized URLs at render time and verify the final production page contains exactly one embed.
 
 ## Stop conditions
 
