@@ -29,6 +29,16 @@ const PAGE_DEFINITIONS = {
       "Leminoで視聴できるボクシング興行の予定と対戦カードをまとめています。各記事で開始時間、試合順、会場、配信情報を確認できます。",
     category: "lemino"
   },
+  broadcast: {
+    path: "/boxing-broadcast",
+    title: "ボクシング放送・配信予定｜Lemino・WOWOWなど",
+    heading: "ボクシング放送・配信予定",
+    description:
+      "ボクシングの放送・配信予定をまとめています。Lemino、WOWOW、U-NEXTなど、試合ごとの視聴方法と開始時間を確認できます。",
+    intro:
+      "テレビ放送や配信サービスで見られるボクシングの試合を、対戦カードと開始時間とともにまとめています。",
+    category: "broadcast"
+  },
   news: {
     path: "/boxing-news",
     title: "ボクシングニュース最新情報｜ボクシング速報",
@@ -80,13 +90,13 @@ function safeHttpsUrl(value) {
 }
 
 function isNewsArticle(article) {
-  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  const source = `${article?.title || ""}\n${article?.summary || ""}\n${article?.body || ""}`;
   const declaredCategory = String(article?.category || "").toLowerCase();
   return declaredCategory === "news" || /NEWS|ニュース/i.test(source);
 }
 
 function articleCategoryKey(article) {
-  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  const source = `${article?.title || ""}\n${article?.summary || ""}\n${article?.body || ""}`;
   if (/WOWOW|エキサイトマッチ/i.test(source)) return "wowow";
   return isNewsArticle(article) ? "news" : "schedule";
 }
@@ -100,8 +110,14 @@ function articleCategoryText(article) {
 
 function matchesPageCategory(article, category) {
   if (category === "lemino") {
-    const source = `${article?.title || ""}\n${article?.body || ""}`;
+    const source = `${article?.title || ""}\n${article?.summary || ""}\n${article?.body || ""}`;
     return /Lemino/i.test(source);
+  }
+  if (category === "broadcast") {
+    const source = `${article?.title || ""}\n${article?.summary || ""}\n${article?.body || ""}`;
+    return /Lemino|WOWOW|エキサイトマッチ|U-NEXT|Prime Video|Amazon|配信|放送/i.test(
+      source
+    );
   }
   return articleCategoryKey(article) === category;
 }
@@ -231,6 +247,7 @@ function categoryNav(activeCategory) {
   const items = [
     ["schedule", "/schedule", "試合日程"],
     ["lemino", "/lemino-boxing", "Leminoボクシング"],
+    ["broadcast", "/boxing-broadcast", "放送・配信"],
     ["news", "/boxing-news", "NEWS"],
     ["wowow", "/wowow-excite-match", "WOWOWエキサイトマッチ"]
   ];

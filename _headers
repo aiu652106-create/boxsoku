@@ -15,3 +15,6 @@
 
 /editor
   X-Robots-Tag: noindex, nofollow
+
+/article.html
+  X-Robots-Tag: noindex, nofollow

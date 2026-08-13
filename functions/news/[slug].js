@@ -454,13 +454,13 @@ const selectRelevantAffiliateProductCards = (article, limit = 4) =>
   });
 
 const isNewsArticle = (article) => {
-  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  const source = `${article?.title || ""}\n${article?.summary || ""}\n${article?.body || ""}`;
   const declaredCategory = String(article?.category || "").toLowerCase();
   return declaredCategory === "news" || /NEWS|\u30CB\u30E5\u30FC\u30B9/i.test(source);
 };
 
 const articleCategoryText = (article) => {
-  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  const source = `${article?.title || ""}\n${article?.summary || ""}\n${article?.body || ""}`;
   if (/WOWOW|エキサイトマッチ/i.test(source)) return "WOWOWエキサイトマッチ";
   return isNewsArticle(article) ? "NEWS" : "試合日程";
 };
@@ -913,7 +913,7 @@ function sidebarHtml(articles, ranked = false) {
 }
 
 function relatedArticlesHtml(article, articles) {
-  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  const source = `${article?.title || ""}\n${article?.summary || ""}\n${article?.body || ""}`;
   const group = /Lemino/i.test(source)
     ? "lemino"
     : /WOWOW|エキサイトマッチ/i.test(source)
@@ -922,7 +922,7 @@ function relatedArticlesHtml(article, articles) {
         ? "news"
         : "schedule";
   const matchesGroup = (candidate) => {
-    const candidateSource = `${candidate?.title || ""}\n${candidate?.body || ""}`;
+    const candidateSource = `${candidate?.title || ""}\n${candidate?.summary || ""}\n${candidate?.body || ""}`;
     if (group === "lemino") return /Lemino/i.test(candidateSource);
     if (group === "wowow") return /WOWOW|エキサイトマッチ/i.test(candidateSource);
     if (group === "news") return isNewsArticle(candidate);
@@ -1003,13 +1003,13 @@ export async function onRequestGet(context) {
     ),
     supabaseRows(
       env,
-      `articles?select=slug,title,image_url,accent,published_at&status=eq.published&published_at=lte.${encodeURIComponent(
+      `articles?select=slug,title,summary,image_url,accent,published_at&status=eq.published&published_at=lte.${encodeURIComponent(
         new Date().toISOString()
       )}&order=published_at.desc&limit=8`
     ),
     supabaseRows(
       env,
-      `articles?select=slug,title,image_url,accent,published_at&status=eq.published&published_at=lte.${encodeURIComponent(
+      `articles?select=slug,title,summary,image_url,accent,published_at&status=eq.published&published_at=lte.${encodeURIComponent(
         new Date().toISOString()
       )}&order=view_count.desc,published_at.desc&limit=5`
     )
@@ -1126,7 +1126,7 @@ export async function onRequestGet(context) {
     siteName
   )}</strong><span>BOXING NEWS</span></a></header>
   <div class="retro-page-layout">
-    <aside class="retro-sidebar retro-sidebar-popular"><nav class="retro-category-nav retro-category-sidebar" aria-label="記事カテゴリー"><a href="/schedule" data-category-filter="schedule">試合日程</a><a href="/lemino-boxing" data-category-filter="lemino">Leminoボクシング</a><a href="/boxing-news" data-category-filter="news">NEWS</a><a href="/wowow-excite-match" data-category-filter="wowow">WOWOWエキサイトマッチ</a></nav><section class="retro-sidebar-panel"><h2>人気記事</h2><ol class="retro-sidebar-list retro-ranking-list">${sidebarHtml(
+    <aside class="retro-sidebar retro-sidebar-popular"><nav class="retro-category-nav retro-category-sidebar" aria-label="記事カテゴリー"><a href="/schedule" data-category-filter="schedule">試合日程</a><a href="/lemino-boxing" data-category-filter="lemino">Leminoボクシング</a><a href="/boxing-broadcast" data-category-filter="broadcast">放送・配信</a><a href="/boxing-news" data-category-filter="news">NEWS</a><a href="/wowow-excite-match" data-category-filter="wowow">WOWOWエキサイトマッチ</a></nav><section class="retro-sidebar-panel"><h2>人気記事</h2><ol class="retro-sidebar-list retro-ranking-list">${sidebarHtml(
       popular,
       true
     )}</ol></section></aside>

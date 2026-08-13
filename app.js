@@ -2,27 +2,33 @@ const feed = document.querySelector("#article-feed");
 const statusMessage = document.querySelector("#site-status");
 
 function isNewsArticle(article) {
-  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  const source = `${article?.title || ""}\n${article?.summary || ""}\n${article?.body || ""}`;
   const declaredCategory = String(article?.category || "").toLowerCase();
   return declaredCategory === "news" || /NEWS|\u30CB\u30E5\u30FC\u30B9/i.test(source);
 }
 
 function articleCategoryText(article) {
-  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  const source = `${article?.title || ""}\n${article?.summary || ""}\n${article?.body || ""}`;
   if (/WOWOW|エキサイトマッチ/i.test(source)) return "WOWOWエキサイトマッチ";
   return isNewsArticle(article) ? "NEWS" : "試合日程";
 }
 
 function articleCategoryKey(article) {
-  const source = `${article?.title || ""}\n${article?.body || ""}`;
+  const source = `${article?.title || ""}\n${article?.summary || ""}\n${article?.body || ""}`;
   if (/WOWOW|エキサイトマッチ/i.test(source)) return "wowow";
   return isNewsArticle(article) ? "news" : "schedule";
 }
 
 function matchesCategory(article, category) {
   if (category === "lemino") {
-    const source = `${article?.title || ""}\n${article?.body || ""}`;
+    const source = `${article?.title || ""}\n${article?.summary || ""}\n${article?.body || ""}`;
     return /Lemino/i.test(source);
+  }
+  if (category === "broadcast") {
+    const source = `${article?.title || ""}\n${article?.summary || ""}\n${article?.body || ""}`;
+    return /Lemino|WOWOW|エキサイトマッチ|U-NEXT|Prime Video|Amazon|配信|放送/i.test(
+      source
+    );
   }
   return articleCategoryKey(article) === category;
 }
@@ -151,11 +157,12 @@ async function initialize() {
     const pathCategory = {
       "/schedule": "schedule",
       "/lemino-boxing": "lemino",
+      "/boxing-broadcast": "broadcast",
       "/boxing-news": "news",
       "/wowow-excite-match": "wowow"
     }[window.location.pathname.replace(/\/$/, "") || "/"];
     const activeCategory = pathCategory ||
-      (["wowow", "lemino", "schedule", "news"].includes(requestedCategory)
+      (["wowow", "lemino", "broadcast", "schedule", "news"].includes(requestedCategory)
         ? requestedCategory
         : null);
     updateCategoryNav(activeCategory);

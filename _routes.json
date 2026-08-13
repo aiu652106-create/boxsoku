@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "include": ["/", "/schedule", "/lemino-boxing", "/boxing-news", "/wowow-excite-match", "/news/*", "/api/*", "/image-proxy", "/sitemap.xml", "/robots.txt", "/ads.txt"],
+  "include": ["/", "/schedule", "/lemino-boxing", "/boxing-broadcast", "/boxing-news", "/wowow-excite-match", "/news/*", "/api/*", "/image-proxy", "/sitemap.xml", "/robots.txt", "/ads.txt"],
   "exclude": ["/assets/*", "/*.js", "/*.css", "/*.html"]
 }

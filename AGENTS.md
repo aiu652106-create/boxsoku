@@ -92,6 +92,8 @@ For SEO and discovery changes, use one fixed production gate: confirm GET and HE
 
 Every server-rendered Pages Function that can be indexed (home, category listings, and article pages) must emit the current favicon link in its HTML head; checking only the static `.html` fallback is insufficient. Assert the favicon path in the SEO render test and inspect the deployed HTML source after release.
 
+When an extensionless Pages Function is the canonical article route, the legacy `article.html` shell must remain `noindex, nofollow` and must not appear in the sitemap; verify both the response header and the static shell so the fallback cannot split indexing signals.
+
 Sitemap, canonical, Open Graph URLs, and internal links must use the final public URL that returns `200`; never publish a redirecting `.html` URL when Cloudflare Pages serves the canonical page extensionless. Crawl every sitemap URL with both GET and HEAD before deployment is considered complete.
 
 Treat any reference page named by the user as a task-specific comparison target, not as a permanent template. First obey the current request and its explicit non-goals; use reference pages only to validate the requested behavior or appearance, and do not copy unrelated labels, structure, links, or content.

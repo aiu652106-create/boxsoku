@@ -6,12 +6,18 @@ const escapeXml = (value = "") =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&apos;");
 
+const isoDate = (value) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
+};
+
 export async function onRequestGet({ env, request }) {
   const siteUrl = String(env.SITE_URL || new URL(request.url).origin).replace(/\/$/, "");
   const staticPages = [
     "",
     "/schedule",
     "/lemino-boxing",
+    "/boxing-broadcast",
     "/boxing-news",
     "/wowow-excite-match",
     "/about",
@@ -41,12 +47,12 @@ export async function onRequestGet({ env, request }) {
       (path) => `<url><loc>${escapeXml(siteUrl + (path || "/"))}</loc></url>`
     ),
     ...articles.map(
-      (article) =>
-        `<url><loc>${escapeXml(
+      (article) => {
+        const lastmod = isoDate(article.updated_at);
+        return `<url><loc>${escapeXml(
           `${siteUrl}/news/${encodeURIComponent(article.slug)}`
-        )}</loc><lastmod>${escapeXml(
-          new Date(article.updated_at).toISOString()
-        )}</lastmod></url>`
+        )}</loc>${lastmod ? `<lastmod>${escapeXml(lastmod)}</lastmod>` : ""}</url>`;
+      }
     )
   ].join("");
 
