@@ -1126,7 +1126,7 @@ export async function onRequestGet(context) {
     siteName
   )}</strong><span>BOXING NEWS</span></a></header>
   <div class="retro-page-layout">
-    <aside class="retro-sidebar retro-sidebar-popular"><nav class="retro-category-nav retro-category-sidebar" aria-label="記事カテゴリー"><a href="/schedule" data-category-filter="schedule">試合日程</a><a href="/lemino-boxing" data-category-filter="lemino">Leminoボクシング</a><a href="/boxing-broadcast" data-category-filter="broadcast">放送・配信</a><a href="/boxing-news" data-category-filter="news">NEWS</a><a href="/wowow-excite-match" data-category-filter="wowow">WOWOWエキサイトマッチ</a></nav><section class="retro-sidebar-panel"><h2>人気記事</h2><ol class="retro-sidebar-list retro-ranking-list">${sidebarHtml(
+    <aside class="retro-sidebar retro-sidebar-popular"><nav class="retro-category-nav retro-category-sidebar" aria-label="記事カテゴリー"><a href="/schedule" data-category-filter="schedule">試合日程</a><a href="/boxing-broadcast" data-category-filter="broadcast">放送・配信</a><a href="/boxing-news" data-category-filter="news">NEWS</a><a href="/lemino-boxing" data-category-filter="lemino">Leminoボクシング</a><a href="/wowow-excite-match" data-category-filter="wowow">WOWOWエキサイトマッチ</a></nav><section class="retro-sidebar-panel"><h2>人気記事</h2><ol class="retro-sidebar-list retro-ranking-list">${sidebarHtml(
       popular,
       true
     )}</ol></section></aside>

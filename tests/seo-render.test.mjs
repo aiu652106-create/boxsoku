@@ -422,6 +422,14 @@ const listingContext = {
 const listingResponse = await renderListingPage(listingContext, "schedule");
 assert.equal(listingResponse.status, 200);
 const listingHtml = await listingResponse.text();
+assert.ok(
+  listingHtml.indexOf('data-category-filter="schedule"') <
+    listingHtml.indexOf('data-category-filter="broadcast"') &&
+    listingHtml.indexOf('data-category-filter="broadcast"') <
+      listingHtml.indexOf('data-category-filter="news"') &&
+    listingHtml.indexOf('data-category-filter="news"') <
+      listingHtml.indexOf('data-category-filter="lemino"')
+);
 assert.match(listingHtml, /<title>ボクシング試合予定・今日の試合と配信情報｜ボクシング速報<\/title>/);
 assert.match(listingHtml, /<h1 class="feed-heading">ボクシング試合予定<\/h1>/);
 assert.match(listingHtml, /<h2><a href="\/news\/seo-test">9月2日のボクシング試合予定<\/a><\/h2>/);

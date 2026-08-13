@@ -246,9 +246,9 @@ async function supabaseRows(env, query) {
 function categoryNav(activeCategory) {
   const items = [
     ["schedule", "/schedule", "試合日程"],
-    ["lemino", "/lemino-boxing", "Leminoボクシング"],
     ["broadcast", "/boxing-broadcast", "放送・配信"],
     ["news", "/boxing-news", "NEWS"],
+    ["lemino", "/lemino-boxing", "Leminoボクシング"],
     ["wowow", "/wowow-excite-match", "WOWOWエキサイトマッチ"]
   ];
   return items
