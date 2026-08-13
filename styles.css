@@ -6995,3 +6995,76 @@ body.retro-blog .retro-summary {
     font-size: 18px;
   }
 }
+
+/* Keep the public article readable on tablet widths. */
+@media (min-width: 721px) and (max-width: 820px) {
+  body.retro-blog .retro-page-layout {
+    display: flex !important;
+    width: calc(100% - 32px) !important;
+    margin-inline: auto !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    gap: 22px !important;
+  }
+
+  body.retro-blog .retro-feed {
+    order: 1 !important;
+    width: 100% !important;
+    grid-area: auto !important;
+    border-inline: 0 !important;
+  }
+
+  body.retro-blog .retro-sidebar {
+    width: 100% !important;
+    position: static !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    border-inline: 0 !important;
+  }
+
+  body.retro-blog .retro-sidebar-popular {
+    display: block !important;
+    order: 2 !important;
+    width: 100% !important;
+    border-left: 0 !important;
+    border-top: 1px solid #bbb !important;
+  }
+
+  body.retro-blog .retro-sidebar-latest {
+    display: none !important;
+  }
+}
+
+@media (min-width: 821px) and (max-width: 1080px) {
+  body.retro-blog .retro-page-layout {
+    display: grid !important;
+    width: min(1040px, calc(100% - 32px)) !important;
+    margin-inline: auto !important;
+    grid-template-columns: minmax(0, 1fr) 230px !important;
+    gap: 24px !important;
+  }
+
+  body.retro-blog .retro-feed {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    width: auto !important;
+    border-left: 1px solid #bbb !important;
+  }
+
+  body.retro-blog .retro-sidebar {
+    width: auto !important;
+    grid-column: 2 !important;
+    position: sticky !important;
+  }
+
+  body.retro-blog .retro-sidebar-popular {
+    display: block !important;
+    grid-row: 1 !important;
+    border-left: 0 !important;
+  }
+
+  body.retro-blog .retro-sidebar-latest {
+    display: none !important;
+  }
+}
+
