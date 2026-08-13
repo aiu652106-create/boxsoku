@@ -94,7 +94,10 @@ const tweetArticle = {
     "## 次戦情報",
     "9月2日に出場します。"
   ].join("\n\n"),
-  tweets: ["https://x.com/fujikiyuga/status/2087518427124731943"]
+  tweets: [
+    "https://twitter.com/fujikiyuga/status/2087518427124731943?s=20",
+    "https://x.com/fujikiyuga/status/2087518427124731943/photo/1"
+  ]
 };
 
 const listArticle = {
@@ -221,7 +224,17 @@ assert.ok(tweetHeadingIndex >= 0 && tweetHeadingIndex < tweetLeadIndex);
 assert.ok(tweetLeadIndex < tweetEmbedIndex);
 assert.ok(tweetEmbedIndex < tweetNextHeadingIndex);
 assert.equal((tweetBodyHtml.match(/2087518427124731943/g) || []).length, 1);
+assert.equal((tweetBodyHtml.match(/data-x-embed="quote"/g) || []).length, 1);
+assert.equal((tweetBodyHtml.match(/data-cards="visible"/g) || []).length, 1);
+assert.match(tweetBodyHtml, /X引用ツイート/);
 assert.match(tweetHtml, /platform\.twitter\.com\/widgets\.js/);
+
+const editorHtml = fs.readFileSync(
+  path.join(projectRoot, "editor.html"),
+  "utf8"
+);
+assert.match(editorHtml, /X引用ツイート/);
+assert.match(editorHtml, /引用元の記事・公式発表は本文の情報源にも明記/);
 
 const wowowArticle = {
   ...article,

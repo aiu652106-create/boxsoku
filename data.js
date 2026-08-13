@@ -437,7 +437,7 @@
       affiliateLinks: storedAffiliateLinks.filter(
         (item) => item && item.label && item.url
       ),
-      tweets: Array.isArray(row.tweets) ? row.tweets : [],
+      tweets: uniqueTweetUrls(row.tweets),
       youtubeUrls: Array.isArray(row.youtube_urls) ? row.youtube_urls : [],
       instagramUrls: Array.isArray(row.instagram_urls) ? row.instagram_urls : [],
       publishedAt: row.published_at,
@@ -487,7 +487,7 @@
       is_advertorial: Boolean(article.isAdvertorial),
       affiliate_disclosure: article.affiliateDisclosure || "",
       affiliate_links: affiliateLinks,
-      tweets: article.tweets || [],
+      tweets: uniqueTweetUrls(article.tweets),
       youtube_urls: article.youtubeUrls || [],
       instagram_urls: article.instagramUrls || [],
       published_at:
@@ -975,10 +975,38 @@
     return links;
   }
 
+  function normalizeTweetUrl(value) {
+    try {
+      const url = new URL(String(value || "").trim());
+      const hostname = url.hostname.replace(/^www\./, "").toLowerCase();
+      if (
+        !["x.com", "twitter.com"].includes(hostname) ||
+        !["http:", "https:"].includes(url.protocol)
+      ) {
+        return "";
+      }
+      const match = url.pathname.match(
+        /^\/([A-Za-z0-9_]+)\/status\/(\d+)(?:\/photo\/\d+)?\/?$/i
+      );
+      return match ? `https://x.com/${match[1]}/status/${match[2]}` : "";
+    } catch {
+      return "";
+    }
+  }
+
+  function uniqueTweetUrls(value) {
+    const seen = new Set();
+    return (Array.isArray(value) ? value : [])
+      .map(normalizeTweetUrl)
+      .filter((url) => {
+        if (!url || seen.has(url)) return false;
+        seen.add(url);
+        return true;
+      });
+  }
+
   function isTweetUrl(value) {
-    return /^https?:\/\/(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d+(?:\/photo\/\d+)?(?:\?.*)?$/i.test(
-      String(value || "").trim()
-    );
+    return Boolean(normalizeTweetUrl(value));
   }
 
   function getYouTubeVideoId(value) {
@@ -1057,6 +1085,8 @@
     selectAffiliateProductCards,
     selectRelevantAffiliateProductCards,
     parseAffiliateLinks,
+    normalizeTweetUrl,
+    uniqueTweetUrls,
     isTweetUrl,
     getYouTubeVideoId,
     isYouTubeUrl,

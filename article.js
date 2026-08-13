@@ -69,18 +69,25 @@ function createAffiliateDisclosure(article) {
 }
 
 function appendTweet(parent, url) {
-  if (!window.BoxingData.isTweetUrl(url)) return;
+  const normalizedUrl = window.BoxingData.normalizeTweetUrl(url);
+  if (!normalizedUrl) return;
   const slot = document.createElement("div");
   slot.className = "retro-tweet";
+  slot.dataset.xEmbed = "quote";
+  const label = document.createElement("p");
+  label.className = "x-embed-label";
+  label.textContent = "X引用ツイート";
   const quote = document.createElement("blockquote");
   quote.className = "twitter-tweet";
   quote.dataset.lang = "ja";
   quote.dataset.dnt = "true";
+  quote.dataset.cards = "visible";
+  quote.dataset.conversation = "none";
   const link = document.createElement("a");
-  link.href = url;
-  link.textContent = "Xで投稿を見る";
+  link.href = normalizedUrl;
+  link.textContent = "Xで引用ツイートを開く";
   quote.appendChild(link);
-  slot.appendChild(quote);
+  slot.append(label, quote);
   parent.appendChild(slot);
 }
 
@@ -440,6 +447,21 @@ function addExternalScript(src) {
   document.body.appendChild(script);
 }
 
+function refreshTweetEmbeds(root) {
+  let attempts = 0;
+  const load = () => {
+    if (typeof window.twttr?.widgets?.load === "function") {
+      window.twttr.widgets.load(root);
+      return;
+    }
+    if (attempts < 20) {
+      attempts += 1;
+      window.setTimeout(load, 250);
+    }
+  };
+  load();
+}
+
 function updateMetadata(article) {
   const pageUrl = new URL(window.BoxingData.articleUrl(article), window.location.href).href;
   const imageUrl = window.BoxingUI?.getArticleImageUrl(article) || "";
@@ -517,12 +539,21 @@ function renderArticle(article) {
   heading.textContent = article.title;
   const tweet = document.createElement("a");
   tweet.className = "retro-tweet-link";
+  const shareUrl = new URL(
+    window.BoxingData.articleUrl(article),
+    window.location.href
+  );
+  shareUrl.search = "";
+  shareUrl.hash = "";
+  shareUrl.searchParams.set("utm_source", "x");
+  shareUrl.searchParams.set("utm_medium", "social");
+  shareUrl.searchParams.set("utm_campaign", "article");
   tweet.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
     article.title
-  )}&url=${encodeURIComponent(window.location.href)}`;
+  )}&url=${encodeURIComponent(shareUrl.href)}`;
   tweet.target = "_blank";
   tweet.rel = "noopener noreferrer";
-  tweet.textContent = "Tweet";
+  tweet.textContent = "Xで共有";
   titleRow.append(heading, tweet);
 
   const category = document.createElement("p");
@@ -557,19 +588,29 @@ function renderArticle(article) {
     .filter(Boolean);
   const middleAdIndex =
     paragraphs.length >= 4 ? Math.ceil(paragraphs.length / 2) - 1 : -1;
-  const inlineTweetUrls = new Set(
-    paragraphs
-      .map((paragraph) => String(paragraph).trim())
-      .filter((url) => window.BoxingData.isTweetUrl(url))
-  );
-  const externalTweets = article.tweets.filter(
-    (url) => !inlineTweetUrls.has(String(url).trim())
-  );
+  const inlineTweetUrls = new Set();
+  paragraphs.forEach((paragraph) => {
+    const lines = paragraph.split(/\n/);
+    [lines[0], paragraph.trim()].forEach((url) => {
+      const normalizedUrl = window.BoxingData.normalizeTweetUrl(url);
+      if (normalizedUrl) inlineTweetUrls.add(normalizedUrl);
+    });
+  });
+  const externalTweets = window.BoxingData
+    .uniqueTweetUrls(article.tweets)
+    .filter((url) => !inlineTweetUrls.has(url));
+  const renderedTweetUrls = new Set();
+  const appendArticleTweet = (url) => {
+    const normalizedUrl = window.BoxingData.normalizeTweetUrl(url);
+    if (!normalizedUrl || renderedTweetUrls.has(normalizedUrl)) return;
+    renderedTweetUrls.add(normalizedUrl);
+    appendTweet(body, normalizedUrl);
+  };
   paragraphs.forEach((paragraph, index) => {
     const lines = paragraph.split(/\n/);
     const firstLine = String(lines[0] || "").trim();
     if (window.BoxingData.isTweetUrl(firstLine)) {
-      appendTweet(body, firstLine);
+      appendArticleTweet(firstLine);
       const rest = lines.slice(1).join("\n").trim();
       if (rest) {
         const text = document.createElement("p");
@@ -577,14 +618,14 @@ function renderArticle(article) {
         body.appendChild(text);
       }
     } else if (window.BoxingData.isTweetUrl(paragraph.trim())) {
-      appendTweet(body, paragraph.trim());
+      appendArticleTweet(paragraph.trim());
     } else {
       appendArticleText(body, paragraph);
     }
-    if (index < externalTweets.length) appendTweet(body, externalTweets[index]);
+    if (index < externalTweets.length) appendArticleTweet(externalTweets[index]);
     if (index === middleAdIndex) body.appendChild(createAdSlot("articleMiddle"));
   });
-  externalTweets.slice(paragraphs.length).forEach((url) => appendTweet(body, url));
+  externalTweets.slice(paragraphs.length).forEach(appendArticleTweet);
   article.youtubeUrls.forEach((url) => appendYouTube(videoEmbeds, url));
   article.instagramUrls.forEach((url) => appendInstagram(body, url));
 
@@ -622,6 +663,7 @@ function renderArticle(article) {
     .some((line) => window.BoxingData.isTweetUrl(line.trim()));
   if (article.tweets.length || hasInlineTweet) {
     addExternalScript("https://platform.twitter.com/widgets.js");
+    refreshTweetEmbeds(body);
   }
   if (article.instagramUrls.length) {
     addExternalScript("https://www.instagram.com/embed.js");

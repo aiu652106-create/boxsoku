@@ -166,6 +166,10 @@ function affiliateItems(article) {
 
 function articleCardHtml(article) {
   const url = articleUrl(article);
+  const shareUrl = new URL(`https://boxsoku.com${url}`);
+  shareUrl.searchParams.set("utm_source", "x");
+  shareUrl.searchParams.set("utm_medium", "social");
+  shareUrl.searchParams.set("utm_campaign", "article");
   const title = escapeHtml(article.title);
   const image = safeHttpsUrl(article.image_url);
   const summary = articleSummary(article);
@@ -185,7 +189,7 @@ function articleCardHtml(article) {
     }
     <div class="retro-title-row"><h2><a href="${url}">${title}</a></h2><a class="retro-tweet-link" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(
       article.title
-    )}&url=${encodeURIComponent(`https://boxsoku.com${url}`)}" target="_blank" rel="noopener noreferrer">Tweet</a></div>
+    )}&url=${encodeURIComponent(shareUrl.href)}" target="_blank" rel="noopener noreferrer">Xで共有</a></div>
     <p class="retro-category">カテゴリ：${escapeHtml(articleCategoryText(article))}</p>
     ${
       image
@@ -358,11 +362,11 @@ export async function renderListingPage(context, pageKey = "home") {
   <title>${escapeHtml(page.title)}</title>
   <script async data-boxing-adsense="true" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5867435180256987" crossorigin="anonymous"></script>
   <script type="application/ld+json">${structuredData}</script>
-  <link rel="stylesheet" href="/styles.css?v=20260813-all-feed-images-contain2">
+  <link rel="stylesheet" href="/styles.css?v=20260813-x-quote-embed1">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/config.js?v=20260805-lemino-link1" defer></script>
   <script src="/site.js" defer></script>
-  <script src="/data.js?v=20260809-seo-human-first1" defer></script>
+  <script src="/data.js?v=20260813-x-quote-embed1" defer></script>
   <script src="/sidebar.js?v=20260804-content-polish" defer></script>
   <script src="/app.js?v=20260813-news-card-class1" defer></script>
   <script src="/ads.js" defer></script>

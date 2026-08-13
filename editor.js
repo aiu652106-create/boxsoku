@@ -355,7 +355,11 @@ function appendPreviewEmbed(parent, type, url) {
 
   const label = document.createElement("strong");
   label.textContent =
-    type === "youtube" ? "YouTube" : type === "instagram" ? "Instagram" : "X";
+    type === "youtube"
+      ? "YouTube"
+      : type === "instagram"
+        ? "Instagram"
+        : "X引用";
 
   const text = document.createElement("span");
   text.textContent = url;
@@ -530,9 +534,18 @@ function updatePreview() {
     setPreviewImage(imageCleared ? "" : imageUrlInput.value);
   }
 
-  urlLines(tweetUrlsInput.value).forEach((url) => {
-    appendPreviewEmbed(bodyPreview, "tweet", url);
+  const inlineTweetUrls = new Set();
+  paragraphs.forEach((paragraph) => {
+    const lines = paragraph.split(/\n/);
+    [lines[0], paragraph.trim()].forEach((url) => {
+      const normalizedUrl = window.BoxingData.normalizeTweetUrl(url);
+      if (normalizedUrl) inlineTweetUrls.add(normalizedUrl);
+    });
   });
+  window.BoxingData
+    .uniqueTweetUrls(urlLines(tweetUrlsInput.value))
+    .filter((url) => !inlineTweetUrls.has(url))
+    .forEach((url) => appendPreviewEmbed(bodyPreview, "tweet", url));
   urlLines(youtubeUrlsInput.value).forEach((url) => {
     appendPreviewEmbed(previewMedia, "youtube", url);
   });
@@ -717,9 +730,11 @@ form.addEventListener("submit", async (event) => {
       affiliateLinks,
       fightCards,
       productCards,
-      tweets: window.BoxingData.parseUrlList(
-        tweetUrlsInput.value,
-        window.BoxingData.isTweetUrl
+      tweets: window.BoxingData.uniqueTweetUrls(
+        window.BoxingData.parseUrlList(
+          tweetUrlsInput.value,
+          window.BoxingData.isTweetUrl
+        )
       ),
       youtubeUrls: window.BoxingData.parseUrlList(
         youtubeUrlsInput.value,

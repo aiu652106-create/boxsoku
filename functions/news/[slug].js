@@ -90,15 +90,45 @@ const safeBoxRecUrl = (value) => {
   return "";
 };
 
-const isTweetUrl = (value) =>
-  /^https?:\/\/(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d+(?:\/photo\/\d+)?(?:\?.*)?$/i.test(
-    String(value || "").trim()
-  );
+const normalizeTweetUrl = (value) => {
+  try {
+    const url = new URL(String(value || "").trim());
+    const hostname = url.hostname.replace(/^www\./, "").toLowerCase();
+    if (
+      !["x.com", "twitter.com"].includes(hostname) ||
+      !["http:", "https:"].includes(url.protocol)
+    ) {
+      return "";
+    }
+    const match = url.pathname.match(
+      /^\/([A-Za-z0-9_]+)\/status\/(\d+)(?:\/photo\/\d+)?\/?$/i
+    );
+    return match ? `https://x.com/${match[1]}/status/${match[2]}` : "";
+  } catch {
+    return "";
+  }
+};
 
-const tweetEmbedHtml = (url) =>
-  `<div class="retro-tweet"><blockquote class="twitter-tweet" data-lang="ja" data-dnt="true"><a href="${escapeHtml(
-    safeUrl(url, "#")
-  )}">Xで投稿を見る</a></blockquote></div>`;
+const uniqueTweetUrls = (value) => {
+  const seen = new Set();
+  return (Array.isArray(value) ? value : [])
+    .map(normalizeTweetUrl)
+    .filter((url) => {
+      if (!url || seen.has(url)) return false;
+      seen.add(url);
+      return true;
+    });
+};
+
+const isTweetUrl = (value) => Boolean(normalizeTweetUrl(value));
+
+const tweetEmbedHtml = (url) => {
+  const normalizedUrl = normalizeTweetUrl(url);
+  if (!normalizedUrl) return "";
+  return `<div class="retro-tweet" data-x-embed="quote"><p class="x-embed-label">X引用ツイート</p><blockquote class="twitter-tweet" data-lang="ja" data-dnt="true" data-cards="visible" data-conversation="none"><a href="${escapeHtml(
+    safeUrl(normalizedUrl, "#")
+  )}">Xで引用ツイートを開く</a></blockquote></div>`;
+};
 
 const leminoAffiliateUrl =
   "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2";
@@ -215,14 +245,24 @@ const articleBodyHtml = (body, title = "", lead = "", tweets = []) => {
     .filter(Boolean);
   const middleAdIndex =
     paragraphs.length >= 4 ? Math.ceil(paragraphs.length / 2) - 1 : -1;
-  const inlineTweetUrls = new Set(
-    paragraphs
-      .map((paragraph) => String(paragraph).trim())
-      .filter((url) => isTweetUrl(url))
+  const inlineTweetUrls = new Set();
+  paragraphs.forEach((paragraph) => {
+    const lines = paragraph.split(/\n/);
+    [lines[0], paragraph.trim()].forEach((url) => {
+      const normalizedUrl = normalizeTweetUrl(url);
+      if (normalizedUrl) inlineTweetUrls.add(normalizedUrl);
+    });
+  });
+  const tweetUrls = uniqueTweetUrls(tweets).filter(
+    (url) => !inlineTweetUrls.has(url)
   );
-  const tweetUrls = jsonArray(tweets).filter(
-    (url) => isTweetUrl(url) && !inlineTweetUrls.has(String(url).trim())
-  );
+  const renderedTweetUrls = new Set();
+  const renderTweet = (url) => {
+    const normalizedUrl = normalizeTweetUrl(url);
+    if (!normalizedUrl || renderedTweetUrls.has(normalizedUrl)) return "";
+    renderedTweetUrls.add(normalizedUrl);
+    return tweetEmbedHtml(normalizedUrl);
+  };
   return (
     paragraphs
     .map((paragraph, index) => {
@@ -234,13 +274,13 @@ const articleBodyHtml = (body, title = "", lead = "", tweets = []) => {
       const firstLine = String(lines[0] || "").trim();
       if (isTweetUrl(firstLine)) {
         const rest = lines.slice(1).join("\n").trim();
-        return `${tweetEmbedHtml(firstLine)}${
+        return `${renderTweet(firstLine)}${
           rest ? `<p>${escapeHtml(rest).replaceAll("\n", "<br>")}</p>` : ""
-        }${tweetUrls[index] ? tweetEmbedHtml(tweetUrls[index]) : ""}${ad}`;
+        }${tweetUrls[index] ? renderTweet(tweetUrls[index]) : ""}${ad}`;
       }
       if (isTweetUrl(paragraph.trim())) {
-        return `${tweetEmbedHtml(paragraph.trim())}${
-          tweetUrls[index] ? tweetEmbedHtml(tweetUrls[index]) : ""
+        return `${renderTweet(paragraph.trim())}${
+          tweetUrls[index] ? renderTweet(tweetUrls[index]) : ""
         }${ad}`;
       }
       const heading = firstLine.match(/^#{2,6}\s+(.+)$/);
@@ -250,7 +290,7 @@ const articleBodyHtml = (body, title = "", lead = "", tweets = []) => {
           rest
             ? `<p>${articleInlineHtml(rest).replaceAll("\n", "<br>")}</p>`
             : ""
-        }${tweetUrls[index] ? tweetEmbedHtml(tweetUrls[index]) : ""}${ad}`;
+        }${tweetUrls[index] ? renderTweet(tweetUrls[index]) : ""}${ad}`;
       }
       const listItems = lines
         .map((line) => line.match(/^\s*[-*+]\s+(.+)$/)?.[1] || "")
@@ -258,16 +298,16 @@ const articleBodyHtml = (body, title = "", lead = "", tweets = []) => {
       if (listItems.length === lines.filter((line) => line.trim()).length) {
         return `<ul>${listItems
           .map((item) => `<li>${articleInlineHtml(item)}</li>`)
-          .join("")}</ul>${tweetUrls[index] ? tweetEmbedHtml(tweetUrls[index]) : ""}${ad}`;
+          .join("")}</ul>${tweetUrls[index] ? renderTweet(tweetUrls[index]) : ""}${ad}`;
       }
       return `<p>${articleInlineHtml(paragraph).replaceAll("\n", "<br>")}</p>${
-        tweetUrls[index] ? tweetEmbedHtml(tweetUrls[index]) : ""
+        tweetUrls[index] ? renderTweet(tweetUrls[index]) : ""
       }${ad}`;
     })
     .join("") +
     tweetUrls
       .slice(paragraphs.length)
-      .map((url) => tweetEmbedHtml(url))
+      .map((url) => renderTweet(url))
       .join("")
   );
 };
@@ -1034,6 +1074,10 @@ export async function onRequestGet(context) {
   const siteUrl = String(env.SITE_URL || new URL(request.url).origin).replace(/\/$/, "");
   const siteName = String(env.SITE_NAME || "ボクシング速報");
   const canonical = `${siteUrl}/news/${encodeURIComponent(article.slug)}`;
+  const shareUrl = new URL(canonical);
+  shareUrl.searchParams.set("utm_source", "x");
+  shareUrl.searchParams.set("utm_medium", "social");
+  shareUrl.searchParams.set("utm_campaign", "article");
  const image = String(article.image_url || siteUrl + "/assets/boxing-arena.png");
   const summary = articleSummary(article);
   const metaDescription = summary.slice(0, 160);
@@ -1125,7 +1169,7 @@ export async function onRequestGet(context) {
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script async data-boxing-adsense="true" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5867435180256987" crossorigin="anonymous"></script>
   <script type="application/ld+json">${structuredData}</script>
-   <link rel="stylesheet" href="/styles.css?v=20260811-seo-entry1">
+   <link rel="stylesheet" href="/styles.css?v=20260813-x-quote-embed1">
   <script src="/config.js?v=20260811-adsense-link1" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
@@ -1150,7 +1194,7 @@ export async function onRequestGet(context) {
           article.title
         )}</h1><a class="retro-tweet-link" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(
           article.title
-        )}&url=${encodeURIComponent(canonical)}" target="_blank" rel="noopener noreferrer">Tweet</a></div>
+        )}&url=${encodeURIComponent(shareUrl.href)}" target="_blank" rel="noopener noreferrer">Xで共有</a></div>
           <p class="retro-category">カテゴリ：${escapeHtml(categoryText)}</p>
         <div class="article-trust"><span>公開日：<time datetime="${escapeHtml(
           article.published_at
