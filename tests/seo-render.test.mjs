@@ -29,11 +29,18 @@ const temporaryListingModule = path.join(
   os.tmpdir(),
   `boxsoku-listing-function-${Date.now()}.mjs`
 );
+const temporarySecurityModule = path.join(os.tmpdir(), "security.js");
+const securitySource = fs.readFileSync(
+  path.join(projectRoot, "functions", "_shared", "security.js"),
+  "utf8"
+);
+fs.writeFileSync(temporarySecurityModule, securitySource, "utf8");
 fs.writeFileSync(temporaryListingModule, listingSource, "utf8");
 const { renderListingPage } = await import(
   pathToFileURL(temporaryListingModule).href
 );
 fs.unlinkSync(temporaryListingModule);
+fs.unlinkSync(temporarySecurityModule);
 
 const article = {
   id: "article-1",
@@ -123,7 +130,8 @@ const env = {
   SUPABASE_ANON_KEY: "public-test-key",
   SITE_URL: "https://boxsoku.com",
   SITE_NAME: "ボクシング速報",
-  VISITOR_ID_SALT: "test-salt"
+  VISITOR_ID_SALT: "test-salt",
+  BOXSOKU_SERVER_TOKEN: "test-server-token"
 };
 
 const makeContext = (method, userAgent = "") => ({
@@ -140,6 +148,13 @@ const makeContext = (method, userAgent = "") => ({
 
 const response = await onRequestGet(makeContext("GET"));
 assert.equal(response.status, 200);
+assert.equal(response.headers.get("X-Frame-Options"), "SAMEORIGIN");
+assert.equal(response.headers.get("X-Content-Type-Options"), "nosniff");
+assert.equal(
+  response.headers.get("Strict-Transport-Security"),
+  "max-age=31536000; includeSubDomains"
+);
+assert.equal(response.headers.get("Content-Security-Policy"), "frame-ancestors 'self'");
 const html = await response.text();
 
 const description = html.match(/<meta name="description" content="([^"]*)">/)?.[1];
@@ -421,6 +436,11 @@ const listingContext = {
 };
 const listingResponse = await renderListingPage(listingContext, "schedule");
 assert.equal(listingResponse.status, 200);
+assert.equal(listingResponse.headers.get("X-Frame-Options"), "SAMEORIGIN");
+assert.equal(
+  listingResponse.headers.get("Content-Security-Policy"),
+  "frame-ancestors 'self'"
+);
 const listingHtml = await listingResponse.text();
 assert.ok(
   listingHtml.indexOf('data-category-filter="schedule"') <

@@ -1,8 +1,12 @@
-const JSON_HEADERS = {
+import { securityHeaders } from "../_shared/security.js";
+
+const JSON_HEADERS = securityHeaders({
   "Content-Type": "application/json; charset=UTF-8",
   "Cache-Control": "no-store",
   "X-Content-Type-Options": "nosniff"
-};
+});
+
+const MAX_COMMENT_REQUEST_BYTES = 32 * 1024;
 
 function json(payload, status = 200) {
   return new Response(JSON.stringify(payload), {
@@ -52,10 +56,8 @@ function publicComment(row, index = 0) {
 
 async function visitorId(request, articleId, env) {
   const ip =
-    request.headers.get("CF-Connecting-IP") ||
-    request.headers.get("X-Forwarded-For") ||
-    "unknown";
-  const salt = env.COMMENT_ID_SALT || env.SITE_URL || "boxing-comments";
+    request.headers.get("CF-Connecting-IP") || "unknown";
+  const salt = String(env.COMMENT_ID_SALT || "");
   const bytes = new TextEncoder().encode(`${ip}|${articleId}|${salt}`);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(digest)]
@@ -80,7 +82,12 @@ async function fetchComments(env, articleId) {
 }
 
 function checkEnvironment(env) {
-  return Boolean(env.SUPABASE_URL && env.SUPABASE_ANON_KEY);
+  return Boolean(
+    env.SUPABASE_URL &&
+      env.SUPABASE_ANON_KEY &&
+      env.COMMENT_ID_SALT &&
+      env.BOXSOKU_SERVER_TOKEN
+  );
 }
 
 export async function onRequestGet({ env, request }) {
@@ -110,11 +117,29 @@ export async function onRequestPost({ env, request }) {
     return json({ ok: false, message: "コメント機能が未設定です。" }, 503);
   }
 
+  const contentLength = Number(request.headers.get("Content-Length") || 0);
+  if (contentLength > MAX_COMMENT_REQUEST_BYTES) {
+    return json({ ok: false, message: "投稿内容が大きすぎます。" }, 413);
+  }
+
+  const origin = request.headers.get("Origin");
+  if (origin !== new URL(request.url).origin) {
+    return json({ ok: false, message: "許可されていない送信元です。" }, 403);
+  }
+
   let input;
   try {
-    input = await request.json();
+    const rawBody = await request.text();
+    if (new TextEncoder().encode(rawBody).byteLength > MAX_COMMENT_REQUEST_BYTES) {
+      return json({ ok: false, message: "投稿内容が大きすぎます。" }, 413);
+    }
+    input = JSON.parse(rawBody);
   } catch {
     return json({ ok: false, message: "投稿内容が正しくありません。" }, 400);
+  }
+
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    return json({ ok: false, message: "Invalid request body" }, 400);
   }
 
   const articleId = String(input.articleId || "");
@@ -151,18 +176,18 @@ export async function onRequestPost({ env, request }) {
     }
 
     const insertResponse = await fetch(
-      `${env.SUPABASE_URL}/rest/v1/comments`,
+      `${env.SUPABASE_URL}/rest/v1/rpc/submit_comment`,
       {
         method: "POST",
         headers: supabaseHeaders(env, {
-          "Content-Type": "application/json",
-          Prefer: "return=representation"
+          "Content-Type": "application/json"
         }),
         body: JSON.stringify({
-          article_id: articleId,
-          display_name: name,
-          body,
-          visitor_id: id
+          p_article_id: articleId,
+          p_display_name: name,
+          p_body: body,
+          p_visitor_id: id,
+          p_server_token: String(env.BOXSOKU_SERVER_TOKEN)
         })
       }
     );
@@ -170,7 +195,9 @@ export async function onRequestPost({ env, request }) {
       throw new Error(`Comment insert failed: ${insertResponse.status}`);
     }
 
-    const inserted = (await insertResponse.json())[0];
+    const insertedRows = await insertResponse.json();
+    const inserted = Array.isArray(insertedRows) ? insertedRows[0] : null;
+    if (!inserted) throw new Error("Comment insert returned no row");
     const rows = await fetchComments(env, articleId);
     const comments = rows.map(publicComment);
     const number = rows.findIndex((row) => row.id === inserted.id) + 1;

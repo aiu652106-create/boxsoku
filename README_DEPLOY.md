@@ -67,13 +67,23 @@ Pages Functionsを使用するため、GitHub連携での公開を推奨しま�
 | `SUPABASE_URL` | `https://mowosdkvlrrrrevgrqkw.supabase.co` |
 | `SUPABASE_ANON_KEY` | `sb_publishable_DoXlNgEPi5sF6nut9pkMxw_82jRYvm_` |
 | `SITE_URL` | `https://boxsoku.com` |
-| `COMMENT_ID_SALT` | `8800a06c277946f49341cdbad691175c0c424a7502e34e24b68567e72afd6bf0` |
+| `COMMENT_ID_SALT` | Cloudflare PagesのSecretとして登録（値はリポジトリに記載しない） |
 | `SITE_NAME` | サイト名（未設定時は「ボクシング速報」） |
-| `COMMENT_ID_SALT` | 推測されにくい任意の長い文字列 |
+| `VISITOR_ID_SALT` | Cloudflare PagesのSecretとして登録（COMMENT_ID_SALTとは別の値） |
+| `BOXSOKU_SERVER_TOKEN` | Cloudflare PagesのSecretとして登録（Supabase RPCのサーバー間認証用） |
 | `ADSENSE_PUBLISHER_ID` | AdSense承認後の`pub-`から始まるサイト運営者ID |
 
 再デプロイ後、`/news/記事slug`と`/sitemap.xml`がFunctionsから生成されます。
 記事ページのコメント投稿は`/api/comments`を通してSupabaseへ保存されます。
+
+コメント投稿と記事PV記録のサーバー間認証には、Cloudflare PagesのSecret `BOXSOKU_SERVER_TOKEN`を使います。Supabaseの`public.server_secrets`には、同じ値をリポジトリへ書かず、SQL EditorでSHA-256ハッシュとして登録してください。
+
+```sql
+insert into public.server_secrets (id, token_hash)
+values ('boxsoku', encode(extensions.digest(convert_to('CloudflareのBOXSOKU_SERVER_TOKENと同じ値', 'UTF8'), 'sha256'), 'hex'))
+on conflict (id) do update
+set token_hash = excluded.token_hash, updated_at = now();
+```
 
 ## 4. XServerドメインをCloudflareへ接続
 

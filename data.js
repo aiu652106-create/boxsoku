@@ -868,11 +868,6 @@
     return normalizeSiteSettings(data);
   }
 
-  async function incrementView(slug) {
-    if (!client || !slug) return;
-    await client.rpc("increment_article_view", { article_slug: slug });
-  }
-
   function articleUrl(article) {
     const slug = encodeURIComponent(article.slug || article.id);
     if (
@@ -1049,7 +1044,6 @@
     removeArticleImage,
     getSiteSettings,
     saveSiteSettings,
-    incrementView,
     articleUrl,
     articleDate,
     articleSummary,

@@ -1,3 +1,5 @@
+import { securityHeaders } from "./security.js";
+
 const PAGE_DEFINITIONS = {
   home: {
     path: "/",
@@ -266,7 +268,8 @@ export async function renderListingPage(context, pageKey = "home") {
   const page = PAGE_DEFINITIONS[pageKey] || PAGE_DEFINITIONS.home;
   if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
     return new Response("Supabase environment variables are not configured.", {
-      status: 503
+      status: 503,
+      headers: securityHeaders({ "Content-Type": "text/plain; charset=UTF-8" })
     });
   }
 
@@ -393,9 +396,9 @@ export async function renderListingPage(context, pageKey = "home") {
 </html>`;
 
   return new Response(request.method === "HEAD" ? null : html, {
-    headers: {
+    headers: securityHeaders({
       "Content-Type": "text/html; charset=UTF-8",
       "Cache-Control": "public, max-age=300, s-maxage=300"
-    }
+    })
   });
 }

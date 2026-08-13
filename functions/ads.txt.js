@@ -1,3 +1,5 @@
+import { securityHeaders } from "./_shared/security.js";
+
 function publisherId(value) {
   const match = String(value || "")
     .trim()
@@ -14,9 +16,9 @@ export function onRequestGet({ env }) {
     : "# AdSense承認後にCloudflare PagesのADSENSE_PUBLISHER_IDを設定してください。\n";
 
   return new Response(body, {
-    headers: {
+    headers: securityHeaders({
       "Content-Type": "text/plain; charset=UTF-8",
       "Cache-Control": "public, max-age=300, s-maxage=300"
-    }
+    })
   });
 }

@@ -46,6 +46,15 @@ create table if not exists public.site_settings (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.server_secrets (
+  id text primary key check (id = 'boxsoku'),
+  token_hash text not null check (token_hash ~ '^[a-f0-9]{64}$'),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+revoke all on public.server_secrets from public, anon, authenticated;
+
 insert into public.site_settings (id)
 values ('global')
 on conflict (id) do nothing;
@@ -134,9 +143,80 @@ as $$
   );
 $$;
 
+create or replace function public.is_server_request(p_server_token text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.server_secrets
+    where id = 'boxsoku'
+      and token_hash = encode(
+        extensions.digest(
+          convert_to(coalesce(p_server_token, ''), 'UTF8'),
+          'sha256'
+        ),
+        'hex'
+      )
+  );
+$$;
+
+create or replace function public.submit_comment(
+  p_article_id uuid,
+  p_display_name text,
+  p_body text,
+  p_visitor_id text,
+  p_server_token text
+)
+returns setof public.comments
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_server_request(p_server_token) then
+    raise exception 'not authorized';
+  end if;
+
+  if p_display_name is null
+     or char_length(trim(p_display_name)) not between 1 and 24
+     or p_body is null
+     or char_length(trim(p_body)) not between 1 and 1000
+     or p_visitor_id is null
+     or p_visitor_id !~ '^[a-f0-9]{9}$' then
+    raise exception 'invalid comment';
+  end if;
+
+  if not exists (
+    select 1
+    from public.articles
+    where id = p_article_id
+      and status = 'published'
+      and published_at is not null
+      and published_at <= now()
+  ) then
+    raise exception 'article is not available';
+  end if;
+
+  return query
+    insert into public.comments (article_id, display_name, body, visitor_id)
+    values (
+      p_article_id,
+      trim(p_display_name),
+      trim(p_body),
+      p_visitor_id
+    )
+    returning *;
+end;
+$$;
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   new.updated_at = now();
@@ -154,22 +234,12 @@ create trigger site_settings_set_updated_at
 before update on public.site_settings
 for each row execute function public.set_updated_at();
 
-create or replace function public.increment_article_view(article_slug text)
-returns void
-language sql
-security definer
-set search_path = public
-as $$
-  update public.articles
-  set view_count = view_count + 1
-  where slug = article_slug
-    and status = 'published'
-    and published_at <= now();
-$$;
+drop function if exists public.record_article_view(text, text);
 
 create or replace function public.record_article_view(
   p_article_slug text,
-  p_visitor_hash text
+  p_visitor_hash text,
+  p_server_token text
 )
 returns void
 language plpgsql
@@ -180,6 +250,10 @@ declare
   target_article_id uuid;
   inserted_unique integer;
 begin
+  if not public.is_server_request(p_server_token) then
+    return;
+  end if;
+
   if p_visitor_hash is null or p_visitor_hash !~ '^[a-f0-9]{64}$' then
     return;
   end if;
@@ -225,6 +299,7 @@ alter table public.comments enable row level security;
 alter table public.site_visitors enable row level security;
 alter table public.article_unique_views enable row level security;
 alter table public.site_settings enable row level security;
+alter table public.server_secrets enable row level security;
 
 drop policy if exists "Admins can read own membership" on public.admin_users;
 create policy "Admins can read own membership"
@@ -271,22 +346,6 @@ to anon, authenticated
 using (true);
 
 drop policy if exists "Public can post comments" on public.comments;
-create policy "Public can post comments"
-on public.comments for insert
-to anon, authenticated
-with check (
-  char_length(display_name) between 1 and 24
-  and char_length(body) between 1 and 1000
-  and visitor_id ~ '^[a-f0-9]{9}$'
-  and exists (
-    select 1
-    from public.articles
-    where articles.id = comments.article_id
-      and articles.status = 'published'
-      and articles.published_at is not null
-      and articles.published_at <= now()
-  )
-);
 
 drop policy if exists "Admins can delete comments" on public.comments;
 create policy "Admins can delete comments"
@@ -328,15 +387,18 @@ using (public.is_admin());
 grant usage on schema public to anon, authenticated;
 grant select on public.articles to anon, authenticated;
 grant insert, update, delete on public.articles to authenticated;
-grant select, insert on public.comments to anon, authenticated;
+grant select on public.comments to anon, authenticated;
 grant delete on public.comments to authenticated;
-grant usage, select on sequence public.comments_id_seq to anon, authenticated;
+revoke insert on public.comments from anon, authenticated;
+revoke all on sequence public.comments_id_seq from public, anon, authenticated;
 grant select on public.admin_users to authenticated;
 grant select on public.site_settings to anon, authenticated;
 grant insert, update on public.site_settings to authenticated;
-grant execute on function public.is_admin() to anon, authenticated;
-grant execute on function public.increment_article_view(text) to anon, authenticated;
-grant execute on function public.record_article_view(text, text) to anon, authenticated;
+revoke all on function public.is_admin() from public, anon, authenticated;
+revoke all on function public.is_server_request(text) from public, anon, authenticated;
+grant execute on function public.submit_comment(uuid, text, text, text, text) to anon, authenticated;
+grant execute on function public.record_article_view(text, text, text) to anon, authenticated;
+drop function if exists public.increment_article_view(text);
 grant select on public.site_visitors, public.article_unique_views to authenticated;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

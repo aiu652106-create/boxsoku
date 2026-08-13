@@ -52,9 +52,13 @@ alter table public.article_unique_views
 create index if not exists article_unique_views_visitor_idx
   on public.article_unique_views (visitor_hash);
 
+-- Run schema.sql first so server_secrets and is_server_request already exist.
+drop function if exists public.record_article_view(text, text);
+
 create or replace function public.record_article_view(
   p_article_slug text,
-  p_visitor_hash text
+  p_visitor_hash text,
+  p_server_token text
 )
 returns void
 language plpgsql
@@ -65,6 +69,10 @@ declare
   target_article_id uuid;
   inserted_unique integer;
 begin
+  if not public.is_server_request(p_server_token) then
+    return;
+  end if;
+
   if p_visitor_hash is null or p_visitor_hash !~ '^[a-f0-9]{64}$' then
     return;
   end if;
@@ -119,7 +127,7 @@ on public.article_unique_views for select
 to authenticated
 using (public.is_admin());
 
-grant execute on function public.record_article_view(text, text) to anon, authenticated;
+grant execute on function public.record_article_view(text, text, text) to anon, authenticated;
 grant select on public.site_visitors, public.article_unique_views to authenticated;
 
 -- Start the requested visitor dashboard from zero. Run this migration once.

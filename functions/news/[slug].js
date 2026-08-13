@@ -1,4 +1,5 @@
 import "../../affiliate-products.js";
+import { securityHeaders } from "../_shared/security.js";
 
 const escapeHtml = (value = "") =>
   String(value)
@@ -970,7 +971,8 @@ export async function onRequestGet(context) {
   const { env, params, request } = context;
   if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
     return new Response("Supabase environment variables are not configured.", {
-      status: 503
+      status: 503,
+      headers: securityHeaders({ "Content-Type": "text/plain; charset=UTF-8" })
     });
   }
 
@@ -979,16 +981,22 @@ export async function onRequestGet(context) {
     new URL(request.url).searchParams.get("boxsoku_verify") === "1";
   const isHeadRequest = request.method === "HEAD";
   const crawlerRequest = isCrawlerRequest(request);
-  const shouldSkipAnalytics = isVerificationRequest || isHeadRequest || crawlerRequest;
+  const visitorIdSalt = String(env.VISITOR_ID_SALT || "");
+  const serverToken = String(env.BOXSOKU_SERVER_TOKEN || "");
+  const shouldSkipAnalytics =
+    isVerificationRequest ||
+    isHeadRequest ||
+    crawlerRequest ||
+    !visitorIdSalt ||
+    !serverToken;
   const existingVisitorToken = readCookie(
     request.headers.get("Cookie"),
     visitorCookieName
   );
   const visitorToken = existingVisitorToken || createVisitorToken();
-  const visitorHash = await hashVisitorToken(
-    visitorToken,
-    String(env.VISITOR_ID_SALT || env.COMMENT_ID_SALT || env.SITE_URL || "boxsoku")
-  );
+  const visitorHash = visitorIdSalt
+    ? await hashVisitorToken(visitorToken, visitorIdSalt)
+    : "";
   const select = encodeURIComponent(
     "id,slug,title,summary,body,image_url,boxrec_url,accent,is_advertorial,affiliate_disclosure,affiliate_links,tweets,youtube_urls,instagram_urls,published_at,updated_at"
   );
@@ -1017,7 +1025,10 @@ export async function onRequestGet(context) {
 
   const article = articles[0];
   if (!article) {
-    return new Response("記事が見つかりません。", { status: 404 });
+    return new Response("記事が見つかりません。", {
+      status: 404,
+      headers: securityHeaders({ "Content-Type": "text/plain; charset=UTF-8" })
+    });
   }
 
   const siteUrl = String(env.SITE_URL || new URL(request.url).origin).replace(/\/$/, "");
@@ -1228,17 +1239,12 @@ export async function onRequestGet(context) {
           headers,
           body: JSON.stringify({
             p_article_slug: slug,
-            p_visitor_hash: visitorHash
+            p_visitor_hash: visitorHash,
+            p_server_token: serverToken
           })
         }
       );
-      if (!uniqueResponse.ok) {
-        await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/increment_article_view`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ article_slug: slug })
-        });
-      }
+      if (!uniqueResponse.ok) throw new Error(`View record failed: ${uniqueResponse.status}`);
     })().catch(() => {})
   );
 
@@ -1248,14 +1254,14 @@ export async function onRequestGet(context) {
       ? "public, max-age=300, s-maxage=300"
       : "private, no-store"
   };
-  if (!existingVisitorToken && !shouldSkipAnalytics) {
+  if (!existingVisitorToken && !shouldSkipAnalytics && visitorIdSalt) {
     responseHeaders["Set-Cookie"] = `${visitorCookieName}=${encodeURIComponent(
       visitorToken
     )}; Max-Age=31536000; Path=/; SameSite=Lax; Secure`;
   }
 
   return new Response(isHeadRequest ? null : html, {
-    headers: responseHeaders
+    headers: securityHeaders(responseHeaders)
   });
 }
 

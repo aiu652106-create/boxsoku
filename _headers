@@ -3,18 +3,26 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   X-Frame-Options: SAMEORIGIN
+  Content-Security-Policy: frame-ancestors 'self'
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Permitted-Cross-Domain-Policies: none
+  X-Download-Options: noopen
 
 /admin.html
   X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
 
 /admin
   X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
 
 /editor.html
   X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
 
 /editor
   X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
 
 /article.html
   X-Robots-Tag: noindex, nofollow
