@@ -368,7 +368,7 @@ export async function renderListingPage(context, pageKey = "home") {
   <script src="/site.js" defer></script>
   <script src="/data.js?v=20260813-x-quote-embed1" defer></script>
   <script src="/sidebar.js?v=20260804-content-polish" defer></script>
-  <script src="/app.js?v=20260813-news-card-class1" defer></script>
+  <script src="/app.js?v=20260813-x-quote-embed1" defer></script>
   <script src="/ads.js" defer></script>
 </head>
 <body class="retro-blog">

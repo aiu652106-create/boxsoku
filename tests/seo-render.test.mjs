@@ -473,7 +473,13 @@ assert.match(
   listingHtml,
   /<link rel="icon" data-boxsoku-site-icon="true" type="image\/png" href="\/assets\/boxsoku-icon\.png">/
 );
+assert.match(listingHtml, /Xで共有/);
+assert.match(listingHtml, /utm_source%3Dx/);
 assert.ok(!listingHtml.includes("記事を読み込んでいます"));
+
+const appSource = fs.readFileSync(path.join(projectRoot, "app.js"), "utf8");
+assert.match(appSource, /tweet\.textContent = "Xで共有"/);
+assert.match(appSource, /utm_campaign/);
 
 const leminoListingResponse = await renderListingPage(
   {

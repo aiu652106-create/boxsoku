@@ -80,14 +80,21 @@ function createArticle(article) {
 
   const tweet = document.createElement("a");
   tweet.className = "retro-tweet-link";
+  const shareUrl = new URL(
+    window.BoxingData.articleUrl(article),
+    window.location.href
+  );
+  shareUrl.search = "";
+  shareUrl.hash = "";
+  shareUrl.searchParams.set("utm_source", "x");
+  shareUrl.searchParams.set("utm_medium", "social");
+  shareUrl.searchParams.set("utm_campaign", "article");
   tweet.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
     article.title
-  )}&url=${encodeURIComponent(
-    new URL(window.BoxingData.articleUrl(article), window.location.href).href
-  )}`;
+  )}&url=${encodeURIComponent(shareUrl.href)}`;
   tweet.target = "_blank";
   tweet.rel = "noopener noreferrer";
-  tweet.textContent = "Tweet";
+  tweet.textContent = "Xで共有";
 
   titleRow.append(heading, tweet);
 
