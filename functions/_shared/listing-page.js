@@ -1,12 +1,12 @@
 const PAGE_DEFINITIONS = {
   home: {
     path: "/",
-    title: "ボクシング試合予定・配信情報｜ボクシング速報",
-    heading: "ボクシング試合予定・配信情報",
+    title: "ボクシング速報｜試合予定・配信情報・ニュース",
+    heading: "ボクシング速報",
     description:
-      "今日・今週・今後のボクシング試合予定、対戦カード、開始時間、会場、Lemino・WOWOWなどの放送・配信情報を日本人ボクサー中心に掲載します。",
+      "ボクシングの試合予定・配信情報・ニュースを掲載。対戦カード、開始時間、会場、Lemino・WOWOWなどの視聴情報を確認できます。",
     intro:
-      "日本人ボクサーを中心に、今後の試合予定、対戦カード、開始時間、会場、放送・配信情報をまとめています。",
+      "試合予定や結果、配信情報、選手・大会のニュースを、公式発表を確認しながらまとめています。",
     category: null
   },
   schedule: {
@@ -324,6 +324,7 @@ export async function renderListingPage(context, pageKey = "home") {
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <meta name="description" content="${escapeHtml(page.description)}">
   <link rel="canonical" href="${escapeHtml(canonical)}">
+  <link rel="icon" data-boxsoku-site-icon="true" type="image/png" href="/assets/boxsoku-icon.png">
   <meta property="og:type" content="website">
   <meta property="og:title" content="${escapeHtml(page.title)}">
   <meta property="og:description" content="${escapeHtml(page.description)}">

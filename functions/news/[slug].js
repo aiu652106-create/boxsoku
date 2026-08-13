@@ -1058,11 +1058,17 @@ export async function onRequestGet(context) {
         "@type": isNewsArticle(article) ? "NewsArticle" : "Article",
         headline: article.title,
         description: summary,
+        inLanguage: "ja",
+        articleSection: categoryText,
         ...(image ? { image: [image] } : {}),
         datePublished: article.published_at,
         dateModified: article.updated_at || article.published_at,
         mainEntityOfPage: canonical,
-        author: { "@id": organizationId },
+        author: {
+          "@type": "Organization",
+          name: `${siteName}編集部`,
+          url: `${siteUrl}/about`
+        },
         publisher: { "@id": organizationId }
       },
       {
@@ -1090,6 +1096,7 @@ export async function onRequestGet(context) {
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <meta name="description" content="${escapeHtml(metaDescription)}">
   <link rel="canonical" href="${escapeHtml(canonical)}">
+  <link rel="icon" data-boxsoku-site-icon="true" type="image/png" href="/assets/boxsoku-icon.png">
   <meta property="og:type" content="article">
   <meta property="og:title" content="${escapeHtml(article.title)}">
   <meta property="og:description" content="${escapeHtml(metaDescription)}">

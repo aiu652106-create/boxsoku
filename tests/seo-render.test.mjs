@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const projectRoot = path.resolve(import.meta.dirname, "..");
 const functionSource = fs.readFileSync(
@@ -15,7 +16,9 @@ const temporaryModule = path.join(
   `boxsoku-seo-function-${Date.now()}.mjs`
 );
 fs.writeFileSync(temporaryModule, functionSource, "utf8");
-const { onRequestGet, onRequestHead } = await import(temporaryModule);
+const { onRequestGet, onRequestHead } = await import(
+  pathToFileURL(temporaryModule).href
+);
 fs.unlinkSync(temporaryModule);
 
 const listingSource = fs.readFileSync(
@@ -27,7 +30,9 @@ const temporaryListingModule = path.join(
   `boxsoku-listing-function-${Date.now()}.mjs`
 );
 fs.writeFileSync(temporaryListingModule, listingSource, "utf8");
-const { renderListingPage } = await import(temporaryListingModule);
+const { renderListingPage } = await import(
+  pathToFileURL(temporaryListingModule).href
+);
 fs.unlinkSync(temporaryListingModule);
 
 const article = {
@@ -152,6 +157,10 @@ assert.match(html, /"@type":"BreadcrumbList"/);
 assert.match(html, /"@type":"SportsEvent"/);
 assert.match(html, /"startDate":"2026-09-02"/);
 assert.match(html, /"@type":"Organization"/);
+assert.match(
+  html,
+  /<link rel="icon" data-boxsoku-site-icon="true" type="image\/png" href="\/assets\/boxsoku-icon\.png">/
+);
 assert.match(html, /class="public-breadcrumb"/);
 assert.match(html, /編集・確認：ボクシング速報編集部/);
 assert.ok(
@@ -419,6 +428,10 @@ assert.match(listingHtml, /<h2><a href="\/news\/seo-test">9月2日のボクシ�
 assert.match(listingHtml, /"@type":"CollectionPage"/);
 assert.match(listingHtml, /"@type":"ItemList"/);
 assert.match(listingHtml, /"@type":"Organization"/);
+assert.match(
+  listingHtml,
+  /<link rel="icon" data-boxsoku-site-icon="true" type="image\/png" href="\/assets\/boxsoku-icon\.png">/
+);
 assert.ok(!listingHtml.includes("記事を読み込んでいます"));
 
 const leminoListingResponse = await renderListingPage(
