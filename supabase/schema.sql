@@ -310,7 +310,17 @@ using (user_id = auth.uid());
 drop policy if exists "Public can read published articles" on public.articles;
 create policy "Public can read published articles"
 on public.articles for select
-to anon, authenticated
+to anon
+using (
+  status = 'published'
+  and published_at is not null
+  and published_at <= now()
+);
+
+drop policy if exists "Admins can read articles" on public.articles;
+create policy "Admins can read articles"
+on public.articles for select
+to authenticated
 using (
   (
     status = 'published'
@@ -395,6 +405,7 @@ grant select on public.admin_users to authenticated;
 grant select on public.site_settings to anon, authenticated;
 grant insert, update on public.site_settings to authenticated;
 revoke all on function public.is_admin() from public, anon, authenticated;
+grant execute on function public.is_admin() to authenticated;
 revoke all on function public.is_server_request(text) from public, anon, authenticated;
 grant execute on function public.submit_comment(uuid, text, text, text, text) to anon, authenticated;
 grant execute on function public.record_article_view(text, text, text) to anon, authenticated;
