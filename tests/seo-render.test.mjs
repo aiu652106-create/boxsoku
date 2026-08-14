@@ -201,6 +201,10 @@ assert.match(
 );
 assert.ok(!html.includes('href="https://lemino.docomo.ne.jp/"'));
 assert.ok(!html.includes("a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"));
+assert.ok(!html.includes('class="affiliate-links-note"'));
+assert.ok(
+  !html.includes("料金・配信内容・視聴条件はリンク先の公式ページでご確認ください。")
+);
 
 globalThis.fetch = async (input) => {
   const url = String(input);

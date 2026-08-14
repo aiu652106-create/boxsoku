@@ -271,12 +271,6 @@ function createAffiliateLinks(article) {
     }
     section.appendChild(link);
   });
-  const note = document.createElement("p");
-  note.className = "affiliate-links-note";
-  note.textContent =
-    affiliateConfig.note ||
-    "料金・配信内容・視聴条件はリンク先の公式ページでご確認ください。";
-  section.appendChild(note);
   return section;
 }
 

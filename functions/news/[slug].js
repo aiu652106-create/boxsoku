@@ -828,7 +828,7 @@ function affiliateLinksHtml(article) {
     })
     .join("");
   return links
-    ? `<aside class="affiliate-links"><strong>この試合を配信サイトで見る</strong>${links}<p class="affiliate-links-note">料金・配信内容・視聴条件はリンク先の公式ページでご確認ください。</p></aside>`
+    ? `<aside class="affiliate-links"><strong>この試合を配信サイトで見る</strong>${links}</aside>`
     : "";
 }
 

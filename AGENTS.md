@@ -92,6 +92,8 @@ Before changing published article prose, paste the exact proposed replacement te
 
 For streaming and affiliate link changes, add an exact-target gate before editing: capture the user's selected or named visible text, identify the current rendered element that owns it, and preserve the surrounding copy unless a wording change is requested. Verify the exact destination URL, `target`, and `rel` attributes, make the link visually identifiable without changing unrelated services, then check the server-rendered and client-rendered paths when both exist. After deployment, reload a production URL with `boxsoku_verify=1` and confirm the exact visible text, href, CSS version, and click target.
 
+When an affiliate field is cleared or replaced in the editor, never trust the immediate save result alone. Reload the editor, inspect the stored value, and verify the public `.affiliate-links` block so stale persisted labels or links cannot survive unnoticed.
+
 Never describe an affiliate URL as an event-details, official-information, or schedule page unless its verified final destination actually contains that information. When the affiliate destination is a general membership or service page, link factual updates to the primary official announcement separately and label the affiliate CTA for the action it really supports, such as membership registration or service access.
 
 For article pages, keep the event/program lead image separate from fight-card media: only a fighter photo or fighter name inside a fight card may link to that fighter's verified profile. Before declaring completion, inspect the exact lead-image parent and every card-image href on the public page; an article-level profile URL must never be reused as the lead-image link.
