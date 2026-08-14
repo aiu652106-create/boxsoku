@@ -669,10 +669,10 @@ function renderArticle(article) {
   const fightCards = createFightCards(article);
   container.append(titleRow, category);
   container.appendChild(imageContent);
+  if (videoEmbeds.childElementCount) container.appendChild(videoEmbeds);
   container.appendChild(body);
   container.appendChild(topAd);
   if (fightCards) container.appendChild(fightCards);
-  if (videoEmbeds.childElementCount) container.appendChild(videoEmbeds);
   if (affiliateLinks) container.appendChild(affiliateLinks);
   if (productCards) container.appendChild(productCards);
   container.append(meta, commentsMount, back);

@@ -237,6 +237,37 @@ assert.equal((tweetBodyHtml.match(/data-cards="visible"/g) || []).length, 1);
 assert.match(tweetBodyHtml, /X引用ツイート/);
 assert.match(tweetHtml, /platform\.twitter\.com\/widgets\.js/);
 
+const videoArticle = {
+  ...article,
+  id: "youtube-position-article",
+  slug: "youtube-position-test",
+  title: "YouTube動画の表示位置テスト",
+  body: "本文の確認です。",
+  affiliate_links: [],
+  youtube_urls: ["https://www.youtube.com/shorts/Tg_PtUt6Usc"]
+};
+globalThis.fetch = async (input) => {
+  const url = String(input);
+  if (url.includes("slug=eq.youtube-position-test")) return Response.json([videoArticle]);
+  if (url.includes("/rest/v1/articles?")) return Response.json([videoArticle, listArticle]);
+  return new Response(null, { status: 204 });
+};
+const videoContext = makeContext("GET");
+videoContext.params = { slug: videoArticle.slug };
+videoContext.request = new Request(
+  `https://boxsoku.com/news/${videoArticle.slug}?boxsoku_verify=1`
+);
+const videoResponse = await onRequestGet(videoContext);
+assert.equal(videoResponse.status, 200);
+const videoHtml = await videoResponse.text();
+const videoImageIndex = videoHtml.indexOf('class="retro-post-image retro-detail-image"');
+const videoEmbedIndex = videoHtml.indexOf('class="retro-article-videos"');
+const videoBodyIndex = videoHtml.indexOf('class="retro-detail-body"');
+assert.ok(videoImageIndex >= 0 && videoImageIndex < videoEmbedIndex);
+assert.ok(videoEmbedIndex < videoBodyIndex);
+assert.equal((videoHtml.match(/class="retro-article-videos"/g) || []).length, 1);
+assert.equal((videoHtml.match(/youtube-nocookie\.com\/embed\/Tg_PtUt6Usc/g) || []).length, 1);
+
 const editorHtml = fs.readFileSync(
   path.join(projectRoot, "editor.html"),
   "utf8"

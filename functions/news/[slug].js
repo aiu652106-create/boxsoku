@@ -1223,6 +1223,7 @@ export async function onRequestGet(context) {
               )}" alt="${escapeHtml(article.title)}のアイキャッチ画像" loading="lazy">`
             : ""
         }
+        ${videosHtml(article)}
         ${disclosure}
         ${wowowTextAffiliate}
         <div class="retro-detail-body">${articleBodyHtml(
@@ -1234,7 +1235,6 @@ export async function onRequestGet(context) {
         ${affiliateLinksHtml(article)}
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         ${fightCardsHtml(article)}
-        ${videosHtml(article)}
         ${leminoBanner}
         ${wowowBanner}
         ${relatedArticlesHtml(article, latest)}
