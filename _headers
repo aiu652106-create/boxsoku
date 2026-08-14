@@ -26,3 +26,6 @@
 
 /article.html
   X-Robots-Tag: noindex, nofollow
+
+/styles.css
+  Cache-Control: no-cache, must-revalidate
