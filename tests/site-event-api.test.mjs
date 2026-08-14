@@ -7,7 +7,7 @@ const projectRoot = decodeURIComponent(new URL("..", import.meta.url).pathname).
 );
 const { onRequestPost } = await import(
   pathToFileURL(
-    `${projectRoot.replaceAll("/", "\\")}functions\\api\\affiliate-click.js`
+    `${projectRoot.replaceAll("/", "\\")}functions\\api\\site-event.js`
   ).href
 );
 
@@ -20,7 +20,7 @@ const env = {
 
 function request(payload, options = {}) {
   return new Request(
-    `https://boxsoku.com/api/affiliate-click${options.query || ""}`,
+    `https://boxsoku.com/api/site-event${options.query || ""}`,
     {
       method: "POST",
       headers: {

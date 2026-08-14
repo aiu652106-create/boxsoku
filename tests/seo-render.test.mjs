@@ -173,7 +173,7 @@ assert.ok(!html.includes("[Prime Video独占ライブ配信]"));
 assert.match(html, /"@type":"Article"/);
 assert.match(
   html,
-  /<script src="\/affiliate-analytics\.js\?v=20260814-affiliate-tracking1" defer><\/script>/
+  /<script src="\/site-events\.js\?v=20260814-site-events1" defer><\/script>/
 );
 assert.match(html, /"@type":"BreadcrumbList"/);
 assert.match(html, /"@type":"SportsEvent"/);
@@ -487,7 +487,7 @@ assert.match(
 );
 assert.match(
   listingHtml,
-  /<script src="\/affiliate-analytics\.js\?v=20260814-affiliate-tracking1" defer><\/script>/
+  /<script src="\/site-events\.js\?v=20260814-site-events1" defer><\/script>/
 );
 assert.ok(!listingHtml.includes("記事を読み込んでいます"));
 

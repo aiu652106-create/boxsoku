@@ -28,12 +28,12 @@
       const body = JSON.stringify(payload);
       if (navigator.sendBeacon) {
         navigator.sendBeacon(
-          "/api/affiliate-click",
+          "/api/site-event",
           new Blob([body], { type: "application/json" })
         );
         return;
       }
-      fetch("/api/affiliate-click", {
+      fetch("/api/site-event", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body,
