@@ -83,6 +83,16 @@ try {
   assert.equal(verification.status, 200);
   assert.deepEqual(await verification.json(), { ok: true, recorded: false });
   assert.equal(fetchCalls, 1);
+
+  const ownerExcluded = await onRequestPost({
+    env,
+    request: request(payload, {
+      headers: { Cookie: "boxsoku_owner_traffic=1" }
+    })
+  });
+  assert.equal(ownerExcluded.status, 200);
+  assert.deepEqual(await ownerExcluded.json(), { ok: true, recorded: false });
+  assert.equal(fetchCalls, 1);
 } finally {
   globalThis.fetch = originalFetch;
 }

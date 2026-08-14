@@ -11,7 +11,7 @@
     <script src="config.js?v=20260813-site-icon-settings1" defer></script>
     <script src="data.js?v=20260814-affiliate-report1" defer></script>
     <script src="site-icon.js?v=20260813-site-icon-settings1" defer></script>
-    <script src="admin.js?v=20260814-affiliate-report1" defer></script>
+    <script src="admin.js?v=20260815-owner-traffic-exclusion1" defer></script>
   </head>
   <body class="admin-page">
     <header class="admin-header">
@@ -102,6 +102,28 @@
           <p id="affiliate-report-empty" class="admin-empty" hidden>
             まだ収益リンクのクリックはありません。
           </p>
+        </section>
+
+        <section id="owner-traffic-settings" class="admin-settings-panel" aria-labelledby="owner-traffic-heading">
+          <div class="admin-settings-heading">
+            <div>
+              <span>ADMIN TOOL</span>
+              <h2 id="owner-traffic-heading">自分のアクセスを除外</h2>
+            </div>
+            <span id="owner-traffic-status" role="status"></span>
+          </div>
+          <div class="admin-settings-form">
+            <label class="admin-settings-field">
+              <span>
+                <input id="owner-traffic-exclusion" type="checkbox" />
+                自分のアクセスを収集から除外する
+              </span>
+              <small>
+                有効中は、このブラウザからのPV・訪問者数・サイト内の収益クリックを記録しません。アフィリエイトリンクも誤クリック防止のため停止します。過去の記録は変わりません。
+              </small>
+            </label>
+            <p id="owner-traffic-message" class="admin-settings-message" role="status"></p>
+          </div>
         </section>
 
         <section id="site-settings" class="admin-settings-panel" aria-labelledby="site-settings-heading">

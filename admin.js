@@ -19,8 +19,35 @@ const siteIconPreview = document.querySelector("#site-icon-preview");
 const siteSettingsStatus = document.querySelector("#site-settings-status");
 const siteSettingsMessage = document.querySelector("#site-settings-message");
 const siteSettingsSave = document.querySelector("#site-settings-save");
+const ownerTrafficExclusion = document.querySelector("#owner-traffic-exclusion");
+const ownerTrafficStatus = document.querySelector("#owner-traffic-status");
+const ownerTrafficMessage = document.querySelector("#owner-traffic-message");
 let previewMode = false;
 const LOCAL_COMMENT_PREFIX = "boxing-comments:";
+const OWNER_TRAFFIC_COOKIE = "boxsoku_owner_traffic";
+
+function hasOwnerTrafficExclusion() {
+  return document.cookie.split(";").some((item) => {
+    const [name, value] = item.trim().split("=");
+    return name === OWNER_TRAFFIC_COOKIE && value === "1";
+  });
+}
+
+function setOwnerTrafficExclusion(enabled) {
+  const maxAge = enabled ? 60 * 60 * 24 * 365 : 0;
+  document.cookie = `${OWNER_TRAFFIC_COOKIE}=${enabled ? "1" : "0"}; Max-Age=${maxAge}; Path=/; SameSite=Lax; Secure`;
+}
+
+function syncOwnerTrafficExclusion(message = "") {
+  const enabled = hasOwnerTrafficExclusion();
+  ownerTrafficExclusion.checked = enabled;
+  ownerTrafficStatus.textContent = enabled ? "有効" : "無効";
+  ownerTrafficMessage.textContent =
+    message ||
+    (enabled
+      ? "このブラウザは収集対象から除外されています。"
+      : "自分でサイトを確認するときは除外を有効にしてください。");
+}
 
 const distributionRules = [
   { label: "WOWOW", pattern: /WOWOW|wowowライブ/i },
@@ -529,6 +556,15 @@ logoutButton.addEventListener("click", async () => {
   loginPanel.hidden = false;
 });
 
+ownerTrafficExclusion.addEventListener("change", () => {
+  setOwnerTrafficExclusion(ownerTrafficExclusion.checked);
+  syncOwnerTrafficExclusion(
+    ownerTrafficExclusion.checked
+      ? "除外を有効にしました。このブラウザの新しいアクセスは集計されません。"
+      : "除外を解除しました。次回のアクセスから集計対象になります。"
+  );
+});
+
 siteIconFileInput.addEventListener("change", () => {
   const file = siteIconFileInput.files?.[0];
   if (file) setSiteIconPreview(URL.createObjectURL(file));
@@ -576,6 +612,7 @@ siteSettingsForm.addEventListener("submit", async (event) => {
 });
 
 async function initialize() {
+  syncOwnerTrafficExclusion();
   if (!window.BoxingData.configured) {
     previewMode = true;
     loginPanel.hidden = true;

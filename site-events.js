@@ -1,6 +1,15 @@
 (function () {
   "use strict";
 
+  const ownerTrafficCookieName = "boxsoku_owner_traffic";
+
+  function isOwnerTrafficExcluded() {
+    return document.cookie.split(";").some((item) => {
+      const [name, value] = item.trim().split("=");
+      return name === ownerTrafficCookieName && value === "1";
+    });
+  }
+
   if (new URLSearchParams(window.location.search).get("boxsoku_verify") === "1") {
     return;
   }
@@ -17,6 +26,12 @@
     (event) => {
       const link = event.target.closest("a[data-boxsoku-affiliate-service]");
       if (!link) return;
+
+      if (isOwnerTrafficExcluded()) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
 
       const payload = {
         articleSlug: articleSlug(),

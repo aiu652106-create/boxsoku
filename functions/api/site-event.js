@@ -1,6 +1,7 @@
 import { securityHeaders } from "../_shared/security.js";
 
 const visitorCookieName = "boxsoku_visitor";
+const ownerTrafficCookieName = "boxsoku_owner_traffic";
 const MAX_REQUEST_BYTES = 4 * 1024;
 const ALLOWED_SERVICES = new Set([
   "a8",
@@ -78,6 +79,10 @@ export async function onRequestPost({ env, request }) {
     requestUrl.searchParams.get("boxsoku_verify") === "1" ||
     request.headers.get("X-Boxsoku-Verify") === "1"
   ) {
+    return json({ ok: true, recorded: false });
+  }
+
+  if (readCookie(request.headers.get("Cookie"), ownerTrafficCookieName) === "1") {
     return json({ ok: true, recorded: false });
   }
 

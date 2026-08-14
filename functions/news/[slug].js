@@ -10,6 +10,7 @@ const escapeHtml = (value = "") =>
     .replaceAll("'", "&#039;");
 
 const visitorCookieName = "boxsoku_visitor";
+const ownerTrafficCookieName = "boxsoku_owner_traffic";
 
 const isCrawlerRequest = (request) =>
   /(?:bot|crawler|spider|slurp|bingpreview|facebookexternalhit|preview)/i.test(
@@ -1028,10 +1029,13 @@ export async function onRequestGet(context) {
   const crawlerRequest = isCrawlerRequest(request);
   const visitorIdSalt = String(env.VISITOR_ID_SALT || "");
   const serverToken = String(env.BOXSOKU_SERVER_TOKEN || "");
+  const ownerTrafficExcluded =
+    readCookie(request.headers.get("Cookie"), ownerTrafficCookieName) === "1";
   const shouldSkipAnalytics =
     isVerificationRequest ||
     isHeadRequest ||
     crawlerRequest ||
+    ownerTrafficExcluded ||
     !visitorIdSalt ||
     !serverToken;
   const existingVisitorToken = readCookie(
@@ -1178,7 +1182,7 @@ export async function onRequestGet(context) {
   <script src="/config.js?v=20260814-owner-affiliates1" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
-  <script src="/site-events.js?v=20260814-site-events1" defer></script>
+  <script src="/site-events.js?v=20260815-owner-traffic-exclusion1" defer></script>
   <script src="/ads.js" defer></script>
 </head>
 <body class="retro-blog">
