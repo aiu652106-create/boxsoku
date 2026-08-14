@@ -7068,3 +7068,43 @@ body.retro-blog .retro-summary {
   }
 }
 
+
+
+/* Final tablet layout: keep the article readable on every iPad-sized viewport. */
+@media (min-width: 721px) and (max-width: 1080px) {
+  body.retro-blog .retro-page-layout {
+    display: flex !important;
+    width: calc(100% - 32px) !important;
+    margin-inline: auto !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    gap: 22px !important;
+  }
+
+  body.retro-blog .retro-feed {
+    order: 1 !important;
+    width: 100% !important;
+    grid-area: auto !important;
+    border-inline: 0 !important;
+  }
+
+  body.retro-blog .retro-sidebar {
+    width: 100% !important;
+    position: static !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    border-inline: 0 !important;
+  }
+
+  body.retro-blog .retro-sidebar-popular {
+    display: block !important;
+    order: 2 !important;
+    width: 100% !important;
+    border-left: 0 !important;
+    border-top: 1px solid #bbb !important;
+  }
+
+  body.retro-blog .retro-sidebar-latest {
+    display: none !important;
+  }
+}
