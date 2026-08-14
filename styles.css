@@ -7108,3 +7108,56 @@ body.retro-blog .retro-summary {
     display: none !important;
   }
 }
+
+
+
+/* Keep a narrow desktop window on the desktop layout; let touch tablets use the tablet layout. */
+@media (min-width: 721px) and (max-width: 1080px) and (any-hover: hover) and (any-pointer: fine) {
+  body.retro-blog .retro-page-layout {
+    display: grid !important;
+    width: min(1240px, calc(100% - 32px)) !important;
+    margin-inline: auto !important;
+    padding: 34px 0 72px !important;
+    grid-template-columns: 210px minmax(0, 1fr) 230px !important;
+    gap: 24px !important;
+    flex-direction: row !important;
+  }
+
+  body.retro-blog .retro-feed {
+    display: block !important;
+    order: initial !important;
+    width: auto !important;
+    grid-area: auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    border-inline: 0 !important;
+  }
+
+  body.retro-blog .retro-sidebar {
+    width: auto !important;
+    position: sticky !important;
+    grid-area: auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    border-inline: 0 !important;
+  }
+
+  body.retro-blog .retro-sidebar-popular {
+    display: block !important;
+    order: initial !important;
+    width: auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    border-left: 0 !important;
+    border-top: 0 !important;
+  }
+
+  body.retro-blog .retro-sidebar-latest {
+    display: block !important;
+    order: initial !important;
+    width: auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    margin-top: 0 !important;
+  }
+}
