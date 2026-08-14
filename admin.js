@@ -9,6 +9,9 @@ const setupNotice = document.querySelector("#admin-setup-notice");
 const previewNotice = document.querySelector("#admin-preview-notice");
 const commentList = document.querySelector("#admin-comment-list");
 const commentEmpty = document.querySelector("#admin-comment-empty");
+const affiliateReportContent = document.querySelector("#affiliate-report-content");
+const affiliateReportEmpty = document.querySelector("#affiliate-report-empty");
+const affiliateReportStatus = document.querySelector("#affiliate-report-status");
 const siteSettingsForm = document.querySelector("#site-settings-form");
 const siteIconUrlInput = document.querySelector("#site-icon-url");
 const siteIconFileInput = document.querySelector("#site-icon-file");
@@ -392,8 +395,114 @@ async function showDashboard() {
     loadArticles(),
     loadComments(),
     loadVisitStats(),
+    loadAffiliateStats(),
     loadSiteSettings()
   ]);
+}
+
+const affiliateServiceLabels = {
+  a8: "A8.net",
+  amazon: "Amazon / Prime Video",
+  lemino: "Lemino",
+  rakuten: "楽天市場",
+  wowow: "WOWOW"
+};
+
+const affiliatePlacementLabels = {
+  "article-body": "記事本文",
+  "article-bottom-banner": "記事下バナー",
+  "article-product": "商品カード",
+  "article-streaming-links": "配信リンク欄",
+  "article-top-text": "記事上部テキスト",
+  "listing-card": "記事一覧カード"
+};
+
+function createAffiliateReportGroup(titleText, rows, renderRow) {
+  const section = document.createElement("section");
+  const title = document.createElement("h3");
+  title.textContent = titleText;
+  const list = document.createElement("ol");
+  rows.forEach((row, index) => {
+    const item = document.createElement("li");
+    const rank = document.createElement("span");
+    rank.className = "admin-affiliate-rank";
+    rank.textContent = String(index + 1);
+    const content = renderRow(row);
+    item.append(rank, content);
+    list.appendChild(item);
+  });
+  section.append(title, list);
+  return section;
+}
+
+function renderAffiliateStats(stats) {
+  const clickElement = document.querySelector("#affiliate-click-count");
+  const visitorElement = document.querySelector("#affiliate-visitor-count");
+  affiliateReportContent.replaceChildren();
+
+  if (stats == null) {
+    clickElement.textContent = "未設定";
+    visitorElement.textContent = "未設定";
+    affiliateReportStatus.textContent = "DB設定待ち";
+    affiliateReportEmpty.textContent = "収益導線の集計テーブルが未設定です。";
+    affiliateReportEmpty.hidden = false;
+    return;
+  }
+
+  clickElement.textContent = stats.clicks.toLocaleString("ja-JP");
+  visitorElement.textContent = stats.uniqueVisitors.toLocaleString("ja-JP");
+  affiliateReportStatus.textContent = `${stats.clicks.toLocaleString("ja-JP")}クリック`;
+  affiliateReportEmpty.textContent = "まだ収益リンクのクリックはありません。";
+  affiliateReportEmpty.hidden = stats.clicks > 0;
+  if (!stats.clicks) return;
+
+  const services = createAffiliateReportGroup(
+    "サービス別",
+    stats.services,
+    (row) => {
+      const wrapper = document.createElement("div");
+      const label = document.createElement("strong");
+      label.textContent = affiliateServiceLabels[row.service] || row.service;
+      const value = document.createElement("span");
+      value.textContent = `${row.clicks.toLocaleString("ja-JP")}クリック・${row.uniqueVisitors.toLocaleString("ja-JP")}人`;
+      wrapper.append(label, value);
+      return wrapper;
+    }
+  );
+  const pages = createAffiliateReportGroup("クリックされたページ", stats.pages, (row) => {
+    const wrapper = document.createElement("div");
+    const link = document.createElement("a");
+    link.href = row.pagePath;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.textContent = row.pagePath;
+    const value = document.createElement("span");
+    value.textContent = `${row.clicks.toLocaleString("ja-JP")}クリック`;
+    wrapper.append(link, value);
+    return wrapper;
+  });
+  const placements = createAffiliateReportGroup(
+    "掲載位置別",
+    stats.placements,
+    (row) => {
+      const wrapper = document.createElement("div");
+      const label = document.createElement("strong");
+      label.textContent = affiliatePlacementLabels[row.placement] || row.placement;
+      const value = document.createElement("span");
+      value.textContent = `${row.clicks.toLocaleString("ja-JP")}クリック`;
+      wrapper.append(label, value);
+      return wrapper;
+    }
+  );
+  affiliateReportContent.append(services, pages, placements);
+}
+
+async function loadAffiliateStats() {
+  if (previewMode) {
+    renderAffiliateStats(null);
+    return;
+  }
+  renderAffiliateStats(await window.BoxingData.getAdminAffiliateStats(30));
 }
 
 loginForm.addEventListener("submit", async (event) => {
@@ -483,6 +592,7 @@ async function initialize() {
       loadArticles(window.BoxingData.sampleArticles),
       loadComments(),
       loadVisitStats(),
+      loadAffiliateStats(),
       loadSiteSettings()
     ]);
     setSiteSettingsDisabled(true);

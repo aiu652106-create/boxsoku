@@ -738,6 +738,64 @@
     };
   }
 
+  async function getAdminAffiliateStats(days = 30) {
+    requireConfigured();
+    const normalizedDays = Math.min(90, Math.max(1, Number(days) || 30));
+    const since = new Date(
+      Date.now() - normalizedDays * 24 * 60 * 60 * 1000
+    ).toISOString();
+    const { data, error } = await client
+      .from("affiliate_clicks")
+      .select("page_path,service,placement,item,visitor_hash,clicked_at")
+      .gte("clicked_at", since)
+      .order("clicked_at", { ascending: false })
+      .limit(5000);
+    if (error) {
+      console.warn("Affiliate stats unavailable:", error.message);
+      return null;
+    }
+
+    const rows = data || [];
+    const uniqueVisitors = new Set();
+    const services = new Map();
+    const pages = new Map();
+    const placements = new Map();
+    rows.forEach((row) => {
+      if (row.visitor_hash) uniqueVisitors.add(row.visitor_hash);
+      const service = String(row.service || "unknown");
+      const pagePath = String(row.page_path || "/");
+      const placement = String(row.placement || "unknown");
+      if (!services.has(service)) {
+        services.set(service, { service, clicks: 0, visitors: new Set() });
+      }
+      const serviceStats = services.get(service);
+      serviceStats.clicks += 1;
+      if (row.visitor_hash) serviceStats.visitors.add(row.visitor_hash);
+      pages.set(pagePath, (pages.get(pagePath) || 0) + 1);
+      placements.set(placement, (placements.get(placement) || 0) + 1);
+    });
+
+    return {
+      days: normalizedDays,
+      clicks: rows.length,
+      uniqueVisitors: uniqueVisitors.size,
+      services: [...services.values()]
+        .map((item) => ({
+          service: item.service,
+          clicks: item.clicks,
+          uniqueVisitors: item.visitors.size
+        }))
+        .sort((first, second) => second.clicks - first.clicks),
+      pages: [...pages.entries()]
+        .map(([pagePath, clicks]) => ({ pagePath, clicks }))
+        .sort((first, second) => second.clicks - first.clicks)
+        .slice(0, 8),
+      placements: [...placements.entries()]
+        .map(([placement, clicks]) => ({ placement, clicks }))
+        .sort((first, second) => second.clicks - first.clicks)
+    };
+  }
+
   async function deleteComment(commentId) {
     requireConfigured();
     const { error } = await client.from("comments").delete().eq("id", commentId);
@@ -1062,6 +1120,7 @@
     deleteArticle,
     getAdminComments,
     getAdminVisitStats,
+    getAdminAffiliateStats,
     deleteComment,
     getSession,
     getCurrentUser,

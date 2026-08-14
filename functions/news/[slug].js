@@ -132,6 +132,7 @@ const tweetEmbedHtml = (url) => {
 
 const leminoAffiliateUrl =
   "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2";
+const amazonAffiliateUrl = "https://amzn.to/4qhu5Mj";
 const leminoAffiliateBanner = {
   linkUrl: "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/52",
   imageUrl: "https://img.affiliate-sp.docomo.ne.jp/ad/d0000000236/52.jpg"
@@ -167,11 +168,11 @@ const linkLeminoText = (value) =>
   String(value || "")
     .replaceAll(
       "配信：Lemino",
-      `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer" data-affiliate-service="lemino" data-affiliate-placement="article-body">配信：Leminoで視聴する</a>`
+      `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer" data-boxsoku-affiliate-service="lemino" data-boxsoku-affiliate-placement="article-body">配信：Leminoで視聴する</a>`
     )
     .replaceAll(
       "配信: Lemino",
-      `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer" data-affiliate-service="lemino" data-affiliate-placement="article-body">配信: Leminoで視聴する</a>`
+      `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer" data-boxsoku-affiliate-service="lemino" data-boxsoku-affiliate-placement="article-body">配信: Leminoで視聴する</a>`
     );
 
 const safeArticleLinkUrl = (value) => {
@@ -208,17 +209,18 @@ const articleInlineHtml = (value) => {
 
   for (const match of source.matchAll(linkPattern)) {
     html += linkLeminoText(basicArticleInlineHtml(source.slice(lastIndex, match.index)));
-    const href = safeArticleLinkUrl(match[2]);
-    if (!href) {
+    const sourceHref = safeArticleLinkUrl(match[2]);
+    if (!sourceHref) {
       html += basicArticleInlineHtml(match[0]);
     } else {
-      const service = articleAffiliateService(href);
+      const service = articleAffiliateService(sourceHref);
+      const href = service === "amazon" ? amazonAffiliateUrl : sourceHref;
       const className = service ? ' class="affiliate-streaming-link"' : "";
       const rel = service
         ? "sponsored noopener noreferrer"
         : "noopener noreferrer";
       const affiliateData = service
-        ? ` data-affiliate-service="${service}" data-affiliate-placement="article-body"`
+        ? ` data-boxsoku-affiliate-service="${service}" data-boxsoku-affiliate-placement="article-body"`
         : "";
       html += `<a${className} href="${escapeHtml(href)}" target="_blank" rel="${rel}"${affiliateData}>${basicArticleInlineHtml(
         match[1]
@@ -509,13 +511,13 @@ const articleCategoryText = (article) => {
 const wowowAffiliateBannerHtml = (article) => {
   if (articleCategoryText(article) !== "WOWOWエキサイトマッチ") return "";
   const banner = wowowAffiliate.banner;
-  return `<aside class="wowow-affiliate-banner" aria-label="WOWOWオンデマンド PR"><span class="wowow-affiliate-banner-label">PR</span><a href="${banner.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" aria-label="WOWOWオンデマンドを確認する" data-affiliate-service="wowow" data-affiliate-placement="article-bottom-banner"><img class="wowow-affiliate-banner-image" src="${banner.imageUrl}" width="300" height="250" alt="WOWOWオンデマンド"></a><img class="wowow-affiliate-tracking-pixel" src="${banner.impressionUrl}" width="1" height="1" alt="" aria-hidden="true"></aside>`;
+  return `<aside class="wowow-affiliate-banner" aria-label="WOWOWオンデマンド PR"><span class="wowow-affiliate-banner-label">PR</span><a href="${banner.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" aria-label="WOWOWオンデマンドを確認する" data-boxsoku-affiliate-service="wowow" data-boxsoku-affiliate-placement="article-bottom-banner"><img class="wowow-affiliate-banner-image" src="${banner.imageUrl}" width="300" height="250" alt="WOWOWオンデマンド"></a><img class="wowow-affiliate-tracking-pixel" src="${banner.impressionUrl}" width="1" height="1" alt="" aria-hidden="true"></aside>`;
 };
 
 const wowowAffiliateTextHtml = (article) => {
   if (articleCategoryText(article) !== "WOWOWエキサイトマッチ") return "";
   const text = wowowAffiliate.text;
-  return `<aside class="affiliate-teaser" aria-label="WOWOWオンデマンド PR"><div class="affiliate-teaser-copy"><span class="affiliate-teaser-label">PR・配信サービス</span><strong>WOWOWオンデマンドの視聴情報を確認</strong><span class="affiliate-teaser-note">料金・配信内容・視聴条件はリンク先でご確認ください。</span></div><a href="${text.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" data-affiliate-service="wowow" data-affiliate-placement="article-top-text">${escapeHtml(text.label)}</a><img class="wowow-affiliate-tracking-pixel" src="${text.impressionUrl}" width="1" height="1" alt="" aria-hidden="true"></aside>`;
+  return `<aside class="affiliate-teaser" aria-label="WOWOWオンデマンド PR"><div class="affiliate-teaser-copy"><span class="affiliate-teaser-label">PR・配信サービス</span><strong>WOWOWオンデマンドの視聴情報を確認</strong><span class="affiliate-teaser-note">料金・配信内容・視聴条件はリンク先でご確認ください。</span></div><a href="${text.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" data-boxsoku-affiliate-service="wowow" data-boxsoku-affiliate-placement="article-top-text">${escapeHtml(text.label)}</a><img class="wowow-affiliate-tracking-pixel" src="${text.impressionUrl}" width="1" height="1" alt="" aria-hidden="true"></aside>`;
 };
 
 const leminoAffiliateBannerHtml = (article) => {
@@ -523,7 +525,7 @@ const leminoAffiliateBannerHtml = (article) => {
     /Lemino|affiliate-sp\.docomo\.ne\.jp/i.test(`${item?.label || ""}\n${item?.url || ""}`)
   );
   if (!hasLeminoAffiliate) return "";
-  return `<aside class="wowow-affiliate-banner lemino-affiliate-banner" aria-label="Leminoプレミアム PR"><span class="wowow-affiliate-banner-label">PR</span><a href="${leminoAffiliateBanner.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" aria-label="Leminoプレミアムを確認する" data-affiliate-service="lemino" data-affiliate-placement="article-bottom-banner"><img class="wowow-affiliate-banner-image lemino-affiliate-banner-image" src="${leminoAffiliateBanner.imageUrl}" width="300" height="250" alt="Leminoプレミアム"></a></aside>`;
+  return `<aside class="wowow-affiliate-banner lemino-affiliate-banner" aria-label="Leminoプレミアム PR"><span class="wowow-affiliate-banner-label">PR</span><a href="${leminoAffiliateBanner.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" aria-label="Leminoプレミアムを確認する" data-boxsoku-affiliate-service="lemino" data-boxsoku-affiliate-placement="article-bottom-banner"><img class="wowow-affiliate-banner-image lemino-affiliate-banner-image" src="${leminoAffiliateBanner.imageUrl}" width="300" height="250" alt="Leminoプレミアム"></a></aside>`;
 };
 
 const articleCategoryPath = (article) => {
@@ -805,19 +807,22 @@ function affiliateLinksHtml(article) {
         ? leminoAffiliateUrl
         : /WOWOW/i.test(source)
           ? wowowAffiliate.text.linkUrl
-          : item.url;
+          : articleAffiliateService(item.url) === "amazon"
+            ? amazonAffiliateUrl
+            : item.url;
       const url = safeUrl(targetUrl, "#");
       if (url === "#" || !url.startsWith("https://")) return "";
       if (seenUrls.has(url)) return "";
       seenUrls.add(url);
-      const service = /affiliate-sp\.docomo\.ne\.jp/i.test(url)
-        ? "lemino"
-        : /px\.a8\.net/i.test(url)
-          ? "wowow"
-          : "other";
+      const service = /WOWOW/i.test(source)
+        ? "wowow"
+        : articleAffiliateService(url);
+      const affiliateData = service
+        ? ` data-boxsoku-affiliate-service="${service}" data-boxsoku-affiliate-placement="article-streaming-links"`
+        : "";
       return `<a href="${escapeHtml(
         url
-      )}" target="_blank" rel="sponsored noopener noreferrer" data-affiliate-service="${service}" data-affiliate-placement="article-streaming-links">${escapeHtml(
+      )}" target="_blank" rel="sponsored noopener noreferrer"${affiliateData}>${escapeHtml(
         item.label
       )}</a>`;
     })
@@ -907,7 +912,7 @@ function productCardsHtml(article) {
     .map(
       (item) => `<a class="affiliate-product-card" href="${escapeHtml(
         item.url
-      )}" target="_blank" rel="sponsored nofollow noopener" data-affiliate-service="rakuten" data-affiliate-placement="article-product" data-affiliate-item="${escapeHtml(
+      )}" target="_blank" rel="sponsored nofollow noopener" data-boxsoku-affiliate-service="rakuten" data-boxsoku-affiliate-placement="article-product" data-boxsoku-affiliate-item="${escapeHtml(
         item.family
       )}"><img src="${escapeHtml(
         item.image
@@ -1170,9 +1175,10 @@ export async function onRequestGet(context) {
   <script async data-boxing-adsense="true" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5867435180256987" crossorigin="anonymous"></script>
   <script type="application/ld+json">${structuredData}</script>
    <link rel="stylesheet" href="/styles.css?v=20260814-tablet-fix8">
-  <script src="/config.js?v=20260811-adsense-link1" defer></script>
+  <script src="/config.js?v=20260814-owner-affiliates1" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
+  <script src="/affiliate-analytics.js?v=20260814-affiliate-tracking1" defer></script>
   <script src="/ads.js" defer></script>
 </head>
 <body class="retro-blog">

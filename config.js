@@ -22,6 +22,7 @@ window.BOXING_CONFIG = {
     }
   },
   affiliate: {
+    amazonUrl: "https://amzn.to/4qhu5Mj",
     leminoUrl:
       "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2",
     wowow: {

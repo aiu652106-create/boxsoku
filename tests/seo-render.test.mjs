@@ -167,10 +167,14 @@ assert.match(html, /<h2>大会概要<\/h2>/);
 assert.match(html, /<ul><li>開催日：2026年9月2日<\/li>/);
 assert.match(
   html,
-  /<a class="affiliate-streaming-link" href="https:\/\/amzn\.to\/4qhu5Mj" target="_blank" rel="sponsored noopener noreferrer" data-affiliate-service="amazon" data-affiliate-placement="article-body">Prime Video独占ライブ配信<\/a>/
+  /<a class="affiliate-streaming-link" href="https:\/\/amzn\.to\/4qhu5Mj" target="_blank" rel="sponsored noopener noreferrer" data-boxsoku-affiliate-service="amazon" data-boxsoku-affiliate-placement="article-body">Prime Video独占ライブ配信<\/a>/
 );
 assert.ok(!html.includes("[Prime Video独占ライブ配信]"));
 assert.match(html, /"@type":"Article"/);
+assert.match(
+  html,
+  /<script src="\/affiliate-analytics\.js\?v=20260814-affiliate-tracking1" defer><\/script>/
+);
 assert.match(html, /"@type":"BreadcrumbList"/);
 assert.match(html, /"@type":"SportsEvent"/);
 assert.match(html, /"startDate":"2026-09-02"/);
@@ -193,7 +197,7 @@ assert.ok(
 assert.match(html, /class="wowow-affiliate-banner lemino-affiliate-banner"/);
 assert.match(
   html,
-  /data-affiliate-service="lemino" data-affiliate-placement="article-bottom-banner"/
+  /data-boxsoku-affiliate-service="lemino" data-boxsoku-affiliate-placement="article-bottom-banner"/
 );
 assert.ok(!html.includes('href="https://lemino.docomo.ne.jp/"'));
 assert.ok(!html.includes("a8mat=4B9XTD+FXXWPM+5DFW+5YZ75"));
@@ -292,8 +296,8 @@ assert.ok(
 );
 assert.ok(!wowowHtml.includes("https://www22.a8.net/svt/bgt"));
 assert.match(wowowHtml, /rel="sponsored nofollow noopener noreferrer"/);
-assert.match(wowowHtml, /data-affiliate-service="wowow" data-affiliate-placement="article-top-text"/);
-assert.match(wowowHtml, /data-affiliate-service="wowow" data-affiliate-placement="article-bottom-banner"/);
+assert.match(wowowHtml, /data-boxsoku-affiliate-service="wowow" data-boxsoku-affiliate-placement="article-top-text"/);
+assert.match(wowowHtml, /data-boxsoku-affiliate-service="wowow" data-boxsoku-affiliate-placement="article-bottom-banner"/);
 assert.match(wowowHtml, /class="affiliate-disclosure"/);
 assert.ok(
   wowowHtml.indexOf('class="affiliate-teaser"') <
@@ -345,7 +349,7 @@ assert.equal((inoueHtml.match(/class="affiliate-product-card"/g) || []).length, 
 assert.equal((inoueProductsHtml.match(/<strong>[^<]*井上尚弥[^<]*<\/strong>/g) || []).length, 3);
 assert.ok(!inoueHtml.includes("那須川天心"));
 assert.ok(!inoueHtml.includes("天心語録"));
-assert.match(inoueHtml, /data-affiliate-service="rakuten" data-affiliate-placement="article-product"/);
+assert.match(inoueHtml, /data-boxsoku-affiliate-service="rakuten" data-boxsoku-affiliate-placement="article-product"/);
 
 const ohashiArticle = {
   ...article,
@@ -392,7 +396,7 @@ const ohashiProductsHtml =
 assert.equal((ohashiHtml.match(/class="affiliate-product-card"/g) || []).length, 4);
 assert.equal((ohashiProductsHtml.match(/<strong>[^<]*井上尚弥[^<]*<\/strong>/g) || []).length, 2);
 assert.match(ohashiHtml, /大橋ボクシングジム コラボ HEATH Tシャツ/);
-assert.match(ohashiHtml, /data-affiliate-item="boxing-/);
+assert.match(ohashiHtml, /data-boxsoku-affiliate-item="boxing-/);
 assert.match(ohashiHtml, /56736(?:9|a)[0-9a-z.]*/);
 assert.ok(!ohashiHtml.includes("那須川天心"));
 assert.ok(!ohashiHtml.includes("天心語録"));
@@ -424,9 +428,9 @@ const tenshinHtml = await tenshinResponse.text();
 const tenshinProductsHtml =
   tenshinHtml.match(/<section class="affiliate-products"[\s\S]*?<\/section>/)?.[0] || "";
 assert.equal((tenshinHtml.match(/class="affiliate-product-card"/g) || []).length, 4);
-assert.equal((tenshinProductsHtml.match(/data-affiliate-item="tenshin-/g) || []).length, 3);
+assert.equal((tenshinProductsHtml.match(/data-boxsoku-affiliate-item="tenshin-/g) || []).length, 3);
 assert.equal((tenshinProductsHtml.match(/<strong>[^<]*(?:那須川天心|天心|TENSHIN)[^<]*<\/strong>/g) || []).length, 3);
-assert.match(tenshinHtml, /data-affiliate-item="boxing-/);
+assert.match(tenshinHtml, /data-boxsoku-affiliate-item="boxing-/);
 assert.ok(!tenshinHtml.includes("井上尚弥"));
 
 const listingArticle = {
@@ -477,6 +481,14 @@ assert.match(
 );
 assert.match(listingHtml, /Xで共有/);
 assert.match(listingHtml, /utm_source%3Dx/);
+assert.match(
+  listingHtml,
+  /href="https:\/\/tr\.affiliate-sp\.docomo\.ne\.jp\/cl\/d0000000236\/5159\/2"[^>]*data-boxsoku-affiliate-service="lemino" data-boxsoku-affiliate-placement="listing-card"/
+);
+assert.match(
+  listingHtml,
+  /<script src="\/affiliate-analytics\.js\?v=20260814-affiliate-tracking1" defer><\/script>/
+);
 assert.ok(!listingHtml.includes("記事を読み込んでいます"));
 
 const appSource = fs.readFileSync(path.join(projectRoot, "app.js"), "utf8");
@@ -593,6 +605,7 @@ const affiliateConfigSource = fs.readFileSync(
   "utf8"
 );
 for (const exactOwnerUrl of [
+  "https://amzn.to/4qhu5Mj",
   "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2",
   "https://px.a8.net/svt/ejp?a8mat=4B9XTD+FXXWPM+5DFW+5YJRM",
   "https://www13.a8.net/0.gif?a8mat=4B9XTD+FXXWPM+5DFW+5YJRM",

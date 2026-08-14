@@ -47,12 +47,38 @@ function affiliateItems(article) {
     .map((item) => {
       try {
         const url = new URL(String(item?.url || ""));
-        return { ...item, url: url.protocol === "https:" ? url.href : "" };
+        const safeUrl = url.protocol === "https:" ? url.href : "";
+        const service = affiliateService(safeUrl, item?.label);
+        const approvedAffiliate = window.BOXING_CONFIG?.affiliate || {};
+        const approvedUrl = service === "amazon"
+          ? approvedAffiliate.amazonUrl
+          : service === "lemino"
+            ? approvedAffiliate.leminoUrl
+            : service === "wowow"
+              ? approvedAffiliate.wowow?.text?.linkUrl
+              : "";
+        return {
+          ...item,
+          url: approvedUrl || safeUrl
+        };
       } catch {
         return { ...item, url: "" };
       }
     })
     .filter((item) => item.label && item.url);
+}
+
+function affiliateService(value, label = "") {
+  if (/WOWOW/i.test(label)) return "wowow";
+  if (/Lemino/i.test(label)) return "lemino";
+  try {
+    const host = new URL(value).hostname.toLowerCase();
+    if (host === "amzn.to" || /(^|\.)amazon\.co\.jp$/.test(host)) return "amazon";
+    if (host === "hb.afl.rakuten.co.jp") return "rakuten";
+    if (host === "tr.affiliate-sp.docomo.ne.jp") return "lemino";
+    if (/(^|\.)a8.net$/.test(host)) return "a8";
+  } catch {}
+  return "";
 }
 
 function createArticle(article) {
@@ -133,6 +159,11 @@ function createArticle(article) {
     teaserLink.target = "_blank";
     teaserLink.rel = "sponsored noopener noreferrer";
     teaserLink.textContent = "配信ページを見る";
+    const service = affiliateService(links[0].url, links[0].label);
+    if (service) {
+      teaserLink.dataset.boxsokuAffiliateService = service;
+      teaserLink.dataset.boxsokuAffiliatePlacement = "listing-card";
+    }
     teaser.append(teaserCopy, teaserLink);
   }
 

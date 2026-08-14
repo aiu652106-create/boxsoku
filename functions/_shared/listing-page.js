@@ -1,5 +1,11 @@
 import { securityHeaders } from "./security.js";
 
+const amazonAffiliateUrl = "https://amzn.to/4qhu5Mj";
+const leminoAffiliateUrl =
+  "https://tr.affiliate-sp.docomo.ne.jp/cl/d0000000236/5159/2";
+const wowowAffiliateUrl =
+  "https://px.a8.net/svt/ejp?a8mat=4B9XTD+FXXWPM+5DFW+5YJRM";
+
 const PAGE_DEFINITIONS = {
   home: {
     path: "/",
@@ -155,12 +161,34 @@ function formatDate(value) {
   return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("ja-JP");
 }
 
+function affiliateService(urlValue, label = "") {
+  if (/WOWOW/i.test(label)) return "wowow";
+  if (/Lemino/i.test(label)) return "lemino";
+  try {
+    const host = new URL(urlValue).hostname.toLowerCase();
+    if (host === "amzn.to" || /(^|\.)amazon\.co\.jp$/.test(host)) return "amazon";
+    if (host === "hb.afl.rakuten.co.jp") return "rakuten";
+    if (host === "tr.affiliate-sp.docomo.ne.jp") return "lemino";
+    if (/(^|\.)a8.net$/.test(host)) return "a8";
+  } catch {}
+  return "";
+}
+
 function affiliateItems(article) {
   return jsonArray(article?.affiliate_links)
-    .map((item) => ({
-      label: String(item?.label || "").trim(),
-      url: safeHttpsUrl(item?.url)
-    }))
+    .map((item) => {
+      const label = String(item?.label || "").trim();
+      const sourceUrl = safeHttpsUrl(item?.url);
+      const service = affiliateService(sourceUrl, label);
+      const url = service === "amazon"
+        ? amazonAffiliateUrl
+        : service === "lemino"
+          ? leminoAffiliateUrl
+          : service === "wowow"
+            ? wowowAffiliateUrl
+            : sourceUrl;
+      return { label, url, service };
+    })
     .filter((item) => item.label && item.url);
 }
 
@@ -205,7 +233,11 @@ function articleCardHtml(article) {
             affiliate.label
           )}</strong><span class="affiliate-teaser-note">料金・配信条件は公式ページで確認</span></div><a href="${escapeHtml(
             affiliate.url
-          )}" target="_blank" rel="sponsored noopener noreferrer">配信ページを見る</a></aside>`
+          )}" target="_blank" rel="sponsored noopener noreferrer"${
+            affiliate.service
+              ? ` data-boxsoku-affiliate-service="${affiliate.service}" data-boxsoku-affiliate-placement="listing-card"`
+              : ""
+          }>配信ページを見る</a></aside>`
         : ""
     }
     <p class="retro-continue"><a href="${url}">記事の詳細を見る</a></p>
@@ -364,11 +396,12 @@ export async function renderListingPage(context, pageKey = "home") {
   <script type="application/ld+json">${structuredData}</script>
   <link rel="stylesheet" href="/styles.css?v=20260814-tablet-fix8">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <script src="/config.js?v=20260805-lemino-link1" defer></script>
+  <script src="/config.js?v=20260814-owner-affiliates1" defer></script>
   <script src="/site.js" defer></script>
   <script src="/data.js?v=20260813-x-quote-embed1" defer></script>
   <script src="/sidebar.js?v=20260804-content-polish" defer></script>
-  <script src="/app.js?v=20260813-x-quote-embed1" defer></script>
+  <script src="/app.js?v=20260814-affiliate-tracking1" defer></script>
+  <script src="/affiliate-analytics.js?v=20260814-affiliate-tracking1" defer></script>
   <script src="/ads.js" defer></script>
 </head>
 <body class="retro-blog">

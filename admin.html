@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex,nofollow" />
     <title>管理画面 | ボクシング速報</title>
-    <link rel="stylesheet" href="styles.css?v=20260804-admin-visitstats3" />
+    <link rel="stylesheet" href="styles.css?v=20260814-affiliate-report1" />
     <link rel="icon" data-boxsoku-site-icon="true" type="image/png" href="/assets/boxsoku-icon.png" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="config.js?v=20260813-site-icon-settings1" defer></script>
-    <script src="data.js?v=20260813-x-quote-embed1" defer></script>
+    <script src="data.js?v=20260814-affiliate-report1" defer></script>
     <script src="site-icon.js?v=20260813-site-icon-settings1" defer></script>
-    <script src="admin.js?v=20260813-site-icon-settings1" defer></script>
+    <script src="admin.js?v=20260814-affiliate-report1" defer></script>
   </head>
   <body class="admin-page">
     <header class="admin-header">
@@ -56,6 +56,7 @@
       <aside class="admin-sidebar">
         <nav>
           <a class="is-active" href="admin.html">記事管理</a>
+          <a href="#affiliate-report">収益導線</a>
           <a href="#comments">コメント管理</a>
           <a href="#site-settings">サイト設定</a>
           <a id="sidebar-new-article" href="editor.html">新規記事</a>
@@ -85,6 +86,22 @@
           <div><span>コメント</span><strong id="comment-count">0</strong></div>
           <div><span>今日の訪問者</span><strong id="today-visitor-count">未設定</strong></div>
           <div><span>今月の訪問者</span><strong id="month-visitor-count">未設定</strong></div>
+          <div><span>30日間の収益クリック</span><strong id="affiliate-click-count">未設定</strong></div>
+          <div><span>クリックした訪問者</span><strong id="affiliate-visitor-count">未設定</strong></div>
+        </section>
+
+        <section id="affiliate-report" class="admin-list-panel admin-affiliate-panel" aria-labelledby="affiliate-report-heading">
+          <div class="admin-list-heading">
+            <div>
+              <span>MONETIZATION</span>
+              <h2 id="affiliate-report-heading">収益導線レポート（過去30日）</h2>
+            </div>
+            <span id="affiliate-report-status">集計中</span>
+          </div>
+          <div id="affiliate-report-content" class="admin-affiliate-report"></div>
+          <p id="affiliate-report-empty" class="admin-empty" hidden>
+            まだ収益リンクのクリックはありません。
+          </p>
         </section>
 
         <section id="site-settings" class="admin-settings-panel" aria-labelledby="site-settings-heading">

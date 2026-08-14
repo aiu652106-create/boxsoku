@@ -22,4 +22,21 @@ const publicArticlePolicy = schema.match(
 assert.ok(publicArticlePolicy);
 assert.doesNotMatch(publicArticlePolicy[1], /public\.is_admin\(\)/i);
 
+assert.match(
+  schema,
+  /alter table public\.affiliate_clicks enable row level security;/i
+);
+assert.match(
+  schema,
+  /create policy "Admins can read affiliate click stats"[\s\S]*?on public\.affiliate_clicks for select\s+to authenticated\s+using \(public\.is_admin\(\)\);/i
+);
+assert.match(
+  schema,
+  /revoke all on public\.affiliate_clicks from public, anon, authenticated;/i
+);
+assert.match(
+  schema,
+  /grant execute on function public\.record_affiliate_click\(text, text, text, text, text, text, text\)\s+to anon, authenticated;/i
+);
+
 console.log("Security schema checks passed");

@@ -3019,7 +3019,7 @@ button {
   display: grid;
   margin-bottom: 22px;
   max-width: 1100px;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
   gap: 14px;
 }
 
@@ -3185,6 +3185,85 @@ button {
   border: 1px solid #dfe2e7;
   border-radius: 5px;
   background: #fff;
+}
+
+.admin-affiliate-panel {
+  max-width: 1100px;
+  margin-bottom: 28px;
+}
+
+.admin-affiliate-report {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+}
+
+.admin-affiliate-report > section {
+  min-width: 0;
+  padding: 20px;
+}
+
+.admin-affiliate-report > section + section {
+  border-left: 1px solid #eceef1;
+}
+
+.admin-affiliate-report h3 {
+  margin: 0 0 12px;
+  color: #737b85;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.admin-affiliate-report ol {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  gap: 10px;
+  list-style: none;
+}
+
+.admin-affiliate-report li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+}
+
+.admin-affiliate-rank {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  place-items: center;
+  background: #f1f3f5;
+  color: #737b85;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.admin-affiliate-report li > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.admin-affiliate-report strong,
+.admin-affiliate-report a {
+  overflow: hidden;
+  color: #20242a;
+  font-size: 12px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-affiliate-report a:hover {
+  color: #d9231e;
+}
+
+.admin-affiliate-report li > div > span {
+  color: #7a828c;
+  font-size: 10px;
 }
 
 .admin-list-heading {
@@ -3499,6 +3578,15 @@ button {
 
   .admin-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-affiliate-report {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-affiliate-report > section + section {
+    border-top: 1px solid #eceef1;
+    border-left: 0;
   }
 
   .admin-settings-grid {

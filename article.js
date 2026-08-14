@@ -3,6 +3,8 @@ const params = new URLSearchParams(window.location.search);
 const identifier = params.get("slug") || params.get("id");
 const affiliateConfig = window.BOXING_CONFIG?.affiliate || {};
 const leminoAffiliateUrl = affiliateConfig.leminoUrl || "";
+const amazonAffiliateUrl = affiliateConfig.amazonUrl || "";
+const wowowAffiliateUrl = affiliateConfig.wowow?.text?.linkUrl || "";
 
 function isNewsArticle(article) {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
@@ -165,6 +167,8 @@ function appendPlainArticleText(parent, text) {
   link.target = "_blank";
   link.rel = "sponsored noopener noreferrer";
   link.textContent = `${matched}で視聴する`;
+  link.dataset.boxsokuAffiliateService = "lemino";
+  link.dataset.boxsokuAffiliatePlacement = "article-body";
   parent.append(link, document.createTextNode(text.slice(index + matched.length)));
 }
 
@@ -175,16 +179,21 @@ function appendArticleInlineText(parent, value) {
 
   for (const match of text.matchAll(linkPattern)) {
     appendPlainArticleText(parent, text.slice(lastIndex, match.index));
-    const href = safeArticleLinkUrl(match[2]);
-    if (!href) {
+    const sourceHref = safeArticleLinkUrl(match[2]);
+    if (!sourceHref) {
       appendPlainArticleText(parent, match[0]);
     } else {
-      const service = articleAffiliateService(href);
+      const service = articleAffiliateService(sourceHref);
+      const href = service === "amazon" && amazonAffiliateUrl
+        ? amazonAffiliateUrl
+        : service === "lemino" && leminoAffiliateUrl
+          ? leminoAffiliateUrl
+          : sourceHref;
       const link = document.createElement("a");
       if (service) {
         link.className = "affiliate-streaming-link";
-        link.dataset.affiliateService = service;
-        link.dataset.affiliatePlacement = "article-body";
+        link.dataset.boxsokuAffiliateService = service;
+        link.dataset.boxsokuAffiliatePlacement = "article-body";
       }
       link.href = href;
       link.target = "_blank";
@@ -241,10 +250,25 @@ function createAffiliateLinks(article) {
   section.appendChild(heading);
   links.forEach((item) => {
     const link = document.createElement("a");
-    link.href = item.url;
+    const service = /WOWOW/i.test(item.label)
+      ? "wowow"
+      : /Lemino/i.test(item.label)
+        ? "lemino"
+        : articleAffiliateService(item.url);
+    link.href = service === "amazon" && amazonAffiliateUrl
+      ? amazonAffiliateUrl
+      : service === "lemino" && leminoAffiliateUrl
+        ? leminoAffiliateUrl
+        : service === "wowow" && wowowAffiliateUrl
+          ? wowowAffiliateUrl
+          : item.url;
     link.target = "_blank";
     link.rel = "sponsored noopener noreferrer";
     link.textContent = item.label;
+    if (service) {
+      link.dataset.boxsokuAffiliateService = service;
+      link.dataset.boxsokuAffiliatePlacement = "article-streaming-links";
+    }
     section.appendChild(link);
   });
   const note = document.createElement("p");
@@ -276,6 +300,9 @@ function createProductCards(article) {
     card.href = item.url;
     card.target = "_blank";
     card.rel = "sponsored nofollow noopener";
+    card.dataset.boxsokuAffiliateService = "rakuten";
+    card.dataset.boxsokuAffiliatePlacement = "article-product";
+    if (item.id) card.dataset.boxsokuAffiliateItem = item.id;
 
     const image = document.createElement("img");
     image.src = item.image;
