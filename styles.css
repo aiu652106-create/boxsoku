@@ -7161,3 +7161,52 @@ body.retro-blog .retro-summary {
     margin-top: 0 !important;
   }
 }
+
+/* Mobile and touch-tablet navigation: keep desktop layouts unchanged. */
+@media (max-width: 720px) and (hover: none) and (pointer: coarse) {
+  body.retro-blog .retro-sidebar-popular {
+    display: contents !important;
+  }
+
+  body.retro-blog .retro-category-sidebar {
+    order: 0 !important;
+    width: 100% !important;
+  }
+
+  body.retro-blog .retro-feed {
+    order: 1 !important;
+  }
+
+  body.retro-blog .retro-sidebar-panel {
+    order: 2 !important;
+    width: 100% !important;
+  }
+
+  body.retro-blog .retro-sidebar-latest {
+    order: 3 !important;
+  }
+}
+
+@media (min-width: 721px) and (max-width: 1080px) and (hover: none) and (pointer: coarse) {
+  body.retro-blog .retro-sidebar-popular {
+    display: contents !important;
+  }
+
+  body.retro-blog .retro-category-sidebar {
+    order: 0 !important;
+    width: 100% !important;
+  }
+
+  body.retro-blog .retro-feed {
+    order: 1 !important;
+  }
+
+  body.retro-blog .retro-sidebar-panel {
+    order: 2 !important;
+    width: 100% !important;
+  }
+
+  body.retro-blog .retro-sidebar-latest {
+    order: 3 !important;
+  }
+}
