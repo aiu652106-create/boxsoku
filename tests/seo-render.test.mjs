@@ -241,11 +241,14 @@ const videoArticle = {
   ...article,
   id: "youtube-position-article",
   slug: "youtube-position-test",
+  summary: "video position test summary",
   title: "YouTube動画の表示位置テスト",
   body: "本文の確認です。",
   affiliate_links: [],
-  youtube_urls: ["https://www.youtube.com/shorts/Tg_PtUt6Usc"]
+  youtube_urls: ["https://www.youtube.com/shorts/Tg_PtUt6Usc"],
+  tweets: tweetArticle.tweets
 };
+videoArticle.body = ["本文の確認です。", tweetArticle.tweets[0]].join("\n\n");
 globalThis.fetch = async (input) => {
   const url = String(input);
   if (url.includes("slug=eq.youtube-position-test")) return Response.json([videoArticle]);
@@ -261,10 +264,16 @@ const videoResponse = await onRequestGet(videoContext);
 assert.equal(videoResponse.status, 200);
 const videoHtml = await videoResponse.text();
 const videoImageIndex = videoHtml.indexOf('class="retro-post-image retro-detail-image"');
-const videoEmbedIndex = videoHtml.indexOf('class="retro-article-videos"');
 const videoBodyIndex = videoHtml.indexOf('class="retro-detail-body"');
-assert.ok(videoImageIndex >= 0 && videoImageIndex < videoEmbedIndex);
-assert.ok(videoEmbedIndex < videoBodyIndex);
+const videoBodyHtml = videoHtml.slice(
+  videoBodyIndex,
+  videoHtml.indexOf('<aside class="ad-slot" data-ad-slot-name="articleTop"')
+);
+const videoEmbedIndex = videoBodyHtml.indexOf('class="retro-article-videos"');
+const videoTweetIndex = videoBodyHtml.indexOf("2087518427124731943");
+assert.ok(videoImageIndex >= 0 && videoImageIndex < videoBodyIndex);
+assert.ok(videoEmbedIndex >= 0);
+assert.ok(videoEmbedIndex < videoTweetIndex);
 assert.equal((videoHtml.match(/class="retro-article-videos"/g) || []).length, 1);
 assert.equal((videoHtml.match(/youtube-nocookie\.com\/embed\/Tg_PtUt6Usc/g) || []).length, 1);
 

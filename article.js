@@ -627,6 +627,8 @@ function renderArticle(article) {
     renderedTweetUrls.add(normalizedUrl);
     appendTweet(body, normalizedUrl);
   };
+  article.youtubeUrls.forEach((url) => appendYouTube(videoEmbeds, url));
+  let videoInserted = false;
   paragraphs.forEach((paragraph, index) => {
     const lines = paragraph.split(/\n/);
     const firstLine = String(lines[0] || "").trim();
@@ -643,11 +645,15 @@ function renderArticle(article) {
     } else {
       appendArticleText(body, paragraph);
     }
+    if (!videoInserted && index === 0 && videoEmbeds.childElementCount) {
+      body.appendChild(videoEmbeds);
+      videoInserted = true;
+    }
     if (index < externalTweets.length) appendArticleTweet(externalTweets[index]);
     if (index === middleAdIndex) body.appendChild(createAdSlot("articleMiddle"));
   });
   externalTweets.slice(paragraphs.length).forEach(appendArticleTweet);
-  article.youtubeUrls.forEach((url) => appendYouTube(videoEmbeds, url));
+  if (!videoInserted && videoEmbeds.childElementCount) body.appendChild(videoEmbeds);
   article.instagramUrls.forEach((url) => appendInstagram(body, url));
 
   const meta = document.createElement("div");
@@ -669,7 +675,6 @@ function renderArticle(article) {
   const fightCards = createFightCards(article);
   container.append(titleRow, category);
   container.appendChild(imageContent);
-  if (videoEmbeds.childElementCount) container.appendChild(videoEmbeds);
   container.appendChild(body);
   container.appendChild(topAd);
   if (fightCards) container.appendChild(fightCards);

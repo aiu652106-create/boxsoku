@@ -233,7 +233,13 @@ const articleInlineHtml = (value) => {
   return html + linkLeminoText(basicArticleInlineHtml(source.slice(lastIndex)));
 };
 
-const articleBodyHtml = (body, title = "", lead = "", tweets = []) => {
+const articleBodyHtml = (
+  body,
+  title = "",
+  lead = "",
+  tweets = [],
+  videoEmbeds = ""
+) => {
   const paragraphs = String(body || "")
     .split(/\n\s*\n/)
     .filter(
@@ -266,9 +272,7 @@ const articleBodyHtml = (body, title = "", lead = "", tweets = []) => {
     renderedTweetUrls.add(normalizedUrl);
     return tweetEmbedHtml(normalizedUrl);
   };
-  return (
-    paragraphs
-    .map((paragraph, index) => {
+  const renderedParagraphs = paragraphs.map((paragraph, index) => {
       const ad =
         index === middleAdIndex
           ? '<aside class="ad-slot" data-ad-slot-name="articleMiddle" aria-label="広告"></aside>'
@@ -306,8 +310,12 @@ const articleBodyHtml = (body, title = "", lead = "", tweets = []) => {
       return `<p>${articleInlineHtml(paragraph).replaceAll("\n", "<br>")}</p>${
         tweetUrls[index] ? renderTweet(tweetUrls[index]) : ""
       }${ad}`;
-    })
-    .join("") +
+    });
+  if (videoEmbeds) {
+    renderedParagraphs.splice(Math.min(1, renderedParagraphs.length), 0, videoEmbeds);
+  }
+  return (
+    renderedParagraphs.join("") +
     tweetUrls
       .slice(paragraphs.length)
       .map((url) => renderTweet(url))
@@ -1223,14 +1231,14 @@ export async function onRequestGet(context) {
               )}" alt="${escapeHtml(article.title)}のアイキャッチ画像" loading="lazy">`
             : ""
         }
-        ${videosHtml(article)}
         ${disclosure}
         ${wowowTextAffiliate}
         <div class="retro-detail-body">${articleBodyHtml(
           article.body,
           article.title,
           summary,
-          article.tweets
+          article.tweets,
+          videosHtml(article)
         )}${embedsHtml(article)}</div>
         ${affiliateLinksHtml(article)}
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
