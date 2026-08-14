@@ -279,14 +279,15 @@ const articleBodyHtml = (
           : "";
       const lines = paragraph.split(/\n/);
       const firstLine = String(lines[0] || "").trim();
+      const videoBeforeExternalTweet = index === 0 ? videoEmbeds : "";
       if (isTweetUrl(firstLine)) {
         const rest = lines.slice(1).join("\n").trim();
         return `${renderTweet(firstLine)}${
           rest ? `<p>${escapeHtml(rest).replaceAll("\n", "<br>")}</p>` : ""
-        }${tweetUrls[index] ? renderTweet(tweetUrls[index]) : ""}${ad}`;
+        }${videoBeforeExternalTweet}${tweetUrls[index] ? renderTweet(tweetUrls[index]) : ""}${ad}`;
       }
       if (isTweetUrl(paragraph.trim())) {
-        return `${renderTweet(paragraph.trim())}${
+        return `${renderTweet(paragraph.trim())}${videoBeforeExternalTweet}${
           tweetUrls[index] ? renderTweet(tweetUrls[index]) : ""
         }${ad}`;
       }
@@ -297,7 +298,7 @@ const articleBodyHtml = (
           rest
             ? `<p>${articleInlineHtml(rest).replaceAll("\n", "<br>")}</p>`
             : ""
-        }${tweetUrls[index] ? renderTweet(tweetUrls[index]) : ""}${ad}`;
+        }${videoBeforeExternalTweet}${tweetUrls[index] ? renderTweet(tweetUrls[index]) : ""}${ad}`;
       }
       const listItems = lines
         .map((line) => line.match(/^\s*[-*+]\s+(.+)$/)?.[1] || "")
@@ -305,15 +306,12 @@ const articleBodyHtml = (
       if (listItems.length === lines.filter((line) => line.trim()).length) {
         return `<ul>${listItems
           .map((item) => `<li>${articleInlineHtml(item)}</li>`)
-          .join("")}</ul>${tweetUrls[index] ? renderTweet(tweetUrls[index]) : ""}${ad}`;
+          .join("")}</ul>${videoBeforeExternalTweet}${tweetUrls[index] ? renderTweet(tweetUrls[index]) : ""}${ad}`;
       }
-      return `<p>${articleInlineHtml(paragraph).replaceAll("\n", "<br>")}</p>${
+      return `<p>${articleInlineHtml(paragraph).replaceAll("\n", "<br>")}</p>${videoBeforeExternalTweet}${
         tweetUrls[index] ? renderTweet(tweetUrls[index]) : ""
       }${ad}`;
     });
-  if (videoEmbeds) {
-    renderedParagraphs.splice(Math.min(1, renderedParagraphs.length), 0, videoEmbeds);
-  }
   return (
     renderedParagraphs.join("") +
     tweetUrls
