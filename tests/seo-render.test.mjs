@@ -465,6 +465,8 @@ assert.ok(
 );
 assert.match(listingHtml, /<title>ボクシング試合予定・今日の試合と配信情報｜ボクシング速報<\/title>/);
 assert.match(listingHtml, /<h1 class="feed-heading">ボクシング試合予定<\/h1>/);
+assert.match(listingHtml, /data-category-filter="schedule"[^>]*>興行日程<\/a>/);
+assert.ok(!listingHtml.includes('data-category-filter="schedule">試合日程<'));
 assert.match(listingHtml, /<h2><a href="\/news\/seo-test">9月2日のボクシング試合予定<\/a><\/h2>/);
 assert.match(listingHtml, /"@type":"CollectionPage"/);
 assert.match(listingHtml, /"@type":"ItemList"/);

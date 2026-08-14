@@ -13,7 +13,7 @@ function isNewsArticle(article) {
 function articleCategoryText(article) {
   const source = `${article?.title || ""}\n${article?.body || ""}`;
   if (/WOWOW|エキサイトマッチ/i.test(source)) return "WOWOWエキサイトマッチ";
-  return isNewsArticle(article) ? "NEWS" : "試合日程";
+  return isNewsArticle(article) ? "NEWS" : "興行日程";
 }
 
 function createAdSlot(name) {

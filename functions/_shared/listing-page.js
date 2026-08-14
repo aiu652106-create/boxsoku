@@ -107,7 +107,7 @@ function articleCategoryText(article) {
   const category = articleCategoryKey(article);
   if (category === "wowow") return "WOWOWエキサイトマッチ";
   if (category === "news") return "NEWS";
-  return "試合日程";
+  return "興行日程";
 }
 
 function matchesPageCategory(article, category) {
@@ -251,7 +251,7 @@ async function supabaseRows(env, query) {
 
 function categoryNav(activeCategory) {
   const items = [
-    ["schedule", "/schedule", "試合日程"],
+    ["schedule", "/schedule", "興行日程"],
     ["broadcast", "/boxing-broadcast", "放送・配信"],
     ["news", "/boxing-news", "NEWS"],
     ["lemino", "/lemino-boxing", "Leminoボクシング"],
