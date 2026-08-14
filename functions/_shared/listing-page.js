@@ -362,7 +362,7 @@ export async function renderListingPage(context, pageKey = "home") {
   <title>${escapeHtml(page.title)}</title>
   <script async data-boxing-adsense="true" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5867435180256987" crossorigin="anonymous"></script>
   <script type="application/ld+json">${structuredData}</script>
-  <link rel="stylesheet" href="/styles.css?v=20260814-tablet-fix3">
+  <link rel="stylesheet" href="/styles.css?v=20260814-tablet-fix4">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/config.js?v=20260805-lemino-link1" defer></script>
   <script src="/site.js" defer></script>
