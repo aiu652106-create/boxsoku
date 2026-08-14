@@ -1169,7 +1169,7 @@ export async function onRequestGet(context) {
   <title>${escapeHtml(article.title)} | ${escapeHtml(siteName)}</title>
   <script async data-boxing-adsense="true" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5867435180256987" crossorigin="anonymous"></script>
   <script type="application/ld+json">${structuredData}</script>
-   <link rel="stylesheet" href="/styles.css?v=20260814-tablet-fix1">
+   <link rel="stylesheet" href="/styles.css?v=20260814-tablet-fix4">
   <script src="/config.js?v=20260811-adsense-link1" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
