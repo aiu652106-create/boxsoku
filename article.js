@@ -262,7 +262,6 @@ function createAffiliateLinks(article) {
         : service === "wowow" && wowowAffiliateUrl
           ? wowowAffiliateUrl
           : item.url;
-    link.target = "_blank";
     link.rel = "sponsored noopener noreferrer";
     link.textContent = item.label;
     if (service) {

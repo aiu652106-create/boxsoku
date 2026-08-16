@@ -170,6 +170,14 @@ assert.match(
   /<a class="affiliate-streaming-link" href="https:\/\/amzn\.to\/4qhu5Mj" target="_blank" rel="sponsored noopener noreferrer" data-boxsoku-affiliate-service="amazon" data-boxsoku-affiliate-placement="article-body">Prime Video独占ライブ配信<\/a>/
 );
 assert.ok(!html.includes("[Prime Video独占ライブ配信]"));
+const streamingAffiliateHtml = html.match(
+  /<aside class="affiliate-links">([\s\S]*?)<\/aside>/
+)?.[1] || "";
+assert.match(
+  streamingAffiliateHtml,
+  /<a href="https:\/\/[^\"]+" rel="sponsored noopener noreferrer" data-boxsoku-affiliate-service="lemino" data-boxsoku-affiliate-placement="article-streaming-links">Leminoプレミアムでライブ配信<\/a>/
+);
+assert.ok(!streamingAffiliateHtml.includes('target="_blank"'));
 assert.match(html, /"@type":"Article"/);
 assert.match(
   html,

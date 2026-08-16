@@ -829,7 +829,7 @@ function affiliateLinksHtml(article) {
         : "";
       return `<a href="${escapeHtml(
         url
-      )}" target="_blank" rel="sponsored noopener noreferrer"${affiliateData}>${escapeHtml(
+      )}" rel="sponsored noopener noreferrer"${affiliateData}>${escapeHtml(
         item.label
       )}</a>`;
     })
