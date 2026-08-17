@@ -100,6 +100,8 @@ For article pages, keep the event/program lead image separate from fight-card me
 
 For SEO and discovery changes, use one fixed production gate: confirm GET and HEAD both return `200`, Googlebot and OAI-SearchBot receive the same canonical content without visitor cookies or analytics writes, the sitemap contains the canonical URL, and metadata contains plain text without Markdown markers. Keep the useful article body before general product promotions, while placing streaming affiliate links next to the visible streaming information. Verify the server-rendered HTML and the client fallback use the same order and schema type.
 
+For any category or listing-order change, compare the server-rendered `#article-feed` order with the post-hydration browser DOM order. Update the shared server listing and `app.js` together when both render the feed, and use a new asset version for the client script before public verification.
+
 Every server-rendered Pages Function that can be indexed (home, category listings, and article pages) must emit the current favicon link in its HTML head; checking only the static `.html` fallback is insufficient. Assert the favicon path in the SEO render test and inspect the deployed HTML source after release.
 
 When an extensionless Pages Function is the canonical article route, the legacy `article.html` shell must remain `noindex, nofollow` and must not appear in the sitemap; verify both the response header and the static shell so the fallback cannot split indexing signals.
