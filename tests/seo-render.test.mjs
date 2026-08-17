@@ -186,7 +186,7 @@ assert.ok(renderedAffiliateAnchors.every((tag) => !tag.includes('target="_blank"
 assert.match(html, /"@type":"Article"/);
 assert.match(
   html,
-  /<script src="\/site-events\.js\?v=20260815-owner-traffic-exclusion1" defer><\/script>/
+  /<script src="\/site-events\.js\?v=20260817-owner-traffic-exclusion2" defer><\/script>/
 );
 assert.match(html, /"@type":"BreadcrumbList"/);
 assert.match(html, /"@type":"SportsEvent"/);
@@ -549,7 +549,7 @@ assert.ok(listingAffiliateAnchors.length > 0);
 assert.ok(listingAffiliateAnchors.every((tag) => !tag.includes('target="_blank"')));
 assert.match(
   listingHtml,
-  /<script src="\/site-events\.js\?v=20260815-owner-traffic-exclusion1" defer><\/script>/
+  /<script src="\/site-events\.js\?v=20260817-owner-traffic-exclusion2" defer><\/script>/
 );
 assert.match(
   listingHtml,
@@ -561,6 +561,10 @@ const appSource = fs.readFileSync(path.join(projectRoot, "app.js"), "utf8");
 assert.match(appSource, /tweet\.textContent = "Xで共有"/);
 assert.match(appSource, /utm_campaign/);
 assert.match(appSource, /if \(!service\) teaserLink\.target = "_blank"/);
+const siteEventsSource = fs.readFileSync(path.join(projectRoot, "site-events.js"), "utf8");
+assert.match(siteEventsSource, /if \(isOwnerTrafficExcluded\(\)\) return;/);
+assert.ok(!siteEventsSource.includes("event.preventDefault()"));
+assert.ok(!siteEventsSource.includes("event.stopImmediatePropagation()"));
 
 const leminoListingResponse = await renderListingPage(
   {

@@ -27,11 +27,7 @@
       const link = event.target.closest("a[data-boxsoku-affiliate-service]");
       if (!link) return;
 
-      if (isOwnerTrafficExcluded()) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        return;
-      }
+    if (isOwnerTrafficExcluded()) return;
 
       const payload = {
         articleSlug: articleSlug(),

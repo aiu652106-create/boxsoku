@@ -402,7 +402,7 @@ export async function renderListingPage(context, pageKey = "home") {
   <script src="/data.js?v=20260813-x-quote-embed1" defer></script>
   <script src="/sidebar.js?v=20260804-content-polish" defer></script>
   <script src="/app.js?v=20260817-affiliate-same-tab2" defer></script>
-  <script src="/site-events.js?v=20260815-owner-traffic-exclusion1" defer></script>
+  <script src="/site-events.js?v=20260817-owner-traffic-exclusion2" defer></script>
   <script src="/ads.js" defer></script>
 </head>
 <body class="retro-blog">

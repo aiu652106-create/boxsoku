@@ -1189,7 +1189,7 @@ export async function onRequestGet(context) {
   <script src="/config.js?v=20260814-owner-affiliates1" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
-  <script src="/site-events.js?v=20260815-owner-traffic-exclusion1" defer></script>
+  <script src="/site-events.js?v=20260817-owner-traffic-exclusion2" defer></script>
   <script src="/ads.js" defer></script>
 </head>
 <body class="retro-blog">
