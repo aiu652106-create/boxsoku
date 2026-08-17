@@ -202,6 +202,7 @@ function articleCardHtml(article) {
   const image = safeHttpsUrl(article.image_url);
   const summary = articleSummary(article);
   const affiliate = affiliateItems(article)[0];
+  const affiliateTarget = affiliate?.service ? "" : ' target="_blank"';
   const hasCommercialContent =
     Boolean(article.is_advertorial) || Boolean(affiliate) ||
     jsonArray(article.affiliate_links).some((item) => item?.type === "product_cards");
@@ -233,7 +234,7 @@ function articleCardHtml(article) {
             affiliate.label
           )}</strong><span class="affiliate-teaser-note">料金・配信条件は公式ページで確認</span></div><a href="${escapeHtml(
             affiliate.url
-          )}" target="_blank" rel="sponsored noopener noreferrer"${
+          )}"${affiliateTarget} rel="sponsored noopener noreferrer"${
             affiliate.service
               ? ` data-boxsoku-affiliate-service="${affiliate.service}" data-boxsoku-affiliate-placement="listing-card"`
               : ""

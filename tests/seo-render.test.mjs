@@ -542,6 +542,11 @@ assert.match(
   listingHtml,
   /href="https:\/\/tr\.affiliate-sp\.docomo\.ne\.jp\/cl\/d0000000236\/5159\/2"[^>]*data-boxsoku-affiliate-service="lemino" data-boxsoku-affiliate-placement="listing-card"/
 );
+const listingAffiliateAnchors = [
+  ...listingHtml.matchAll(/<a\b[^>]*data-boxsoku-affiliate-service="[^"]+"[^>]*>/g)
+].map((match) => match[0]);
+assert.ok(listingAffiliateAnchors.length > 0);
+assert.ok(listingAffiliateAnchors.every((tag) => !tag.includes('target="_blank"')));
 assert.match(
   listingHtml,
   /<script src="\/site-events\.js\?v=20260815-owner-traffic-exclusion1" defer><\/script>/
@@ -551,6 +556,7 @@ assert.ok(!listingHtml.includes("記事を読み込んでいます"));
 const appSource = fs.readFileSync(path.join(projectRoot, "app.js"), "utf8");
 assert.match(appSource, /tweet\.textContent = "Xで共有"/);
 assert.match(appSource, /utm_campaign/);
+assert.match(appSource, /if \(!service\) teaserLink\.target = "_blank"/);
 
 const leminoListingResponse = await renderListingPage(
   {

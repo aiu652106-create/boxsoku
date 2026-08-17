@@ -156,10 +156,10 @@ function createArticle(article) {
 
     const teaserLink = document.createElement("a");
     teaserLink.href = links[0].url;
-    teaserLink.target = "_blank";
     teaserLink.rel = "sponsored noopener noreferrer";
     teaserLink.textContent = "配信ページを見る";
     const service = affiliateService(links[0].url, links[0].label);
+    if (!service) teaserLink.target = "_blank";
     if (service) {
       teaserLink.dataset.boxsokuAffiliateService = service;
       teaserLink.dataset.boxsokuAffiliatePlacement = "listing-card";
