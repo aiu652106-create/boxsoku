@@ -161,6 +161,55 @@ function formatDate(value) {
   return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("ja-JP");
 }
 
+function normalizeDigits(value) {
+  return String(value || "").replace(/[０-９]/g, (digit) =>
+    String.fromCharCode(digit.charCodeAt(0) - 0xfee0)
+  );
+}
+
+function scheduleEventTimestamp(article) {
+  const body = String(article?.body || "").replace(/\r\n?/g, "\n");
+  const dateMatch = body.match(
+    /(?:開催日|日程)\s*[:：]\s*([20０-９0-9]{4})年\s*([０-９0-9]{1,2})月\s*([０-９0-9]{1,2})日/
+  );
+  if (!dateMatch) return null;
+
+  const year = Number(normalizeDigits(dateMatch[1]));
+  const month = Number(normalizeDigits(dateMatch[2]));
+  const day = Number(normalizeDigits(dateMatch[3]));
+  const timestamp = Date.UTC(year, month - 1, day);
+  const date = new Date(timestamp);
+  if (
+    !Number.isFinite(timestamp) ||
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+  return timestamp;
+}
+
+function publishedTimestamp(article) {
+  const timestamp = new Date(article?.published_at).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function sortScheduleArticles(articles) {
+  return [...articles].sort((left, right) => {
+    const leftEventDate = scheduleEventTimestamp(left);
+    const rightEventDate = scheduleEventTimestamp(right);
+
+    if (leftEventDate !== null && rightEventDate !== null) {
+      return rightEventDate - leftEventDate ||
+        publishedTimestamp(right) - publishedTimestamp(left);
+    }
+    if (leftEventDate !== null) return -1;
+    if (rightEventDate !== null) return 1;
+    return publishedTimestamp(right) - publishedTimestamp(left);
+  });
+}
+
 function affiliateService(urlValue, label = "") {
   if (/WOWOW/i.test(label)) return "wowow";
   if (/Lemino/i.test(label)) return "lemino";
@@ -318,9 +367,13 @@ export async function renderListingPage(context, pageKey = "home") {
     env,
     `articles?select=${select}&status=eq.published&published_at=lte.${now}&order=published_at.desc&limit=100`
   );
-  const visibleArticles = page.category
+  const filteredArticles = page.category
     ? articles.filter((article) => matchesPageCategory(article, page.category))
     : articles;
+  const visibleArticles =
+    pageKey === "schedule"
+      ? sortScheduleArticles(filteredArticles)
+      : filteredArticles;
   const popular = [...articles]
     .sort(
       (left, right) =>
