@@ -551,6 +551,10 @@ assert.match(
   listingHtml,
   /<script src="\/site-events\.js\?v=20260815-owner-traffic-exclusion1" defer><\/script>/
 );
+assert.match(
+  listingHtml,
+  /<script src="\/app\.js\?v=20260817-affiliate-same-tab2" defer><\/script>/
+);
 assert.ok(!listingHtml.includes("記事を読み込んでいます"));
 
 const appSource = fs.readFileSync(path.join(projectRoot, "app.js"), "utf8");
