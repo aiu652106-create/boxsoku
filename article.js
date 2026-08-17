@@ -164,7 +164,6 @@ function appendPlainArticleText(parent, text) {
   const link = document.createElement("a");
   link.className = "affiliate-streaming-link";
   link.href = leminoAffiliateUrl;
-  link.target = "_blank";
   link.rel = "sponsored noopener noreferrer";
   link.textContent = `${matched}で視聴する`;
   link.dataset.boxsokuAffiliateService = "lemino";
@@ -196,7 +195,7 @@ function appendArticleInlineText(parent, value) {
         link.dataset.boxsokuAffiliatePlacement = "article-body";
       }
       link.href = href;
-      link.target = "_blank";
+      if (!service) link.target = "_blank";
       link.rel = service
         ? "sponsored noopener noreferrer"
         : "noopener noreferrer";
@@ -291,7 +290,6 @@ function createProductCards(article) {
     const card = document.createElement("a");
     card.className = "affiliate-product-card";
     card.href = item.url;
-    card.target = "_blank";
     card.rel = "sponsored nofollow noopener";
     card.dataset.boxsokuAffiliateService = "rakuten";
     card.dataset.boxsokuAffiliatePlacement = "article-product";

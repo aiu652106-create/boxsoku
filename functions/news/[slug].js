@@ -169,11 +169,11 @@ const linkLeminoText = (value) =>
   String(value || "")
     .replaceAll(
       "配信：Lemino",
-      `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer" data-boxsoku-affiliate-service="lemino" data-boxsoku-affiliate-placement="article-body">配信：Leminoで視聴する</a>`
+      `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" rel="sponsored noopener noreferrer" data-boxsoku-affiliate-service="lemino" data-boxsoku-affiliate-placement="article-body">配信：Leminoで視聴する</a>`
     )
     .replaceAll(
       "配信: Lemino",
-      `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" target="_blank" rel="sponsored noopener noreferrer" data-boxsoku-affiliate-service="lemino" data-boxsoku-affiliate-placement="article-body">配信: Leminoで視聴する</a>`
+      `<a class="affiliate-streaming-link" href="${leminoAffiliateUrl}" rel="sponsored noopener noreferrer" data-boxsoku-affiliate-service="lemino" data-boxsoku-affiliate-placement="article-body">配信: Leminoで視聴する</a>`
     );
 
 const safeArticleLinkUrl = (value) => {
@@ -223,7 +223,8 @@ const articleInlineHtml = (value) => {
       const affiliateData = service
         ? ` data-boxsoku-affiliate-service="${service}" data-boxsoku-affiliate-placement="article-body"`
         : "";
-      html += `<a${className} href="${escapeHtml(href)}" target="_blank" rel="${rel}"${affiliateData}>${basicArticleInlineHtml(
+      const target = service ? "" : ' target="_blank"';
+      html += `<a${className} href="${escapeHtml(href)}"${target} rel="${rel}"${affiliateData}>${basicArticleInlineHtml(
         match[1]
       )}</a>`;
     }
@@ -518,13 +519,13 @@ const articleCategoryText = (article) => {
 const wowowAffiliateBannerHtml = (article) => {
   if (articleCategoryText(article) !== "WOWOWエキサイトマッチ") return "";
   const banner = wowowAffiliate.banner;
-  return `<aside class="wowow-affiliate-banner" aria-label="WOWOWオンデマンド PR"><span class="wowow-affiliate-banner-label">PR</span><a href="${banner.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" aria-label="WOWOWオンデマンドを確認する" data-boxsoku-affiliate-service="wowow" data-boxsoku-affiliate-placement="article-bottom-banner"><img class="wowow-affiliate-banner-image" src="${banner.imageUrl}" width="300" height="250" alt="WOWOWオンデマンド"></a><img class="wowow-affiliate-tracking-pixel" src="${banner.impressionUrl}" width="1" height="1" alt="" aria-hidden="true"></aside>`;
+  return `<aside class="wowow-affiliate-banner" aria-label="WOWOWオンデマンド PR"><span class="wowow-affiliate-banner-label">PR</span><a href="${banner.linkUrl}" rel="sponsored nofollow noopener noreferrer" aria-label="WOWOWオンデマンドを確認する" data-boxsoku-affiliate-service="wowow" data-boxsoku-affiliate-placement="article-bottom-banner"><img class="wowow-affiliate-banner-image" src="${banner.imageUrl}" width="300" height="250" alt="WOWOWオンデマンド"></a><img class="wowow-affiliate-tracking-pixel" src="${banner.impressionUrl}" width="1" height="1" alt="" aria-hidden="true"></aside>`;
 };
 
 const wowowAffiliateTextHtml = (article) => {
   if (articleCategoryText(article) !== "WOWOWエキサイトマッチ") return "";
   const text = wowowAffiliate.text;
-  return `<aside class="affiliate-teaser" aria-label="WOWOWオンデマンド PR"><div class="affiliate-teaser-copy"><span class="affiliate-teaser-label">PR・配信サービス</span><strong>WOWOWオンデマンドの視聴情報を確認</strong><span class="affiliate-teaser-note">料金・配信内容・視聴条件はリンク先でご確認ください。</span></div><a href="${text.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" data-boxsoku-affiliate-service="wowow" data-boxsoku-affiliate-placement="article-top-text">${escapeHtml(text.label)}</a><img class="wowow-affiliate-tracking-pixel" src="${text.impressionUrl}" width="1" height="1" alt="" aria-hidden="true"></aside>`;
+  return `<aside class="affiliate-teaser" aria-label="WOWOWオンデマンド PR"><div class="affiliate-teaser-copy"><span class="affiliate-teaser-label">PR・配信サービス</span><strong>WOWOWオンデマンドの視聴情報を確認</strong><span class="affiliate-teaser-note">料金・配信内容・視聴条件はリンク先でご確認ください。</span></div><a href="${text.linkUrl}" rel="sponsored nofollow noopener noreferrer" data-boxsoku-affiliate-service="wowow" data-boxsoku-affiliate-placement="article-top-text">${escapeHtml(text.label)}</a><img class="wowow-affiliate-tracking-pixel" src="${text.impressionUrl}" width="1" height="1" alt="" aria-hidden="true"></aside>`;
 };
 
 const leminoAffiliateBannerHtml = (article) => {
@@ -532,7 +533,7 @@ const leminoAffiliateBannerHtml = (article) => {
     /Lemino|affiliate-sp\.docomo\.ne\.jp/i.test(`${item?.label || ""}\n${item?.url || ""}`)
   );
   if (!hasLeminoAffiliate) return "";
-  return `<aside class="wowow-affiliate-banner lemino-affiliate-banner" aria-label="Leminoプレミアム PR"><span class="wowow-affiliate-banner-label">PR</span><a href="${leminoAffiliateBanner.linkUrl}" target="_blank" rel="sponsored nofollow noopener noreferrer" aria-label="Leminoプレミアムを確認する" data-boxsoku-affiliate-service="lemino" data-boxsoku-affiliate-placement="article-bottom-banner"><img class="wowow-affiliate-banner-image lemino-affiliate-banner-image" src="${leminoAffiliateBanner.imageUrl}" width="300" height="250" alt="Leminoプレミアム"></a></aside>`;
+  return `<aside class="wowow-affiliate-banner lemino-affiliate-banner" aria-label="Leminoプレミアム PR"><span class="wowow-affiliate-banner-label">PR</span><a href="${leminoAffiliateBanner.linkUrl}" rel="sponsored nofollow noopener noreferrer" aria-label="Leminoプレミアムを確認する" data-boxsoku-affiliate-service="lemino" data-boxsoku-affiliate-placement="article-bottom-banner"><img class="wowow-affiliate-banner-image lemino-affiliate-banner-image" src="${leminoAffiliateBanner.imageUrl}" width="300" height="250" alt="Leminoプレミアム"></a></aside>`;
 };
 
 const articleCategoryPath = (article) => {
@@ -919,7 +920,7 @@ function productCardsHtml(article) {
     .map(
       (item) => `<a class="affiliate-product-card" href="${escapeHtml(
         item.url
-      )}" target="_blank" rel="sponsored nofollow noopener" data-boxsoku-affiliate-service="rakuten" data-boxsoku-affiliate-placement="article-product" data-boxsoku-affiliate-item="${escapeHtml(
+      )}" rel="sponsored nofollow noopener" data-boxsoku-affiliate-service="rakuten" data-boxsoku-affiliate-placement="article-product" data-boxsoku-affiliate-item="${escapeHtml(
         item.family
       )}"><img src="${escapeHtml(
         item.image

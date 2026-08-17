@@ -167,7 +167,7 @@ assert.match(html, /<h2>大会概要<\/h2>/);
 assert.match(html, /<ul><li>開催日：2026年9月2日<\/li>/);
 assert.match(
   html,
-  /<a class="affiliate-streaming-link" href="https:\/\/amzn\.to\/4qhu5Mj" target="_blank" rel="sponsored noopener noreferrer" data-boxsoku-affiliate-service="amazon" data-boxsoku-affiliate-placement="article-body">Prime Video独占ライブ配信<\/a>/
+  /<a class="affiliate-streaming-link" href="https:\/\/amzn\.to\/4qhu5Mj" rel="sponsored noopener noreferrer" data-boxsoku-affiliate-service="amazon" data-boxsoku-affiliate-placement="article-body">Prime Video独占ライブ配信<\/a>/
 );
 assert.ok(!html.includes("[Prime Video独占ライブ配信]"));
 const streamingAffiliateHtml = html.match(
@@ -178,6 +178,11 @@ assert.match(
   /<a href="https:\/\/[^\"]+" rel="sponsored noopener noreferrer" data-boxsoku-affiliate-service="lemino" data-boxsoku-affiliate-placement="article-streaming-links">Leminoプレミアムでライブ配信<\/a>/
 );
 assert.ok(!streamingAffiliateHtml.includes('target="_blank"'));
+const renderedAffiliateAnchors = [
+  ...html.matchAll(/<a\b[^>]*data-boxsoku-affiliate-service="[^"]+"[^>]*>/g)
+].map((match) => match[0]);
+assert.ok(renderedAffiliateAnchors.length > 0);
+assert.ok(renderedAffiliateAnchors.every((tag) => !tag.includes('target="_blank"')));
 assert.match(html, /"@type":"Article"/);
 assert.match(
   html,
