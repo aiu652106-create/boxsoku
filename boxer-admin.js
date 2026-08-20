@@ -6,6 +6,7 @@
     "nameEn",
     "ringName",
     "boxrecId",
+    "boxrecUrl",
     "nationality",
     "birthDate",
     "birthplace",
@@ -118,6 +119,7 @@
     setValue("nameEn", boxer.name_en);
     setValue("ringName", boxer.ring_name);
     setValue("boxrecId", boxer.boxrec_id);
+    setValue("boxrecUrl", boxer.boxrec_url);
     setValue("nationality", boxer.nationality);
     setValue("birthDate", boxer.birth_date);
     setValue("birthplace", boxer.birthplace);
@@ -224,6 +226,7 @@
       name_en: nullableValue(valueOf("nameEn")),
       ring_name: nullableValue(valueOf("ringName")),
       boxrec_id: nullableValue(valueOf("boxrecId")),
+      boxrec_url: nullableValue(valueOf("boxrecUrl")),
       nationality: nullableValue(valueOf("nationality")),
       birth_date: nullableValue(valueOf("birthDate")),
       birthplace: nullableValue(valueOf("birthplace")),

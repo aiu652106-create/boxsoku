@@ -54,6 +54,7 @@ create table if not exists public.boxers (
   name_en text,
   ring_name text,
   boxrec_id text,
+  boxrec_url text,
   nationality text,
   birth_date date,
   birthplace text,
@@ -97,6 +98,9 @@ create table if not exists public.boxers (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.boxers
+  add column if not exists boxrec_url text;
 
 create index if not exists boxers_public_name_idx
   on public.boxers (is_published, name_ja);

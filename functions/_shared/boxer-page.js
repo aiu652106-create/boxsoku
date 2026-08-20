@@ -8,6 +8,7 @@ const BOXER_SELECT = [
   "name_en",
   "ring_name",
   "boxrec_id",
+  "boxrec_url",
   "nationality",
   "birth_date",
   "birthplace",
@@ -133,17 +134,18 @@ function recordText(boxer) {
   if (!hasRecordData(boxer)) return "戦績：不明";
   const parts = [
     formatNumber(boxer.total_fights, "戦"),
-    formatNumber(boxer.wins, "勝"),
+    `${formatNumber(boxer.wins, "勝")}（${formatNumber(boxer.ko_wins, "KO")}）`,
     formatNumber(boxer.losses, "敗"),
     formatNumber(boxer.draws, "分")
   ];
-  if (boxer.no_contests !== null && boxer.no_contests !== undefined) {
+  if (
+    boxer.no_contests !== null &&
+    boxer.no_contests !== undefined &&
+    Number(boxer.no_contests) > 0
+  ) {
     parts.push(`${boxer.no_contests}無効試合`);
   }
-  if (boxer.ko_wins !== null && boxer.ko_wins !== undefined) {
-    parts.push(`${boxer.ko_wins}KO`);
-  }
-  return parts.join(" ");
+  return parts.join("");
 }
 
 function careerLabel(value) {
@@ -403,6 +405,10 @@ export async function renderBoxerPage({ env, request, params }) {
         formatValue(boxer.source_name)
       )}</a>`
     : escapeHtml(formatValue(boxer.source_name));
+  const boxrecUrl = safeUrl(boxer.boxrec_url);
+  const boxrecDetails = boxrecUrl
+    ? `<p>BoxRec：<a href="${escapeHtml(boxrecUrl)}" target="_blank" rel="noopener noreferrer">本人ページを確認</a></p>`
+    : "";
   const html = `<!doctype html><html lang="ja"><head>${sharedHead({
     siteUrl,
     siteName,
@@ -450,7 +456,7 @@ export async function renderBoxerPage({ env, request, params }) {
         <section class="boxer-profile-section" aria-labelledby="next-heading"><h2 id="next-heading">次戦</h2>${nextFightHtml(
     boxer
   )}</section>
-        <footer class="boxer-source"><h2>データ出典</h2><p>${sourceDetails}</p><p>確認日：${escapeHtml(
+        <footer class="boxer-source"><h2>データ出典</h2><p>${sourceDetails}</p>${boxrecDetails}<p>確認日：${escapeHtml(
     formatCheckedAt(boxer.source_checked_at)
   )}</p></footer>
       </article>
