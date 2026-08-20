@@ -25,7 +25,7 @@
     fixed: "修正済み",
     rejected: "却下"
   };
-  const teamReportFields = new Set(["residence", "trainer", "promoter", "manager", "training_base"]);
+  const teamReportFields = new Set(["trainer", "promoter", "manager", "training_base"]);
 
   const byId = (id) => document.getElementById(id);
   const client = () => window.BoxingData?.client;

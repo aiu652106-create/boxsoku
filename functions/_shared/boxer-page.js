@@ -16,7 +16,6 @@ const BOXER_SELECT = [
   "birthplace",
   "career_status",
   "gym",
-  "residence",
   "trainer",
   "promoter",
   "manager",
@@ -188,7 +187,6 @@ const REPORT_FIELD_DEFINITIONS = [
   ["birthplace", "出身地"],
   ["career_status", "現役・引退状態"],
   ["gym", "所属ジム"],
-  ["residence", "居住地"],
   ["trainer", "トレーナー"],
   ["promoter", "プロモーター"],
   ["manager", "マネージャー"],
@@ -382,9 +380,9 @@ function boxerCard(boxer) {
     ${boxer.name_en ? `<p class="boxer-name-en">${escapeHtml(boxer.name_en)}</p>` : ""}
     <dl class="boxer-card-facts"><div><dt>階級</dt><dd>${escapeHtml(
       formatValue(boxer.weight_class)
-    )}</dd></div><div><dt>所属ジム</dt><dd>${escapeHtml(
-      formatValue(boxer.gym)
-    )}</dd></div>${boxer.promoter ? `<div><dt>プロモーター</dt><dd>${escapeHtml(
+    )}</dd></div>${boxer.gym ? `<div><dt>所属ジム</dt><dd>${escapeHtml(
+      boxer.gym
+    )}</dd></div>` : ""}${boxer.promoter ? `<div><dt>プロモーター</dt><dd>${escapeHtml(
       formatValue(boxer.promoter)
     )}</dd></div>` : ""}<div><dt>戦績</dt><dd>${escapeHtml(record)}</dd></div></dl>
     <a class="boxer-card-detail" href="${detailUrl}">詳細を見る</a>
@@ -471,7 +469,14 @@ function rankingRows(boxer) {
     ["IBF", boxer.ranking_ibf],
     ["WBO", boxer.ranking_wbo]
   ].filter(([, value]) => value !== null && value !== undefined && value !== "");
-  if (!rankings.length) return `<p class="boxer-unknown">確認できる世界ランキングはありません。</p>`;
+  if (!rankings.length) {
+    const hasCurrentWorldTitle = String(boxer.current_titles || "").includes("世界");
+    return `<p class="boxer-unknown">${
+      hasCurrentWorldTitle
+        ? "現在世界王者のため通常ランキングは表示していません。"
+        : "確認できる世界ランキングはありません。"
+    }</p>`;
+  }
   return `<dl class="boxer-ranking-list">${rankings
     .map(([label, value]) => `<div><dt>${label}</dt><dd>${escapeHtml(formatNumber(value, "位"))}</dd></div>`)
     .join("")}</dl>`;
@@ -589,13 +594,19 @@ export async function renderBoxerPage({ env, request, params }) {
     "プロデビュー",
     formatDate(boxer.pro_debut_date)
   )}</dl></section>
-        <section class="boxer-profile-section" aria-labelledby="team-heading"><h2 id="team-heading">チーム情報</h2><dl class="boxer-detail-list">${fieldRow(
-    "居住地",
-    boxer.residence
-  )}${fieldRow("トレーナー", boxer.trainer)}${fieldRow("プロモーター", boxer.promoter)}${fieldRow(
-    "マネージャー",
-    boxer.manager
-  )}${fieldRow("トレーニング拠点", boxer.training_base)}</dl></section>
+        ${[
+          ["トレーナー", boxer.trainer],
+          ["プロモーター", boxer.promoter],
+          ["マネージャー", boxer.manager],
+          ["トレーニング拠点", boxer.training_base]
+        ].filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== "").length
+          ? `<section class="boxer-profile-section" aria-labelledby="team-heading"><h2 id="team-heading">チーム情報</h2><dl class="boxer-detail-list">${[
+              ["トレーナー", boxer.trainer],
+              ["プロモーター", boxer.promoter],
+              ["マネージャー", boxer.manager],
+              ["トレーニング拠点", boxer.training_base]
+            ].filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== "").map(([label, value]) => fieldRow(label, value)).join("")}</dl></section>`
+          : ""}
         <section class="boxer-profile-section" aria-labelledby="title-heading"><h2 id="title-heading">タイトル</h2><dl class="boxer-detail-list">${fieldRow(
     "世界王者経験",
     titleExperience

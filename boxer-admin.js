@@ -14,7 +14,6 @@
     "birthplace",
     "careerStatus",
     "gym",
-    "residence",
     "trainer",
     "promoter",
     "manager",
@@ -134,7 +133,6 @@
     setValue("birthplace", boxer.birthplace);
     setValue("careerStatus", boxer.career_status);
     setValue("gym", boxer.gym);
-    setValue("residence", boxer.residence);
     setValue("trainer", boxer.trainer);
     setValue("promoter", boxer.promoter);
     setValue("manager", boxer.manager);
@@ -259,7 +257,6 @@
       birth_date: nullableValue(valueOf("birthDate")),
       birthplace: nullableValue(valueOf("birthplace")),
       gym: nullableValue(valueOf("gym")),
-      residence: nullableValue(valueOf("residence")),
       trainer: nullableValue(valueOf("trainer")),
       promoter: nullableValue(valueOf("promoter")),
       manager: nullableValue(valueOf("manager")),

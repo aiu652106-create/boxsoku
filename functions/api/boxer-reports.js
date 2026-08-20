@@ -19,7 +19,6 @@ const REPORT_FIELDS = new Set([
   "birthplace",
   "career_status",
   "gym",
-  "residence",
   "trainer",
   "promoter",
   "manager",

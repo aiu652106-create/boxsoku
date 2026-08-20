@@ -27,7 +27,7 @@
   const boxerFields = [
     "slug", "name_ja", "name_kana", "name_en", "ring_name", "boxrec_id", "boxrec_url",
     "sex", "nationality", "nationality_code", "birth_date", "birthplace",
-    "gym", "residence", "trainer", "promoter", "manager", "training_base",
+    "gym", "trainer", "promoter", "manager", "training_base",
     "weight_class", "stance", "height_cm", "reach_cm", "pro_debut_date",
     "total_fights", "wins", "losses", "draws", "no_contests", "ko_wins",
     "world_champion_experience", "next_fight_date",
@@ -58,7 +58,6 @@
     nationalityCode: "nationality_code",
     birthDate: "birth_date",
     careerStatus: "career_status",
-    residence: "residence",
     trainer: "trainer",
     promoter: "promoter",
     manager: "manager",
