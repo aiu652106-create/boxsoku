@@ -75,7 +75,9 @@ function formatDate(value) {
 function formatCheckedAt(value) {
   if (!value) return "不明";
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "不明" : date.toLocaleString("ja-JP");
+  return Number.isNaN(date.getTime())
+    ? "不明"
+    : date.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
 }
 
 function formatValue(value) {
