@@ -553,7 +553,7 @@ assert.match(
 );
 assert.match(
   listingHtml,
-  /<script src="\/app\.js\?v=20260817-affiliate-same-tab2" defer><\/script>/
+  /<script src="\/app\.js\?v=20260817-event-date-sort1" defer><\/script>/
 );
 assert.ok(!listingHtml.includes("記事を読み込んでいます"));
 
