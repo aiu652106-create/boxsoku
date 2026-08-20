@@ -342,6 +342,10 @@ begin
     raise exception 'candidate not found';
   end if;
 
+  if candidate.status not in ('pending', 'needs_review') then
+    raise exception 'candidate already reviewed';
+  end if;
+
   if p_action <> 'approved' then
     update public.update_candidates
     set status = p_action,
