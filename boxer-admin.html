@@ -82,7 +82,7 @@
                 <label>国籍コード<input id="boxer-nationality-code" maxlength="3" pattern="[A-Z]{3}" placeholder="JPN / USA / IRL" /></label>
                 <label>生年月日<input id="boxer-birth-date" type="date" /></label>
                 <label>出身地<input id="boxer-birthplace" /></label>
-                <label>状態<select id="boxer-career-status"><option value="unknown">不明</option><option value="active">現役</option><option value="inactive">活動休止</option><option value="retired">引退</option></select></label>
+                <label>状態<select id="boxer-career-status" disabled><option value="unknown">不明</option><option value="active">現役</option><option value="inactive">活動休止</option><option value="retired">引退</option></select></label>
                 <label>所属ジム<input id="boxer-gym" /></label>
                 <label>居住地<input id="boxer-residence" /></label>
                 <label>トレーナー<input id="boxer-trainer" /></label>
@@ -105,14 +105,14 @@
               </div><p class="boxer-admin-help">KO率は「KO勝 ÷ 勝利数 × 100」でDBが自動計算します。</p></fieldset>
               <fieldset><legend>タイトル・ランキング</legend><div class="boxer-admin-grid">
                 <label>世界王者経験<select id="boxer-world-champion"><option value="">不明</option><option value="true">あり</option><option value="false">なし</option></select></label>
-                <label>現在保有タイトル<textarea id="boxer-current-titles" rows="2"></textarea></label>
-                <label>過去の主要タイトル<textarea id="boxer-past-titles" rows="2"></textarea></label>
-                <label>世界王座獲得階級<textarea id="boxer-world-title-classes" rows="2"></textarea></label>
-                <label>WBA順位<input id="boxer-ranking-wba" type="number" min="0" step="1" /></label>
-                <label>WBC順位<input id="boxer-ranking-wbc" type="number" min="0" step="1" /></label>
-                <label>IBF順位<input id="boxer-ranking-ibf" type="number" min="0" step="1" /></label>
-                <label>WBO順位<input id="boxer-ranking-wbo" type="number" min="0" step="1" /></label>
-              </div></fieldset>
+                <label>現在保有タイトル<textarea id="boxer-current-titles" rows="2" disabled></textarea></label>
+                <label>過去の主要タイトル<textarea id="boxer-past-titles" rows="2" disabled></textarea></label>
+                <label>世界王座獲得階級<textarea id="boxer-world-title-classes" rows="2" disabled></textarea></label>
+                <label>WBA順位<input id="boxer-ranking-wba" type="number" min="0" step="1" disabled /></label>
+                <label>WBC順位<input id="boxer-ranking-wbc" type="number" min="0" step="1" disabled /></label>
+                <label>IBF順位<input id="boxer-ranking-ibf" type="number" min="0" step="1" disabled /></label>
+                <label>WBO順位<input id="boxer-ranking-wbo" type="number" min="0" step="1" disabled /></label>
+              </div><p class="boxer-admin-help">状態・ランキング・タイトルは履歴テーブルが正本です。この画面では表示のみです。</p></fieldset>
               <fieldset><legend>次戦</legend><div class="boxer-admin-grid">
                 <label>次戦日<input id="boxer-next-date" type="date" /></label>
                 <label>対戦相手<input id="boxer-next-opponent" /></label>

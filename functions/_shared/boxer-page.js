@@ -275,11 +275,13 @@ async function derivedBoxerData(env, boxerRows) {
     ? `&fighter_id=eq.${encodeURIComponent(ids[0])}`
     : "";
   try {
-    const [titleRows, rankingRows] = await Promise.all([
+    const [titleRows, rankingRows, statusRows] = await Promise.all([
       supabaseRows(env, `current_fighter_titles?select=fighter_id,current_titles${idFilter}`),
-      supabaseRows(env, `current_fighter_rankings?select=fighter_id,organization,ranking${idFilter}`)
+      supabaseRows(env, `current_fighter_rankings?select=fighter_id,organization,ranking${idFilter}`),
+      supabaseRows(env, `current_fighter_status?select=fighter_id,status${idFilter}`)
     ]);
     const titlesByFighter = new Map((titleRows || []).map((row) => [row.fighter_id, row.current_titles]));
+    const statusByFighter = new Map((statusRows || []).map((row) => [row.fighter_id, row.status]));
     const rankingsByFighter = new Map();
     for (const row of rankingRows || []) {
       const organization = String(row.organization || "").toLowerCase();
@@ -289,9 +291,8 @@ async function derivedBoxerData(env, boxerRows) {
     }
     return boxerRows.map((boxer) => ({
       ...boxer,
-      ...(titlesByFighter.has(boxer.internal_id)
-        ? { current_titles: titlesByFighter.get(boxer.internal_id) }
-        : {}),
+      current_titles: titlesByFighter.get(boxer.internal_id) || "なし",
+      career_status: statusByFighter.get(boxer.internal_id) || "unknown",
       ...(rankingsByFighter.get(boxer.internal_id) || {})
     }));
   } catch {

@@ -26,15 +26,18 @@
   };
   const boxerFields = [
     "slug", "name_ja", "name_kana", "name_en", "ring_name", "boxrec_id", "boxrec_url",
-    "sex", "nationality", "nationality_code", "birth_date", "birthplace", "career_status",
+    "sex", "nationality", "nationality_code", "birth_date", "birthplace",
     "gym", "residence", "trainer", "promoter", "manager", "training_base",
     "weight_class", "stance", "height_cm", "reach_cm", "pro_debut_date",
     "total_fights", "wins", "losses", "draws", "no_contests", "ko_wins",
-    "world_champion_experience", "current_titles", "past_major_titles", "world_title_weight_classes",
-    "ranking_wba", "ranking_wbc", "ranking_ibf", "ranking_wbo", "next_fight_date",
+    "world_champion_experience", "next_fight_date",
     "next_opponent", "next_venue", "next_event_name", "source_name", "source_url",
     "source_checked_at", "field_sources", "is_published"
   ];
+  const generatedBoxerFields = new Set([
+    "career_status", "current_titles", "past_major_titles", "world_title_weight_classes",
+    "ranking_wba", "ranking_wbc", "ranking_ibf", "ranking_wbo"
+  ]);
   const entityFields = {
     boxers: boxerFields,
     rankings: ["fighter_id", "fighter_slug", "boxrec_id", "organization", "weight_class", "ranking", "ranking_date", "ranking_month", "source_name", "source_url", "source_date", "checked_at"],
@@ -263,7 +266,6 @@
     if (!/^https:\/\/boxrec\.com\//i.test(text(row.boxrec_url))) errors.push("boxrec_urlはBoxRec本人ページのhttps URLが必要です。");
     if (!['male', 'female', 'unknown'].includes(text(row.sex))) errors.push("sexはmale/female/unknownのいずれかが必要です。");
     if (!/^[A-Z]{3}$/.test(text(row.nationality_code))) errors.push("nationality_codeは3文字の国コードが必要です。");
-    if (!['active', 'inactive', 'retired', 'unknown'].includes(text(row.career_status))) errors.push("career_statusが不正です。");
     if (!validDate(row.birth_date) || !validDate(row.pro_debut_date) || !validDate(row.next_fight_date)) errors.push("日付はYYYY-MM-DDで入力してください。");
     validateCommonSource(row, errors);
     numericFields.forEach((field) => {
@@ -397,6 +399,14 @@
       const seenAt = entity === "boxers" ? duplicateSeen(row, entity, seen) : null;
       const errors = [...result.errors];
       const review = [...result.review];
+      if (entity === "boxers") {
+        const generatedFields = Object.keys(raw || {})
+          .map(canonicalField)
+          .filter((field, fieldIndex, fields) => generatedBoxerFields.has(field) && fields.indexOf(field) === fieldIndex);
+        if (generatedFields.length) {
+          errors.push(`状態・タイトル・ランキングは正規テーブルで管理してください（${generatedFields.join("、")}）。`);
+        }
+      }
       if (seenAt) errors.push(`同じファイルの${seenAt}行目と識別情報が重複しています。`);
       let operation = "new";
       if (errors.length) operation = "error";

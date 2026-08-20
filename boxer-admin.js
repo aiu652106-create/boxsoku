@@ -226,13 +226,13 @@
 
   async function loadReportSummary() {
     const target = byId("boxer-report-admin-counts");
-    const result = await window.BoxingData.client.from("boxer_reports").select("report_id,status");
+    const result = await window.BoxingData.client.from("correction_reports").select("report_id,status");
     if (result.error) {
       target.innerHTML = "<span>報告件数を読み込めません。</span>";
       return;
     }
     const rows = result.data || [];
-    const labels = [["pending", "未対応"], ["reviewing", "確認中"], ["resolved", "修正済み"], ["rejected", "却下"]];
+    const labels = [["pending", "未対応"], ["reviewing", "確認中"], ["fixed", "修正済み"], ["rejected", "却下"]];
     target.innerHTML = labels.map(([status, label]) => `<span><strong>${rows.filter((row) => row.status === status).length}</strong>${label}</span>`).join("");
   }
 
@@ -258,7 +258,6 @@
       nationality_code: nullableValue(valueOf("nationalityCode"))?.toUpperCase() || null,
       birth_date: nullableValue(valueOf("birthDate")),
       birthplace: nullableValue(valueOf("birthplace")),
-      career_status: valueOf("careerStatus").value,
       gym: nullableValue(valueOf("gym")),
       residence: nullableValue(valueOf("residence")),
       trainer: nullableValue(valueOf("trainer")),
@@ -277,13 +276,6 @@
       no_contests: nullableNumber(valueOf("noContests")),
       ko_wins: nullableNumber(valueOf("koWins")),
       world_champion_experience: valueOf("worldChampion").value === "" ? null : valueOf("worldChampion").value === "true",
-      current_titles: nullableValue(valueOf("currentTitles")),
-      past_major_titles: nullableValue(valueOf("pastTitles")),
-      world_title_weight_classes: nullableValue(valueOf("worldTitleClasses")),
-      ranking_wba: nullableNumber(valueOf("rankingWba")),
-      ranking_wbc: nullableNumber(valueOf("rankingWbc")),
-      ranking_ibf: nullableNumber(valueOf("rankingIbf")),
-      ranking_wbo: nullableNumber(valueOf("rankingWbo")),
       next_fight_date: nullableValue(valueOf("nextDate")),
       next_opponent: nullableValue(valueOf("nextOpponent")),
       next_venue: nullableValue(valueOf("nextVenue")),

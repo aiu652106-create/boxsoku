@@ -22,7 +22,7 @@
   const reportStatusLabels = {
     pending: "未対応",
     reviewing: "確認中",
-    resolved: "修正済み",
+    fixed: "修正済み",
     rejected: "却下"
   };
   const teamReportFields = new Set(["residence", "trainer", "promoter", "manager", "training_base"]);
@@ -162,14 +162,14 @@
     byId("review-report-empty").hidden = state.reports.length !== 0;
     list.innerHTML = state.reports.map((report) => {
       const boxer = boxerOf(report);
-      const evidence = safeUrl(report.evidence_url);
+      const evidence = safeUrl(report.source_url);
       return `<article class="review-report-card" data-report-id="${escapeHtml(report.report_id)}">
         <header><label class="review-select"><input type="checkbox" data-report-check value="${escapeHtml(report.report_id)}" /><span>選択</span></label><div><span class="review-badge">${escapeHtml(reportStatusLabels[report.status] || report.status)}</span><time>${escapeHtml(detectedText(report.submitted_at))}</time></div></header>
         <h3>${boxer.slug ? `<a href="/boxer/${encodeURIComponent(boxer.slug)}" target="_blank" rel="noopener">${escapeHtml(candidateName(report))}</a>` : escapeHtml(candidateName(report))}</h3>
         <p>指摘項目：${escapeHtml(report.field_name)}</p>
-        <dl class="review-value-diff"><div><dt>現在表示</dt><dd>${escapeHtml(report.current_value)}</dd></div><div><dt>変更候補</dt><dd>${escapeHtml(report.proposed_value)}</dd></div></dl>
+        <dl class="review-value-diff"><div><dt>現在表示</dt><dd>${escapeHtml(report.current_value)}</dd></div><div><dt>変更候補</dt><dd>${escapeHtml(report.suggested_value)}</dd></div></dl>
         <p>${escapeHtml(report.comment || "補足コメントなし")}</p>
-        <p>情報元URL：${evidence ? `<a href="${escapeHtml(evidence)}" target="_blank" rel="noopener noreferrer">${escapeHtml(report.evidence_url)}</a>` : escapeHtml(report.evidence_url)}</p>
+        <p>情報元URL：${evidence ? `<a href="${escapeHtml(evidence)}" target="_blank" rel="noopener noreferrer">${escapeHtml(report.source_url)}</a>` : escapeHtml(report.source_url)}</p>
         <div class="review-actions"><button type="button" data-report-action="reviewing">確認中</button><button type="button" data-report-action="resolved">修正済み</button><button type="button" data-report-action="rejected" class="review-danger">却下</button></div>
       </article>`;
     }).join("");
@@ -180,8 +180,8 @@
       `選手：${candidateName(report)}`,
       `指摘項目：${report.field_name}`,
       `現在表示：${valueText(report.current_value)}`,
-      `修正候補：${valueText(report.proposed_value)}`,
-      `情報元URL：${report.evidence_url || "不明"}`,
+      `修正候補：${valueText(report.suggested_value)}`,
+      `情報元URL：${report.source_url || "不明"}`,
       `コメント：${report.comment || "なし"}`,
       `報告状態：${reportStatusLabels[report.status] || report.status}`,
       `報告日時：${detectedText(report.submitted_at)}`,
@@ -205,7 +205,7 @@
   async function loadData() {
     const [candidateResult, reportResult] = await Promise.all([
       client().from("update_candidates").select("*, boxers(name_ja, slug)").order("detected_at", { ascending: false }),
-      client().from("boxer_reports").select("*, boxers(name_ja, slug)").order("submitted_at", { ascending: false })
+      client().from("correction_reports").select("*, boxers(name_ja, slug)").order("submitted_at", { ascending: false })
     ]);
     if (candidateResult.error) throw candidateResult.error;
     if (reportResult.error) throw reportResult.error;
@@ -246,8 +246,8 @@
 
   async function updateReport(reportId, status) {
     setStatus("報告状態を更新中…");
-    const result = await client().from("boxer_reports").update({
-      status,
+    const result = await client().from("correction_reports").update({
+      status: status === "resolved" ? "fixed" : status,
       reviewed_by: state.session.user.id,
       reviewed_at: new Date().toISOString()
     }).eq("report_id", reportId);
