@@ -590,7 +590,7 @@ export async function renderBoxerPage({ env, request, params }) {
   )}${fieldRow("階級", boxer.weight_class)}${fieldRow("身長", formatNumber(boxer.height_cm, "cm"))}${fieldRow(
     "リーチ",
     formatNumber(boxer.reach_cm, "cm")
-  )}${fieldRow("構え", boxer.stance)}${fieldRow("所属ジム", boxer.gym)}${fieldRow(
+  )}${fieldRow("構え", boxer.stance)}${boxer.gym ? fieldRow("所属ジム", boxer.gym) : ""}${fieldRow(
     "プロデビュー",
     formatDate(boxer.pro_debut_date)
   )}</dl></section>
