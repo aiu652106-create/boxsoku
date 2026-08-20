@@ -102,6 +102,16 @@
     "start_date", "end_date", "source_date"
   ]);
   const dateTimeFields = new Set(["source_checked_at", "checked_at"]);
+  const officialBoxerSourceFields = new Set([
+    "next_fight_date", "next_opponent", "next_venue", "next_event_name",
+    "trainer", "promoter", "manager"
+  ]);
+  const officialOrganizationDomains = {
+    WBA: ["wbaboxing.com"],
+    WBC: ["wbcboxing.com"],
+    IBF: ["ibf-usba-boxing.com", "ibfboxing.com"],
+    WBO: ["wboboxing.com"]
+  };
   const byId = (id) => document.getElementById(id);
   const client = () => window.BoxingData?.client;
 
@@ -228,6 +238,161 @@
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text(value));
   }
 
+  function sourceEntries(value) {
+    let parsed = value;
+    if (typeof parsed === "string") {
+      try { parsed = JSON.parse(parsed); } catch { return []; }
+    }
+    if (Array.isArray(parsed)) return parsed;
+    return parsed && typeof parsed === "object" ? [parsed] : [];
+  }
+
+  function sourceUrl(entry) {
+    if (typeof entry === "string") return text(entry);
+    return text(entry?.url || entry?.source_url);
+  }
+
+  function isBoxRecUrl(value) {
+    try {
+      const hostname = new URL(text(value)).hostname.toLowerCase();
+      return hostname === "boxrec.com" || hostname.endsWith(".boxrec.com");
+    } catch {
+      return false;
+    }
+  }
+
+  function hostMatchesDomain(value, domains) {
+    try {
+      const hostname = new URL(text(value)).hostname.toLowerCase();
+      return domains.some((domain) => hostname === domain || hostname.endsWith("." + domain));
+    } catch {
+      return false;
+    }
+  }
+
+  function hasNonBoxRecFieldSource(row, field) {
+    const fieldSources = row.field_sources && typeof row.field_sources === "object"
+      ? row.field_sources
+      : {};
+    return sourceEntries(fieldSources[field]).some((entry) => {
+      const url = sourceUrl(entry);
+      return validUrl(url) && !isBoxRecUrl(url);
+    });
+  }
+
+  function fieldSourceMap(row) {
+    let value = row?.field_sources;
+    if (typeof value === "string") {
+      try { value = JSON.parse(value); } catch { value = null; }
+    }
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  }
+
+  function auditSourceEntries(audit) {
+    if (!audit || typeof audit !== "object") return [];
+    if (audit.sources !== undefined) return sourceEntries(audit.sources);
+    return sourceEntries(audit);
+  }
+
+  function auditHasSource(audit, predicate = () => true) {
+    return auditSourceEntries(audit).some((entry) => {
+      const url = sourceUrl(entry);
+      return validUrl(url) && predicate(url, entry);
+    });
+  }
+
+  function officialOrganizationSourcePresent(audit, organization) {
+    const domains = officialOrganizationDomains[text(organization).toUpperCase()];
+    return domains ? auditHasSource(audit, (url) => hostMatchesDomain(url, domains)) : auditHasSource(audit);
+  }
+
+  function validateAuditCoverage(row, errors, review) {
+    const fields = fieldSourceMap(row);
+    const required = [
+      ["status", ["confirmed"]],
+      ["current_titles", ["present", "none", "unresearched"]],
+      ["rankings", ["present", "none", "unresearched"]]
+    ];
+    for (const [field, allowedStatuses] of required) {
+      const audit = fields[field];
+      if (!audit || typeof audit !== "object" || Array.isArray(audit)) {
+        errors.push(`field_sources.${field}の監査結果が必要です。`);
+        continue;
+      }
+      const auditStatus = text(audit.audit_status);
+      if (!allowedStatuses.includes(auditStatus)) {
+        errors.push(`field_sources.${field}.audit_statusが不正です。`);
+      }
+      if (!auditHasSource(audit)) {
+        errors.push(`field_sources.${field}には確認に使った出典URLが必要です。`);
+      }
+      if (auditStatus === "unresearched") {
+        review.push(`${field}が未調査です。`);
+      }
+      if (field === "status") {
+        if (!["active", "retired", "inactive"].includes(text(audit.value))) {
+          errors.push("field_sources.status.valueはactive/retired/inactiveが必要です。");
+        }
+        if (text(audit.value) === "retired" && !auditHasSource(audit, (url) => !isBoxRecUrl(url))) {
+          review.push("retired判定がBoxRecのみです。公式・一次情報を再確認してください。");
+        }
+      }
+      if (["current_titles", "rankings"].includes(field)
+        && ["present", "none"].includes(auditStatus)
+        && (!Array.isArray(audit.value) || (auditStatus === "present" && audit.value.length === 0))) {
+        errors.push(`field_sources.${field}.valueは${auditStatus === "present" ? "1件以上の配列" : "空配列"}が必要です。`);
+      }
+      if (auditStatus === "none" && Array.isArray(audit.value) && audit.value.length > 0) {
+        errors.push(`field_sources.${field}.audit_status=noneなのにvalueがあります。`);
+      }
+    }
+
+    const titleAudit = fields.current_titles;
+    if (titleAudit?.audit_status === "present" && Array.isArray(titleAudit.value)) {
+      for (const title of titleAudit.value) {
+        const organization = text(title?.organization).toUpperCase();
+        if (["WBA", "WBC", "IBF", "WBO"].includes(organization)
+          && !officialOrganizationSourcePresent(titleAudit, organization)) {
+          errors.push(`${organization}の現在王座には${organization}公式出典が必要です。`);
+        }
+      }
+    }
+    const rankingAudit = fields.rankings;
+    if (rankingAudit?.audit_status === "present" && Array.isArray(rankingAudit.value)) {
+      for (const ranking of rankingAudit.value) {
+        const organization = text(ranking?.organization).toUpperCase();
+        if (["WBA", "WBC", "IBF", "WBO"].includes(organization)
+          && !officialOrganizationSourcePresent(rankingAudit, organization)) {
+          errors.push(`${organization}のランキングには${organization}公式出典が必要です。`);
+        }
+      }
+    }
+  }
+
+  function validateOfficialBoxerSources(row, review) {
+    for (const field of officialBoxerSourceFields) {
+      if (text(row[field]) && !hasNonBoxRecFieldSource(row, field)) {
+        review.push(field + "にはBoxRec以外の公式・一次出典が必要です。");
+      }
+    }
+  }
+
+  function validateOfficialCanonicalSource(row, entity, review, organization = row.organization) {
+    const url = text(row.source_url);
+    if (!validUrl(url)) return;
+    if (entity === "fighter_status_history") {
+      if (isBoxRecUrl(url)) review.push("現役・引退状態にはBoxRec以外の公式・一次出典が必要です。");
+      return;
+    }
+    if (entity === "rankings" || entity === "title_reigns") {
+      const org = text(organization).toUpperCase();
+      const domains = officialOrganizationDomains[org];
+      if (domains && !hostMatchesDomain(url, domains)) {
+        review.push(org + "のランキング・王座情報は" + org + "公式出典が必要です。");
+      }
+    }
+  }
+
   function rowKey(row, fields) {
     return fields.map((field) => text(row[field]).toLocaleLowerCase("ja-JP")).join("|");
   }
@@ -267,6 +432,8 @@
     if (!/^[A-Z]{3}$/.test(text(row.nationality_code))) errors.push("nationality_codeは3文字の国コードが必要です。");
     if (!validDate(row.birth_date) || !validDate(row.pro_debut_date) || !validDate(row.next_fight_date)) errors.push("日付はYYYY-MM-DDで入力してください。");
     validateCommonSource(row, errors);
+    validateOfficialBoxerSources(row, review);
+    validateAuditCoverage(row, errors, review);
     numericFields.forEach((field) => {
       if (text(row[field]) !== "" && (!Number.isFinite(Number(row[field])) || Number(row[field]) < 0)) errors.push(`${field}は0以上の数値が必要です。`);
     });
@@ -348,6 +515,7 @@
       if (!/^\d+$/.test(text(row.ranking))) errors.push("rankingが必要です。");
       if (!validDate(row.ranking_date) || !validDate(row.ranking_month)) errors.push("ranking_date/ranking_monthはYYYY-MM-DDで入力してください。");
       validateCommonSource(row, errors);
+      validateOfficialCanonicalSource(row, entity, review);
       if (!validDate(row.source_date)) errors.push("source_dateはYYYY-MM-DDで入力してください。");
       const duplicate = refs.rankings.find((item) => item.fighter_id === fighter?.internal_id
         && item.organization === text(row.organization).toUpperCase()
@@ -371,6 +539,7 @@
       if (!['active', 'lost', 'vacated', 'stripped', 'inactive'].includes(text(row.status || "active"))) errors.push("statusが不正です。");
       if (!validDate(row.start_date) || !validDate(row.end_date) || !validDate(row.source_date)) errors.push("日付はYYYY-MM-DDで入力してください。");
       validateCommonSource(row, errors);
+      validateOfficialCanonicalSource(row, entity, review, title?.organization || row.organization);
       const duplicate = refs.titleReigns.find((item) => item.fighter_id === fighter?.internal_id
         && item.title_id === title?.title_id
         && item.status === text(row.status || "active")
@@ -381,6 +550,7 @@
       if (!['active', 'inactive', 'retired'].includes(text(row.status))) errors.push("statusが不正です。");
       if (!validDate(row.start_date) || !validDate(row.end_date) || !validDate(row.source_date)) errors.push("日付はYYYY-MM-DDで入力してください。");
       validateCommonSource(row, errors);
+      validateOfficialCanonicalSource(row, entity, review);
       const duplicate = refs.statusHistory.find((item) => item.fighter_id === fighter?.internal_id
         && item.status === text(row.status)
         && text(item.start_date) === text(row.start_date));
