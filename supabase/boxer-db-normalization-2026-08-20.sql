@@ -216,7 +216,8 @@ select distinct on (h.fighter_id)
 from public.fighter_status_history h
 order by
   h.fighter_id,
-  h.checked_at desc,
+  (h.end_date is null) desc,
+  h.checked_at desc nulls last,
   h.history_id desc;
 
 grant select on public.current_fighter_titles,
@@ -493,36 +494,43 @@ where tr.fighter_id = b.internal_id
   and t.title_type = 'world';
 
 -- Katie Taylor's September 5, 2026 bout is the latest verified status
--- evidence. Keep older inactive history and append a newer active record.
-insert into public.fighter_status_history (
-  fighter_id,
-  status,
-  start_date,
-  end_date,
-  source_name,
-  source_url,
-  source_date,
-  checked_at
-)
-select
-  b.internal_id,
-  'active',
-  null,
-  null,
-  'Matchroom Boxing公式（2026-08-20再確認）',
-  'https://www.matchroomboxing.com/news/katie-taylor-lands-historic-croke-park-undisputed-world-title-farewell-in-ireland-against-flora-pili-on-saturday-september-5-live-worldwide-on-dazn/',
-  '2026-06-05',
-  now()
-from public.boxers b
-where b.slug = 'katie-taylor'
-  and not exists (
+-- evidence. Keep older history, close any previous current row, and append
+-- exactly one newer active record. The block is rerunnable without closing
+-- the already-current record a second time.
+do $$
+declare
+  katie_id uuid;
+begin
+  select internal_id into katie_id
+  from public.boxers
+  where slug = 'katie-taylor';
+
+  if katie_id is not null and not exists (
     select 1
     from public.fighter_status_history h
-    where h.fighter_id = b.internal_id
+    where h.fighter_id = katie_id
       and h.status = 'active'
       and h.source_name = 'Matchroom Boxing公式（2026-08-20再確認）'
       and h.source_date = '2026-06-05'
-  );
+      and h.end_date is null
+  ) then
+    update public.fighter_status_history
+    set end_date = '2026-08-20'
+    where fighter_id = katie_id
+      and end_date is null;
+
+    insert into public.fighter_status_history (
+      fighter_id, status, start_date, end_date,
+      source_name, source_url, source_date, checked_at
+    ) values (
+      katie_id, 'active', null, null,
+      'Matchroom Boxing公式（2026-08-20再確認）',
+      'https://www.matchroomboxing.com/news/katie-taylor-lands-historic-croke-park-undisputed-world-title-farewell-in-ireland-against-flora-pili-on-saturday-september-5-live-worldwide-on-dazn/',
+      '2026-06-05', now()
+    );
+  end if;
+end;
+$$;
 
 -- ---------------------------------------------------------------------------
 -- 3. Generate compatibility cache columns from the canonical tables.
