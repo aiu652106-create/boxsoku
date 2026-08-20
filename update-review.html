@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>更新確認 | ボクシング速報</title>
+    <link rel="stylesheet" href="styles.css?v=20260820-boxer-workflow1" />
+    <link rel="icon" data-boxsoku-site-icon="true" type="image/png" href="/assets/boxsoku-icon.png" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="config.js?v=20260813-site-icon-settings1" defer></script>
+    <script src="data.js?v=20260820-boxer-workflow1" defer></script>
+    <script src="site-icon.js?v=20260813-site-icon-settings1" defer></script>
+    <script src="update-review.js?v=20260820-boxer-workflow1" defer></script>
+  </head>
+  <body class="admin-page boxer-admin-page update-review-page">
+    <header class="admin-header">
+      <a class="admin-brand" href="admin.html">
+        <span>速</span>
+        <div><strong>ボクシング速報</strong><small>UPDATE REVIEW</small></div>
+      </a>
+      <a class="admin-view-site" href="/boxers" target="_blank" rel="noopener">選手DBを見る</a>
+    </header>
+
+    <section id="review-login-panel" class="admin-login-shell">
+      <form id="review-login-form" class="admin-login-card">
+        <span>UPDATE REVIEW</span>
+        <h1>更新確認</h1>
+        <p>自動取得やユーザー報告は候補として保存され、承認するまで本番データへ反映されません。</p>
+        <label>メールアドレス<input id="review-login-email" type="email" autocomplete="username" required /></label>
+        <label>パスワード<input id="review-login-password" type="password" autocomplete="current-password" required /></label>
+        <p id="review-login-error" class="form-error" role="alert"></p>
+        <button type="submit">ログイン</button>
+      </form>
+    </section>
+
+    <div id="review-dashboard" class="admin-layout boxer-admin-layout" hidden>
+      <aside class="admin-sidebar">
+        <nav>
+          <a href="admin.html">記事管理</a>
+          <a href="boxer-admin.html">選手DB管理</a>
+          <a class="is-active" href="update-review.html">更新確認</a>
+          <a href="/boxers" target="_blank" rel="noopener">公開選手一覧</a>
+          <button id="review-logout-button" type="button">ログアウト</button>
+        </nav>
+      </aside>
+
+      <main class="admin-main boxer-admin-main update-review-main">
+        <div class="admin-page-heading">
+          <div><span>UPDATE CANDIDATES</span><h1>更新確認</h1><p>候補を確認し、承認したものだけ現在の選手データへ反映します。</p></div>
+          <button id="review-refresh-button" class="admin-new-button" type="button">再読み込み</button>
+        </div>
+        <p id="review-status" class="admin-settings-message" role="status"></p>
+
+        <section class="review-summary-grid" aria-label="今日の変更候補">
+          <div><span>未確認</span><strong id="review-pending-count">0</strong></div>
+          <div><span>試合結果</span><strong id="review-fight-count">0</strong></div>
+          <div><span>ランキング</span><strong id="review-ranking-count">0</strong></div>
+          <div><span>タイトル</span><strong id="review-title-count">0</strong></div>
+          <div><span>状態・プロフィール</span><strong id="review-profile-count">0</strong></div>
+          <div><span>ユーザー報告</span><strong id="review-report-count">0</strong></div>
+        </section>
+
+        <section class="review-toolbar" aria-label="候補の絞り込みと一括操作">
+          <label>状態<select id="review-status-filter"><option value="all">すべて</option><option value="pending">未確認</option><option value="needs_review">保留・要確認</option><option value="approved">承認済み</option><option value="rejected">却下</option></select></label>
+          <label>カテゴリ<select id="review-category-filter"><option value="all">すべて</option><option value="fight_result">試合結果</option><option value="ranking">ランキング</option><option value="title">タイトル</option><option value="status">現役・引退</option><option value="gym">所属変更</option><option value="profile">プロフィール</option><option value="next_fight">次戦</option><option value="user_report">ユーザー報告</option></select></label>
+          <label>情報源<select id="review-source-filter"><option value="all">すべて</option></select></label>
+          <label>検索<input id="review-search" type="search" placeholder="選手名・項目・出典" /></label>
+          <button id="review-select-all" class="boxer-admin-button" type="button">表示中を全選択</button>
+          <button id="review-copy-button" class="boxer-admin-button" type="button">未確認を一括コピー</button>
+          <button id="review-bulk-approve" class="boxer-admin-button" type="button">選択を一括承認</button>
+          <button id="review-bulk-reject" class="boxer-admin-button boxer-admin-danger" type="button">選択を一括却下</button>
+          <button id="review-bulk-hold" class="boxer-admin-button" type="button">選択を保留</button>
+        </section>
+
+        <section class="review-panel" aria-labelledby="candidate-heading">
+          <div class="admin-list-heading"><div><span>CHANGE CANDIDATES</span><h2 id="candidate-heading">変更候補</h2></div><strong id="review-result-count">0件</strong></div>
+          <div id="review-candidate-list" class="review-candidate-list"></div>
+          <p id="review-candidate-empty" class="boxer-admin-empty" hidden>条件に一致する候補はありません。</p>
+        </section>
+
+        <section class="review-panel" aria-labelledby="report-heading">
+          <div class="admin-list-heading"><div><span>USER REPORTS</span><h2 id="report-heading">ユーザー修正報告</h2></div><strong id="review-user-report-count">0件</strong></div>
+          <div id="review-report-list" class="review-report-list"></div>
+          <p id="review-report-empty" class="boxer-admin-empty" hidden>ユーザー報告はありません。</p>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

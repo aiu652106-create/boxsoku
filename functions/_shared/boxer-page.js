@@ -164,6 +164,77 @@ function sourceLink(boxer) {
   )}</a>`;
 }
 
+const REPORT_FIELD_DEFINITIONS = [
+  ["name_ja", "選手名（日本語）"],
+  ["name_kana", "読み方"],
+  ["name_en", "英語表記"],
+  ["ring_name", "リングネーム"],
+  ["nationality", "国籍"],
+  ["birth_date", "生年月日"],
+  ["birthplace", "出身地"],
+  ["career_status", "現役・引退状態"],
+  ["gym", "所属ジム"],
+  ["weight_class", "階級"],
+  ["stance", "構え"],
+  ["height_cm", "身長"],
+  ["reach_cm", "リーチ"],
+  ["pro_debut_date", "プロデビュー日"],
+  ["world_champion_experience", "世界王者経験"],
+  ["current_titles", "現在保有タイトル"],
+  ["past_major_titles", "過去の主要タイトル"],
+  ["world_title_weight_classes", "世界王座獲得階級"],
+  ["ranking_wba", "WBAランキング"],
+  ["ranking_wbc", "WBCランキング"],
+  ["ranking_ibf", "IBFランキング"],
+  ["ranking_wbo", "WBOランキング"],
+  ["next_fight", "次戦情報"],
+  ["next_fight_date", "次戦日"],
+  ["next_opponent", "次戦対戦相手"],
+  ["next_venue", "次戦会場"],
+  ["next_event_name", "次戦興行名"]
+];
+
+function reportCurrentValue(boxer, fieldName) {
+  if (fieldName === "career_status") return careerLabel(boxer.career_status);
+  if (fieldName === "world_champion_experience") {
+    return boxer.world_champion_experience === true
+      ? "あり"
+      : boxer.world_champion_experience === false
+        ? "なし"
+        : "不明";
+  }
+  if (fieldName === "next_fight") {
+    return [
+      formatDate(boxer.next_fight_date),
+      formatValue(boxer.next_opponent),
+      formatValue(boxer.next_venue),
+      formatValue(boxer.next_event_name)
+    ].join(" / ");
+  }
+  if (fieldName.startsWith("ranking_")) {
+    const value = boxer[fieldName];
+    return value === null || value === undefined ? "不明" : `${value}位`;
+  }
+  if (fieldName === "height_cm") return formatNumber(boxer.height_cm, "cm");
+  if (fieldName === "reach_cm") return formatNumber(boxer.reach_cm, "cm");
+  if (fieldName === "birth_date" || fieldName === "pro_debut_date") {
+    return formatDate(boxer[fieldName]);
+  }
+  return formatValue(boxer[fieldName]);
+}
+
+function reportFieldOptions(boxer) {
+  return REPORT_FIELD_DEFINITIONS.map(
+    ([value, label]) => `<option value="${value}">${label}</option>`
+  ).join("");
+}
+
+function reportCurrentValues(boxer) {
+  return Object.fromEntries(
+    REPORT_FIELD_DEFINITIONS.map(([value]) => [value, reportCurrentValue(boxer, value)])
+  );
+}
+
 async function supabaseRows(env, query) {
   if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
     throw new Error("Supabase environment variables are not configured.");
@@ -195,7 +266,7 @@ async function getBoxer(env, slug) {
 
 function sharedHead({ siteUrl, siteName, title, description, canonical, structuredData }) {
   const defaultImage = `${siteUrl}/assets/boxing-arena.png`;
-  return `<meta charset="UTF-8">
+  const head = `<meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <meta name="description" content="${escapeHtml(description)}">
@@ -217,6 +288,8 @@ function sharedHead({ siteUrl, siteName, title, description, canonical, structur
   <script src="/config.js?v=20260813-site-icon-settings1" defer></script>
   <script src="/site.js" defer></script>
   <script src="/site-icon.js?v=20260813-site-icon-settings1" defer></script>`;
+  return `${head}
+  <script src="/boxer-report.js?v=20260820-boxer-workflow1" defer></script>`;
 }
 
 function siteHeader(siteName) {
@@ -458,6 +531,22 @@ export async function renderBoxerPage({ env, request, params }) {
         <section class="boxer-profile-section" aria-labelledby="next-heading"><h2 id="next-heading">次戦</h2>${nextFightHtml(
     boxer
   )}</section>
+        <section class="boxer-profile-section boxer-report-section" aria-labelledby="report-heading" data-boxer-report data-fighter-id="${escapeHtml(
+    boxer.internal_id
+  )}" data-current-values="${escapeHtml(JSON.stringify(reportCurrentValues(boxer)))}">
+          <h2 id="report-heading">情報の誤りを報告</h2>
+          <p>表示内容に誤りがある場合は、項目と根拠URLを送信してください。すぐには反映されず、管理者が公式情報を確認します。</p>
+          <form class="boxer-report-form">
+            <label>指摘項目<select name="fieldName" required>${reportFieldOptions(boxer)}</select></label>
+            <p class="boxer-report-current" data-report-current></p>
+            <label>正しいと思う内容<textarea name="proposedValue" rows="3" maxlength="2000" required></textarea></label>
+            <label>根拠URL<input name="evidenceUrl" type="url" maxlength="1000" placeholder="https://" required></label>
+            <label>補足コメント（任意）<textarea name="comment" rows="3" maxlength="2000"></textarea></label>
+            <label class="boxer-report-trap" aria-hidden="true">ウェブサイト<input name="website" type="text" tabindex="-1" autocomplete="off"></label>
+            <button type="submit">報告を送信</button>
+            <p class="boxer-report-status" data-report-status role="status" aria-live="polite"></p>
+          </form>
+        </section>
         <footer class="boxer-source"><h2>データ出典</h2><p>${sourceDetails}</p>${boxrecDetails}<p>確認日：${escapeHtml(
     formatCheckedAt(boxer.source_checked_at)
   )}</p></footer>
