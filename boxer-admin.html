@@ -6,13 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex,nofollow" />
     <title>選手DB管理 | ボクシング速報</title>
-    <link rel="stylesheet" href="styles.css?v=20260820-boxer-db3" />
+    <link rel="stylesheet" href="styles.css?v=20260821-boxer-source-audit1" />
     <link rel="icon" data-boxsoku-site-icon="true" type="image/png" href="/assets/boxsoku-icon.png" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="config.js?v=20260813-site-icon-settings1" defer></script>
     <script src="data.js?v=20260814-affiliate-report1" defer></script>
     <script src="site-icon.js?v=20260813-site-icon-settings1" defer></script>
-    <script src="boxer-admin.js?v=20260820-boxer-db3" defer></script>
+    <script src="boxer-admin.js?v=20260821-boxer-source-audit1" defer></script>
   </head>
   <body class="admin-page boxer-admin-page">
     <header class="admin-header">
@@ -119,12 +119,13 @@
                 <label>興行名<input id="boxer-next-event" /></label>
               </div></fieldset>
               <fieldset><legend>出典・公開状態</legend><div class="boxer-admin-grid">
-                <label>主な出典名*<input id="boxer-source-name" required placeholder="JBC / 公式サイトなど" /></label>
-                <label>主な出典URL*<input id="boxer-source-url" required type="url" placeholder="https://" /></label>
+                <label>互換用代表出典名*<input id="boxer-source-name" required placeholder="JBC / 公式サイトなど" /></label>
+                <label>互換用代表出典URL*<input id="boxer-source-url" required type="url" placeholder="https://" /></label>
                 <label>確認日時<input id="boxer-source-checked-at" type="datetime-local" /></label>
                 <label class="boxer-admin-check"><input id="boxer-published" type="checkbox" checked /> 公開する</label>
                 <label class="boxer-admin-full">項目別出典（JSON）<textarea id="boxer-field-sources" rows="5" placeholder='{"wins":{"name":"公式戦績","url":"https://..."}}'></textarea></label>
-              </div></fieldset>
+                <div id="boxer-source-audit" class="boxer-admin-source-audit boxer-admin-full"><h3>項目別出典の確認</h3><p class="boxer-admin-source-audit-empty">選手を選択してください。</p></div>
+              </div><p class="boxer-admin-help">代表出典は互換用に保存します。公開ページの「データ出典」は、項目別出典と正本テーブルの情報を表示します。</p></fieldset>
               <div class="boxer-admin-actions"><button class="boxer-admin-button" type="submit">保存</button><button id="boxer-delete-button" class="boxer-admin-button boxer-admin-danger" type="button" disabled>削除</button></div>
             </form>
           </section>

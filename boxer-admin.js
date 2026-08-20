@@ -50,6 +50,49 @@
 
   let currentBoxers = [];
   let editingId = "";
+  let sourceAuditRequestId = 0;
+
+  const sourceFieldLabels = {
+    profile: "基本プロフィール",
+    record: "戦績",
+    boxrec: "BoxRec ID・本人ページ",
+    boxrec_id: "BoxRec ID・本人ページ",
+    boxrec_url: "BoxRec ID・本人ページ",
+    name_ja: "基本プロフィール",
+    name_kana: "基本プロフィール",
+    name_en: "基本プロフィール",
+    nationality: "国籍",
+    birth_date: "生年月日",
+    birthplace: "出身地",
+    sex: "性別",
+    weight_class: "階級",
+    stance: "構え",
+    height_cm: "身長",
+    reach_cm: "リーチ",
+    pro_debut_date: "プロデビュー",
+    world_champion_experience: "世界王者経験",
+    past_major_titles: "過去の主要タイトル",
+    titles: "過去の主要タイトル",
+    world_title_weight_classes: "世界王座獲得階級",
+    next_fight: "次戦",
+    next_fight_date: "次戦",
+    next_opponent: "次戦",
+    next_venue: "次戦",
+    next_event_name: "次戦",
+    gym: "所属ジム",
+    trainer: "トレーナー",
+    promoter: "プロモーター",
+    manager: "マネージャー",
+    training_base: "トレーニング拠点"
+  };
+  const canonicalSourceFields = new Set([
+    "career_status",
+    "current_titles",
+    "ranking_wba",
+    "ranking_wbc",
+    "ranking_ibf",
+    "ranking_wbo"
+  ]);
 
   const byId = (id) => document.getElementById(id);
   const valueOf = (name) => byId(`boxer-${kebab(name)}`);
@@ -114,6 +157,7 @@
     byId("boxer-world-champion").value = "";
     byId("boxer-delete-button").disabled = true;
     byId("boxer-form-heading").textContent = "選手情報（新規）";
+    renderSourceAudit(null);
   }
 
   function loadForm(boxer) {
@@ -197,6 +241,7 @@
         const boxer = currentBoxers.find((item) => item.internal_id === button.dataset.boxerId);
         if (boxer) {
           loadForm(boxer);
+          void loadSourceAudit(boxer);
           renderList();
         }
       });
@@ -210,6 +255,151 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#39;");
+  }
+
+  function sourceDisplayName(value) {
+    const name = String(value || "").trim();
+    if (!name) return "情報源";
+    return name.split(/\s*\/\s*/)[0].trim() || "情報源";
+  }
+
+  function sourceEntries(value) {
+    const values = Array.isArray(value) ? value : [value];
+    return values
+      .map((entry) => (typeof entry === "string" ? { url: entry } : entry))
+      .filter((entry) => entry && typeof entry === "object");
+  }
+
+  function safeSourceUrl(value) {
+    try {
+      const url = new URL(String(value || ""));
+      return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+    } catch {
+      return "";
+    }
+  }
+
+  function sourceDateText(value) {
+    const date = String(value || "").slice(0, 10);
+    return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.replaceAll("-", "/") : "不明";
+  }
+
+  function checkedAtText(value) {
+    if (!value) return "不明";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "不明" : date.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+  }
+
+  function currentTitleReign(reign) {
+    if (String(reign?.status || "") !== "active") return false;
+    if (!reign?.end_date) return true;
+    return String(reign.end_date).slice(0, 10) >= new Date().toISOString().slice(0, 10);
+  }
+
+  function buildSourceAuditRows(boxer, rankings, titleReigns, status) {
+    const byUrl = new Map();
+    const add = (entry, purpose) => {
+      const url = safeSourceUrl(entry?.url || entry?.source_url);
+      if (!url) return;
+      const sourceName = sourceDisplayName(entry?.name || entry?.source_name);
+      const existing = byUrl.get(url);
+      if (existing) {
+        if (!existing.purposes.includes(purpose)) existing.purposes.push(purpose);
+        if (!existing.names.includes(sourceName)) existing.names.push(sourceName);
+        existing.sourceDate ||= entry?.source_date || entry?.sourceDate || null;
+        existing.checkedAt ||= entry?.checked_at || entry?.checkedAt || null;
+        return;
+      }
+      byUrl.set(url, {
+        names: [sourceName],
+        url,
+        purposes: [purpose],
+        sourceDate: entry?.source_date || entry?.sourceDate || null,
+        checkedAt: entry?.checked_at || entry?.checkedAt || null
+      });
+    };
+
+    const fieldSources = boxer.field_sources && typeof boxer.field_sources === "object"
+      ? boxer.field_sources
+      : {};
+    for (const [fieldName, value] of Object.entries(fieldSources)) {
+      if (canonicalSourceFields.has(fieldName) || fieldName === "residence") continue;
+      const label = sourceFieldLabels[fieldName];
+      if (!label) continue;
+      for (const entry of sourceEntries(value)) add(entry, label);
+    }
+    for (const row of rankings || []) {
+      const organization = String(row.organization || "").toUpperCase();
+      add(row, organization ? `${organization}ランキング` : "世界ランキング");
+    }
+    for (const row of titleReigns || []) {
+      if (currentTitleReign(row)) add(row, "現在保有タイトル");
+    }
+    if (status) add(status, "現役・引退状態");
+    if (!byUrl.size) add({ name: boxer.source_name, url: boxer.source_url, checked_at: boxer.source_checked_at }, "互換用代表出典");
+
+    return [...byUrl.values()].map((row) => ({ ...row, name: row.names.join("・") }));
+  }
+
+  function renderSourceAudit(boxer, rows = []) {
+    const target = byId("boxer-source-audit");
+    if (!target) return;
+    if (!boxer) {
+      target.innerHTML = '<h3>項目別出典の確認</h3><p class="boxer-admin-source-audit-empty">選手を選択してください。</p>';
+      return;
+    }
+    if (!rows.length) {
+      target.innerHTML = '<h3>項目別出典の確認</h3><p class="boxer-admin-source-audit-empty">項目別に確認できる出典はありません。</p>';
+      return;
+    }
+    target.innerHTML = `<h3>項目別出典の確認</h3><p class="boxer-admin-source-audit-note">同じURLは1件にまとめ、用途を併記しています。</p><ul class="boxer-admin-source-audit-list">${rows
+      .map((row) => `<li class="boxer-admin-source-audit-item"><strong>${escapeHtml(row.name)}</strong><span>対象：${escapeHtml(row.purposes.join("・"))}</span><a href="${escapeHtml(row.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(row.url)}</a><span>公開日：${escapeHtml(sourceDateText(row.sourceDate))}｜確認日：${escapeHtml(checkedAtText(row.checkedAt || boxer.source_checked_at))}</span></li>`)
+      .join("")}</ul>`;
+  }
+
+  async function loadSourceAudit(boxer) {
+    const requestId = ++sourceAuditRequestId;
+    if (!boxer) {
+      renderSourceAudit(null);
+      return;
+    }
+    const target = byId("boxer-source-audit");
+    if (target) target.innerHTML = '<h3>項目別出典の確認</h3><p class="boxer-admin-source-audit-empty">正本出典を読み込み中…</p>';
+    try {
+      const [rankingsResult, titlesResult, statusResult] = await Promise.all([
+        window.BoxingData.client
+          .from("current_fighter_rankings")
+          .select("organization,ranking,source_name,source_url,source_date,checked_at")
+          .eq("fighter_id", boxer.internal_id),
+        window.BoxingData.client
+          .from("title_reigns")
+          .select("title_id,status,end_date,source_name,source_url,source_date,checked_at")
+          .eq("fighter_id", boxer.internal_id)
+          .eq("status", "active"),
+        window.BoxingData.client
+          .from("current_fighter_status")
+          .select("status,source_name,source_url,source_date,checked_at")
+          .eq("fighter_id", boxer.internal_id)
+          .limit(1)
+      ]);
+      if (rankingsResult.error) throw rankingsResult.error;
+      if (titlesResult.error) throw titlesResult.error;
+      if (statusResult.error) throw statusResult.error;
+      if (requestId !== sourceAuditRequestId) return;
+      renderSourceAudit(
+        boxer,
+        buildSourceAuditRows(
+          boxer,
+          rankingsResult.data || [],
+          titlesResult.data || [],
+          (statusResult.data || [])[0] || null
+        )
+      );
+    } catch (error) {
+      if (requestId !== sourceAuditRequestId) return;
+      const target = byId("boxer-source-audit");
+      if (target) target.innerHTML = `<h3>項目別出典の確認</h3><p class="boxer-admin-source-audit-error">正本出典の読み込みに失敗しました。${escapeHtml(error.message || "")}</p>`;
+    }
   }
 
   async function loadBoxers() {
@@ -311,7 +501,10 @@
     }
     await loadBoxers();
     const saved = currentBoxers.find((boxer) => boxer.slug === payload.slug);
-    if (saved) loadForm(saved);
+    if (saved) {
+      loadForm(saved);
+      await loadSourceAudit(saved);
+    }
     setStatus("保存しました。");
   }
 

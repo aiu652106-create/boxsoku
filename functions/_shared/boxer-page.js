@@ -169,12 +169,148 @@ function sexLabel(value) {
   return "不明";
 }
 
-function sourceLink(boxer) {
-  const url = safeUrl(boxer.source_url);
-  if (!url) return `<span>${escapeHtml(formatValue(boxer.source_name))}</span>`;
-  return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(
-    formatValue(boxer.source_name) || url
-  )}</a>`;
+const SOURCE_FIELD_LABELS = {
+  profile: "基本プロフィール",
+  record: "戦績",
+  boxrec: "BoxRec ID・本人ページ",
+  boxrec_id: "BoxRec ID・本人ページ",
+  boxrec_url: "BoxRec ID・本人ページ",
+  name_ja: "基本プロフィール",
+  name_kana: "基本プロフィール",
+  name_en: "基本プロフィール",
+  nationality: "国籍",
+  birth_date: "生年月日",
+  birthplace: "出身地",
+  sex: "性別",
+  weight_class: "階級",
+  stance: "構え",
+  height_cm: "身長",
+  reach_cm: "リーチ",
+  pro_debut_date: "プロデビュー",
+  world_champion_experience: "世界王者経験",
+  past_major_titles: "過去の主要タイトル",
+  titles: "過去の主要タイトル",
+  world_title_weight_classes: "世界王座獲得階級",
+  next_fight: "次戦",
+  next_fight_date: "次戦",
+  next_opponent: "次戦",
+  next_venue: "次戦",
+  next_event_name: "次戦",
+  gym: "所属ジム",
+  trainer: "トレーナー",
+  promoter: "プロモーター",
+  manager: "マネージャー",
+  training_base: "トレーニング拠点"
+};
+
+const CANONICAL_SOURCE_FIELDS = new Set([
+  "career_status",
+  "current_titles",
+  "ranking_wba",
+  "ranking_wbc",
+  "ranking_ibf",
+  "ranking_wbo"
+]);
+
+function sourceDisplayName(value) {
+  const name = String(value || "").trim();
+  if (!name) return "情報源";
+  // Legacy metadata occasionally combined multiple sources while retaining
+  // only one URL. Keep one name per URL until the metadata migration runs.
+  return name.split(/\s*\/\s*/)[0].trim() || "情報源";
+}
+
+function sourceEntries(value) {
+  const values = Array.isArray(value) ? value : [value];
+  return values
+    .map((entry) => {
+      if (typeof entry === "string") return { url: entry };
+      return entry && typeof entry === "object" ? entry : null;
+    })
+    .filter(Boolean);
+}
+
+function sourcePurpose(fieldName) {
+  return SOURCE_FIELD_LABELS[fieldName] || "プロフィール情報";
+}
+
+function currentTitleReign(reign) {
+  if (String(reign?.status || "") !== "active") return false;
+  if (!reign?.end_date) return true;
+  return String(reign.end_date).slice(0, 10) >= new Date().toISOString().slice(0, 10);
+}
+
+function buildSourceAudit(boxer) {
+  const byUrl = new Map();
+  const add = (entry, purpose) => {
+    const url = safeUrl(entry?.url || entry?.source_url);
+    if (!url) return;
+    const key = url;
+    const sourceName = sourceDisplayName(entry?.name || entry?.source_name);
+    const existing = byUrl.get(key);
+    if (existing) {
+      if (!existing.purposes.includes(purpose)) existing.purposes.push(purpose);
+      if (!existing.names.includes(sourceName)) existing.names.push(sourceName);
+      existing.sourceDate ||= entry?.source_date || entry?.sourceDate || null;
+      existing.checkedAt ||= entry?.checked_at || entry?.checkedAt || null;
+      return;
+    }
+    byUrl.set(key, {
+      name: sourceName,
+      names: [sourceName],
+      url,
+      purposes: [purpose],
+      sourceDate: entry?.source_date || entry?.sourceDate || null,
+      checkedAt: entry?.checked_at || entry?.checkedAt || null
+    });
+  };
+
+  const fieldSources = boxer.field_sources && typeof boxer.field_sources === "object"
+    ? boxer.field_sources
+    : {};
+  for (const [fieldName, value] of Object.entries(fieldSources)) {
+    if (CANONICAL_SOURCE_FIELDS.has(fieldName) || fieldName === "residence") continue;
+    const label = SOURCE_FIELD_LABELS[fieldName];
+    if (!label) continue;
+    for (const entry of sourceEntries(value)) add(entry, label);
+  }
+
+  for (const row of boxer.current_rankings || []) {
+    const organization = String(row.organization || "").toUpperCase();
+    add(row, organization ? `${organization}ランキング` : "世界ランキング");
+  }
+  for (const row of boxer.current_title_reigns || []) {
+    if (currentTitleReign(row)) add(row, "現在保有タイトル");
+  }
+  if (boxer.current_status_source) add(boxer.current_status_source, "現役・引退状態");
+
+  if (!byUrl.size) {
+    add(
+      { name: boxer.source_name, url: boxer.source_url, checked_at: boxer.source_checked_at },
+      "互換用代表出典"
+    );
+  }
+
+  return [...byUrl.values()].map((source) => ({
+    ...source,
+    name: source.names.join("・")
+  }));
+}
+
+function sourceAuditHtml(boxer) {
+  const sources = boxer.source_audit || [];
+  if (!sources.length) return '<p class="boxer-source-empty">項目別に確認できる出典はありません。</p>';
+  return `<ul class="boxer-source-list">${sources
+    .map(
+      (source) => `<li class="boxer-source-card"><div class="boxer-source-card-heading"><strong>${escapeHtml(
+        source.name
+      )}</strong><span>${escapeHtml(source.purposes.join("・"))}</span></div><a href="${escapeHtml(
+        source.url
+      )}" target="_blank" rel="noopener noreferrer">公式情報を確認</a><small>公開日：${escapeHtml(
+        formatDate(source.sourceDate)
+      )}｜確認日：${escapeHtml(formatCheckedAt(source.checkedAt || boxer.source_checked_at))}</small></li>`
+    )
+    .join("")}</ul>`;
 }
 
 const REPORT_FIELD_DEFINITIONS = [
@@ -273,13 +409,15 @@ async function derivedBoxerData(env, boxerRows) {
     ? `&fighter_id=eq.${encodeURIComponent(ids[0])}`
     : "";
   try {
-    const [titleRows, rankingRows, statusRows] = await Promise.all([
+    const [titleRows, rankingRows, statusRows, titleReignRows] = await Promise.all([
       supabaseRows(env, `current_fighter_titles?select=fighter_id,current_titles${idFilter}`),
-      supabaseRows(env, `current_fighter_rankings?select=fighter_id,organization,ranking${idFilter}`),
-      supabaseRows(env, `current_fighter_status?select=fighter_id,status${idFilter}`)
+      supabaseRows(env, `current_fighter_rankings?select=fighter_id,organization,ranking,source_name,source_url,source_date,checked_at${idFilter}`),
+      supabaseRows(env, `current_fighter_status?select=fighter_id,status,source_name,source_url,source_date,checked_at${idFilter}`),
+      supabaseRows(env, `title_reigns?select=fighter_id,title_id,status,end_date,source_name,source_url,source_date,checked_at${idFilter}`)
     ]);
     const titlesByFighter = new Map((titleRows || []).map((row) => [row.fighter_id, row.current_titles]));
     const statusByFighter = new Map((statusRows || []).map((row) => [row.fighter_id, row.status]));
+    const statusSourceByFighter = new Map((statusRows || []).map((row) => [row.fighter_id, row]));
     const rankingsByFighter = new Map();
     for (const row of rankingRows || []) {
       const organization = String(row.organization || "").toLowerCase();
@@ -287,11 +425,30 @@ async function derivedBoxerData(env, boxerRows) {
       if (!rankingsByFighter.has(row.fighter_id)) rankingsByFighter.set(row.fighter_id, {});
       rankingsByFighter.get(row.fighter_id)[`ranking_${organization}`] = row.ranking;
     }
+    const currentRankingsByFighter = new Map();
+    for (const row of rankingRows || []) {
+      if (!currentRankingsByFighter.has(row.fighter_id)) currentRankingsByFighter.set(row.fighter_id, []);
+      currentRankingsByFighter.get(row.fighter_id).push(row);
+    }
+    const currentTitlesByFighter = new Map();
+    for (const row of titleReignRows || []) {
+      if (!currentTitlesByFighter.has(row.fighter_id)) currentTitlesByFighter.set(row.fighter_id, []);
+      currentTitlesByFighter.get(row.fighter_id).push(row);
+    }
     return boxerRows.map((boxer) => ({
       ...boxer,
       current_titles: titlesByFighter.get(boxer.internal_id) || "なし",
       career_status: statusByFighter.get(boxer.internal_id) || "unknown",
-      ...(rankingsByFighter.get(boxer.internal_id) || {})
+      ...(rankingsByFighter.get(boxer.internal_id) || {}),
+      current_rankings: currentRankingsByFighter.get(boxer.internal_id) || [],
+      current_title_reigns: currentTitlesByFighter.get(boxer.internal_id) || [],
+      current_status_source: statusSourceByFighter.get(boxer.internal_id) || null,
+      source_audit: buildSourceAudit({
+        ...boxer,
+        current_rankings: currentRankingsByFighter.get(boxer.internal_id) || [],
+        current_title_reigns: currentTitlesByFighter.get(boxer.internal_id) || [],
+        current_status_source: statusSourceByFighter.get(boxer.internal_id) || null
+      })
     }));
   } catch {
     // Keep the published snapshot usable while a new view is being deployed.
@@ -334,7 +491,7 @@ function sharedHead({ siteUrl, siteName, title, description, canonical, structur
   <meta name="twitter:image" content="${escapeHtml(defaultImage)}">
   <title>${escapeHtml(title)}</title>
   <script type="application/ld+json">${structuredData}</script>
-  <link rel="stylesheet" href="/styles.css?v=20260820-boxer-db3">
+  <link rel="stylesheet" href="/styles.css?v=20260821-boxer-source-audit1">
   <script src="/config.js?v=20260813-site-icon-settings1" defer></script>
   <script src="/site.js" defer></script>
   <script src="/site-icon.js?v=20260813-site-icon-settings1" defer></script>`;
@@ -538,20 +695,7 @@ export async function renderBoxerPage({ env, request, params }) {
   });
   const record = recordText(boxer);
   const titleExperience = boxer.world_champion_experience === true ? "あり" : boxer.world_champion_experience === false ? "なし" : "不明";
-  const sourceUrl = safeUrl(boxer.source_url);
-  const sourceDetails = sourceUrl
-    ? `<a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(
-        formatValue(boxer.source_name)
-      )}</a>`
-    : escapeHtml(formatValue(boxer.source_name));
   const boxrecUrl = safeUrl(boxer.boxrec_url);
-  const boxrecDetails = boxrecUrl
-    ? `<p>BoxRec ID：<strong>${escapeHtml(formatValue(boxer.boxrec_id))}</strong>　<a href="${escapeHtml(
-        boxrecUrl
-      )}" target="_blank" rel="noopener noreferrer">本人ページを確認</a></p>`
-    : boxer.boxrec_id
-      ? `<p>BoxRec ID：<strong>${escapeHtml(boxer.boxrec_id)}</strong></p>`
-      : "<p>BoxRec：不明</p>";
   const boxrecProfile = boxrecUrl
     ? `<div class="boxer-field"><dt>BoxRec ID</dt><dd><strong>${escapeHtml(
         formatValue(boxer.boxrec_id)
@@ -638,9 +782,9 @@ export async function renderBoxerPage({ env, request, params }) {
           </form>
           </div>
         </details>
-        <footer class="boxer-source"><h2>データ出典</h2><p>${sourceDetails}</p>${boxrecDetails}<p>確認日：${escapeHtml(
-    formatCheckedAt(boxer.source_checked_at)
-  )}</p></footer>
+        <footer class="boxer-source"><h2>データ出典</h2><p>各項目を確認した情報源を、用途ごとに表示しています。</p>${sourceAuditHtml(
+    boxer
+  )}</footer>
       </article>
     </main>${siteFooter(siteName)}</body></html>`;
   return new Response(request.method === "HEAD" ? null : html, {

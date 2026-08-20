@@ -7652,6 +7652,49 @@ body.retro-blog .retro-summary {
   color: inherit;
 }
 
+.boxer-source-list {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.boxer-source-card {
+  display: grid;
+  gap: 5px;
+  border: 1px solid #dedede;
+  background: #fafafa;
+  padding: 11px 13px;
+}
+
+.boxer-source-card-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+}
+
+.boxer-source-card-heading strong {
+  color: #333;
+}
+
+.boxer-source-card-heading span,
+.boxer-source-card small,
+.boxer-source-empty {
+  color: #777;
+}
+
+.boxer-source-card a {
+  width: fit-content;
+  color: #9d1d24;
+  font-weight: 700;
+}
+
+.boxer-source-card small {
+  font-size: 0.78rem;
+}
+
 @media (max-width: 720px) {
   .boxer-page-container {
     width: min(100% - 24px, 640px);
@@ -7816,6 +7859,54 @@ body.retro-blog .retro-summary {
 
 .boxer-admin-help {
   margin: 9px 0 0;
+}
+
+.boxer-admin-source-audit {
+  grid-column: 1 / -1;
+  border-top: 1px solid #e3e3e3;
+  margin-top: 4px;
+  padding-top: 12px;
+}
+
+.boxer-admin-source-audit h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.boxer-admin-source-audit-note,
+.boxer-admin-source-audit-empty,
+.boxer-admin-source-audit-error {
+  color: #737373;
+  font-size: 0.82rem;
+}
+
+.boxer-admin-source-audit-error {
+  color: #a41d24;
+}
+
+.boxer-admin-source-audit-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.boxer-admin-source-audit-item {
+  display: grid;
+  gap: 4px;
+  border: 1px solid #dedede;
+  background: #fafafa;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+}
+
+.boxer-admin-source-audit-item strong {
+  color: #333;
+}
+
+.boxer-admin-source-audit-item a {
+  overflow-wrap: anywhere;
 }
 
 .boxer-admin-actions {
