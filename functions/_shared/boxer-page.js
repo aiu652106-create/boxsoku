@@ -16,6 +16,11 @@ const BOXER_SELECT = [
   "birthplace",
   "career_status",
   "gym",
+  "residence",
+  "trainer",
+  "promoter",
+  "manager",
+  "training_base",
   "weight_class",
   "stance",
   "height_cm",
@@ -183,6 +188,11 @@ const REPORT_FIELD_DEFINITIONS = [
   ["birthplace", "出身地"],
   ["career_status", "現役・引退状態"],
   ["gym", "所属ジム"],
+  ["residence", "居住地"],
+  ["trainer", "トレーナー"],
+  ["promoter", "プロモーター"],
+  ["manager", "マネージャー"],
+  ["training_base", "トレーニング拠点"],
   ["weight_class", "階級"],
   ["stance", "構え"],
   ["height_cm", "身長"],
@@ -258,11 +268,43 @@ async function supabaseRows(env, query) {
   return response.json();
 }
 
+async function derivedBoxerData(env, boxerRows) {
+  if (!boxerRows.length) return boxerRows;
+  const ids = boxerRows.map((boxer) => boxer.internal_id).filter(Boolean);
+  const idFilter = ids.length === 1
+    ? `&fighter_id=eq.${encodeURIComponent(ids[0])}`
+    : "";
+  try {
+    const [titleRows, rankingRows] = await Promise.all([
+      supabaseRows(env, `current_fighter_titles?select=fighter_id,current_titles${idFilter}`),
+      supabaseRows(env, `current_fighter_rankings?select=fighter_id,organization,ranking${idFilter}`)
+    ]);
+    const titlesByFighter = new Map((titleRows || []).map((row) => [row.fighter_id, row.current_titles]));
+    const rankingsByFighter = new Map();
+    for (const row of rankingRows || []) {
+      const organization = String(row.organization || "").toLowerCase();
+      if (!organization) continue;
+      if (!rankingsByFighter.has(row.fighter_id)) rankingsByFighter.set(row.fighter_id, {});
+      rankingsByFighter.get(row.fighter_id)[`ranking_${organization}`] = row.ranking;
+    }
+    return boxerRows.map((boxer) => ({
+      ...boxer,
+      ...(titlesByFighter.has(boxer.internal_id)
+        ? { current_titles: titlesByFighter.get(boxer.internal_id) }
+        : {}),
+      ...(rankingsByFighter.get(boxer.internal_id) || {})
+    }));
+  } catch {
+    // Keep the published snapshot usable while a new view is being deployed.
+    return boxerRows;
+  }
+}
+
 async function getBoxers(env) {
   const query = `boxers?select=${encodeURIComponent(
     BOXER_SELECT
   )}&is_published=eq.true&order=name_ja.asc&limit=1000`;
-  return supabaseRows(env, query);
+  return derivedBoxerData(env, await supabaseRows(env, query));
 }
 
 async function getBoxer(env, slug) {
@@ -270,7 +312,7 @@ async function getBoxer(env, slug) {
     BOXER_SELECT
   )}&slug=eq.${encodeURIComponent(slug)}&is_published=eq.true&limit=1`;
   const rows = await supabaseRows(env, query);
-  return rows[0] || null;
+  return (await derivedBoxerData(env, rows))[0] || null;
 }
 
 function sharedHead({ siteUrl, siteName, title, description, canonical, structuredData }) {
@@ -293,12 +335,12 @@ function sharedHead({ siteUrl, siteName, title, description, canonical, structur
   <meta name="twitter:image" content="${escapeHtml(defaultImage)}">
   <title>${escapeHtml(title)}</title>
   <script type="application/ld+json">${structuredData}</script>
-  <link rel="stylesheet" href="/styles.css?v=20260820-boxer-db2">
+  <link rel="stylesheet" href="/styles.css?v=20260820-boxer-db3">
   <script src="/config.js?v=20260813-site-icon-settings1" defer></script>
   <script src="/site.js" defer></script>
   <script src="/site-icon.js?v=20260813-site-icon-settings1" defer></script>`;
   return `${head}
-  <script src="/boxer-report.js?v=20260820-boxer-workflow1" defer></script>`;
+  <script src="/boxer-report.js?v=20260820-boxer-workflow2" defer></script>`;
 }
 
 function siteHeader(siteName) {
@@ -341,7 +383,9 @@ function boxerCard(boxer) {
       formatValue(boxer.weight_class)
     )}</dd></div><div><dt>所属ジム</dt><dd>${escapeHtml(
       formatValue(boxer.gym)
-    )}</dd></div><div><dt>戦績</dt><dd>${escapeHtml(record)}</dd></div></dl>
+    )}</dd></div>${boxer.promoter ? `<div><dt>プロモーター</dt><dd>${escapeHtml(
+      formatValue(boxer.promoter)
+    )}</dd></div>` : ""}<div><dt>戦績</dt><dd>${escapeHtml(record)}</dd></div></dl>
     <a class="boxer-card-detail" href="${detailUrl}">詳細を見る</a>
   </article>`;
 }
@@ -502,6 +546,11 @@ export async function renderBoxerPage({ env, request, params }) {
     : boxer.boxrec_id
       ? `<p>BoxRec ID：<strong>${escapeHtml(boxer.boxrec_id)}</strong></p>`
       : "<p>BoxRec：不明</p>";
+  const boxrecProfile = boxrecUrl
+    ? `<div class="boxer-field"><dt>BoxRec ID</dt><dd><strong>${escapeHtml(
+        formatValue(boxer.boxrec_id)
+      )}</strong>　<a href="${escapeHtml(boxrecUrl)}" target="_blank" rel="noopener noreferrer">本人ページを見る</a></dd></div>`
+    : fieldRow("BoxRec ID", boxer.boxrec_id);
   const html = `<!doctype html><html lang="ja"><head>${sharedHead({
     siteUrl,
     siteName,
@@ -529,7 +578,7 @@ export async function renderBoxerPage({ env, request, params }) {
   )}${fieldRow("性別", sexLabel(boxer.sex))}${fieldRow("国籍", boxer.nationality)}${fieldRow(
     "国籍コード",
     boxer.nationality_code
-  )}${fieldRow("生年月日", formatDate(boxer.birth_date))}${fieldRow(
+  )}${boxrecProfile}${fieldRow("生年月日", formatDate(boxer.birth_date))}${fieldRow(
     "出身地",
     boxer.birthplace
   )}${fieldRow("階級", boxer.weight_class)}${fieldRow("身長", formatNumber(boxer.height_cm, "cm"))}${fieldRow(
@@ -539,6 +588,13 @@ export async function renderBoxerPage({ env, request, params }) {
     "プロデビュー",
     formatDate(boxer.pro_debut_date)
   )}</dl></section>
+        <section class="boxer-profile-section" aria-labelledby="team-heading"><h2 id="team-heading">チーム情報</h2><dl class="boxer-detail-list">${fieldRow(
+    "居住地",
+    boxer.residence
+  )}${fieldRow("トレーナー", boxer.trainer)}${fieldRow("プロモーター", boxer.promoter)}${fieldRow(
+    "マネージャー",
+    boxer.manager
+  )}${fieldRow("トレーニング拠点", boxer.training_base)}</dl></section>
         <section class="boxer-profile-section" aria-labelledby="title-heading"><h2 id="title-heading">タイトル</h2><dl class="boxer-detail-list">${fieldRow(
     "世界王者経験",
     titleExperience
@@ -555,14 +611,14 @@ export async function renderBoxerPage({ env, request, params }) {
         <details class="boxer-profile-section boxer-report-section" data-boxer-report data-fighter-id="${escapeHtml(
     boxer.internal_id
   )}" data-current-values="${escapeHtml(JSON.stringify(reportCurrentValues(boxer)))}">
-          <summary id="report-heading">情報の誤りを報告</summary>
+          <summary id="report-heading"><span>情報に誤りがありますか？</span><strong>修正を報告する</strong></summary>
           <div class="boxer-report-content">
-          <p>表示内容に誤りがある場合は、項目と根拠URLを送信してください。すぐには反映されず、管理者が公式情報を確認します。</p>
+          <p>表示内容に誤りがある場合は、項目と情報元URLを送信してください。すぐには反映されず、管理者が公式情報を確認します。</p>
           <form class="boxer-report-form">
             <label>指摘項目<select name="fieldName" required>${reportFieldOptions(boxer)}</select></label>
             <p class="boxer-report-current" data-report-current></p>
             <label>正しいと思う内容<textarea name="proposedValue" rows="3" maxlength="2000" required></textarea></label>
-            <label>根拠URL<input name="evidenceUrl" type="url" maxlength="1000" placeholder="https://" required></label>
+            <label>情報元URL<input name="evidenceUrl" type="url" maxlength="1000" placeholder="https://" required></label>
             <label>補足コメント（任意）<textarea name="comment" rows="3" maxlength="2000"></textarea></label>
             <label class="boxer-report-trap" aria-hidden="true">ウェブサイト<input name="website" type="text" tabindex="-1" autocomplete="off"></label>
             <button type="submit">報告を送信</button>

@@ -32,7 +32,7 @@
     const comment = String(form.elements.comment.value || "").trim();
 
     if (!proposedValue || !/^https?:\/\//i.test(evidenceUrl)) {
-      status.textContent = "変更候補と根拠URLを入力してください。";
+      status.textContent = "変更候補と情報元URLを入力してください。";
       status.classList.add("is-error");
       return;
     }

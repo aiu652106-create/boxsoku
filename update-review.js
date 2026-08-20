@@ -25,6 +25,7 @@
     resolved: "修正済み",
     rejected: "却下"
   };
+  const teamReportFields = new Set(["residence", "trainer", "promoter", "manager", "training_base"]);
 
   const byId = (id) => document.getElementById(id);
   const client = () => window.BoxingData?.client;
@@ -168,7 +169,7 @@
         <p>指摘項目：${escapeHtml(report.field_name)}</p>
         <dl class="review-value-diff"><div><dt>現在表示</dt><dd>${escapeHtml(report.current_value)}</dd></div><div><dt>変更候補</dt><dd>${escapeHtml(report.proposed_value)}</dd></div></dl>
         <p>${escapeHtml(report.comment || "補足コメントなし")}</p>
-        <p>根拠URL：${evidence ? `<a href="${escapeHtml(evidence)}" target="_blank" rel="noopener noreferrer">${escapeHtml(report.evidence_url)}</a>` : escapeHtml(report.evidence_url)}</p>
+        <p>情報元URL：${evidence ? `<a href="${escapeHtml(evidence)}" target="_blank" rel="noopener noreferrer">${escapeHtml(report.evidence_url)}</a>` : escapeHtml(report.evidence_url)}</p>
         <div class="review-actions"><button type="button" data-report-action="reviewing">確認中</button><button type="button" data-report-action="resolved">修正済み</button><button type="button" data-report-action="rejected" class="review-danger">却下</button></div>
       </article>`;
     }).join("");
@@ -180,7 +181,7 @@
       `指摘項目：${report.field_name}`,
       `現在表示：${valueText(report.current_value)}`,
       `修正候補：${valueText(report.proposed_value)}`,
-      `根拠URL：${report.evidence_url || "不明"}`,
+      `情報元URL：${report.evidence_url || "不明"}`,
       `コメント：${report.comment || "なし"}`,
       `報告状態：${reportStatusLabels[report.status] || report.status}`,
       `報告日時：${detectedText(report.submitted_at)}`,
@@ -217,7 +218,8 @@
   }
 
   async function reviewCandidate(candidateId, action) {
-    const result = await client().rpc("review_update_candidate", {
+    const candidate = state.candidates.find((item) => item.candidate_id === candidateId);
+    const result = await client().rpc(teamReportFields.has(candidate?.field_name) ? "review_team_update_candidate" : "review_update_candidate", {
       p_candidate_id: candidateId,
       p_action: action,
       p_review_note: null

@@ -14,6 +14,11 @@
     "birthplace",
     "careerStatus",
     "gym",
+    "residence",
+    "trainer",
+    "promoter",
+    "manager",
+    "trainingBase",
     "weightClass",
     "stance",
     "height",
@@ -129,6 +134,11 @@
     setValue("birthplace", boxer.birthplace);
     setValue("careerStatus", boxer.career_status);
     setValue("gym", boxer.gym);
+    setValue("residence", boxer.residence);
+    setValue("trainer", boxer.trainer);
+    setValue("promoter", boxer.promoter);
+    setValue("manager", boxer.manager);
+    setValue("trainingBase", boxer.training_base);
     setValue("weightClass", boxer.weight_class);
     setValue("stance", boxer.stance);
     setValue("height", boxer.height_cm);
@@ -214,6 +224,18 @@
     renderList();
   }
 
+  async function loadReportSummary() {
+    const target = byId("boxer-report-admin-counts");
+    const result = await window.BoxingData.client.from("boxer_reports").select("report_id,status");
+    if (result.error) {
+      target.innerHTML = "<span>報告件数を読み込めません。</span>";
+      return;
+    }
+    const rows = result.data || [];
+    const labels = [["pending", "未対応"], ["reviewing", "確認中"], ["resolved", "修正済み"], ["rejected", "却下"]];
+    target.innerHTML = labels.map(([status, label]) => `<span><strong>${rows.filter((row) => row.status === status).length}</strong>${label}</span>`).join("");
+  }
+
   function formPayload() {
     let fieldSources = {};
     const rawFieldSources = String(valueOf("fieldSources").value || "").trim();
@@ -238,6 +260,11 @@
       birthplace: nullableValue(valueOf("birthplace")),
       career_status: valueOf("careerStatus").value,
       gym: nullableValue(valueOf("gym")),
+      residence: nullableValue(valueOf("residence")),
+      trainer: nullableValue(valueOf("trainer")),
+      promoter: nullableValue(valueOf("promoter")),
+      manager: nullableValue(valueOf("manager")),
+      training_base: nullableValue(valueOf("trainingBase")),
       weight_class: nullableValue(valueOf("weightClass")),
       stance: nullableValue(valueOf("stance")),
       height_cm: nullableNumber(valueOf("height")),
@@ -333,7 +360,7 @@
     byId("boxer-login-panel").hidden = true;
     byId("boxer-dashboard").hidden = false;
     resetForm();
-    await loadBoxers();
+    await Promise.all([loadBoxers(), loadReportSummary()]);
   }
 
   document.addEventListener("DOMContentLoaded", () => {

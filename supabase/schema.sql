@@ -60,8 +60,13 @@ create table if not exists public.boxers (
   nationality_code text check (nationality_code is null or nationality_code ~ '^[A-Z]{3}$'),
   birth_date date,
   birthplace text,
+  residence text,
   career_status text not null default 'unknown' check (career_status in ('active', 'retired', 'inactive', 'unknown')),
   gym text,
+  trainer text,
+  promoter text,
+  manager text,
+  training_base text,
   weight_class text,
   stance text,
   height_cm numeric(5, 1) check (height_cm is null or height_cm > 0),
@@ -751,7 +756,7 @@ create table if not exists public.boxer_reports (
   fighter_id uuid not null references public.boxers(internal_id) on delete cascade,
   field_name text not null check (field_name in (
     'name_ja', 'name_kana', 'name_en', 'ring_name', 'sex', 'nationality', 'nationality_code', 'birth_date',
-    'birthplace', 'career_status', 'gym', 'weight_class', 'stance', 'height_cm',
+    'birthplace', 'career_status', 'gym', 'residence', 'trainer', 'promoter', 'manager', 'training_base', 'weight_class', 'stance', 'height_cm',
     'reach_cm', 'pro_debut_date', 'world_champion_experience', 'current_titles',
     'past_major_titles', 'world_title_weight_classes', 'ranking_wba', 'ranking_wbc',
     'ranking_ibf', 'ranking_wbo', 'next_fight', 'next_fight_date', 'next_opponent',
@@ -858,6 +863,11 @@ begin
     when 'birthplace' then select to_jsonb(birthplace) into value from public.boxers where internal_id = p_fighter_id;
     when 'career_status' then select to_jsonb(career_status) into value from public.boxers where internal_id = p_fighter_id;
     when 'gym' then select to_jsonb(gym) into value from public.boxers where internal_id = p_fighter_id;
+    when 'residence' then select to_jsonb(residence) into value from public.boxers where internal_id = p_fighter_id;
+    when 'trainer' then select to_jsonb(trainer) into value from public.boxers where internal_id = p_fighter_id;
+    when 'promoter' then select to_jsonb(promoter) into value from public.boxers where internal_id = p_fighter_id;
+    when 'manager' then select to_jsonb(manager) into value from public.boxers where internal_id = p_fighter_id;
+    when 'training_base' then select to_jsonb(training_base) into value from public.boxers where internal_id = p_fighter_id;
     when 'weight_class' then select to_jsonb(weight_class) into value from public.boxers where internal_id = p_fighter_id;
     when 'stance' then select to_jsonb(stance) into value from public.boxers where internal_id = p_fighter_id;
     when 'height_cm' then select to_jsonb(height_cm) into value from public.boxers where internal_id = p_fighter_id;
@@ -917,7 +927,7 @@ begin
 
   if p_field_name is null or p_field_name not in (
     'name_ja', 'name_kana', 'name_en', 'ring_name', 'sex', 'nationality', 'nationality_code', 'birth_date',
-    'birthplace', 'career_status', 'gym', 'weight_class', 'stance', 'height_cm',
+    'birthplace', 'career_status', 'gym', 'residence', 'trainer', 'promoter', 'manager', 'training_base', 'weight_class', 'stance', 'height_cm',
     'reach_cm', 'pro_debut_date', 'world_champion_experience', 'current_titles',
     'past_major_titles', 'world_title_weight_classes', 'ranking_wba', 'ranking_wbc',
     'ranking_ibf', 'ranking_wbo', 'next_fight', 'next_fight_date', 'next_opponent',
@@ -1089,6 +1099,11 @@ begin
     when 'birthplace' then update public.boxers set birthplace = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'career_status' then update public.boxers set career_status = candidate.proposed_value #>> '{}' where internal_id = candidate.fighter_id;
     when 'gym' then update public.boxers set gym = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
+    when 'residence' then update public.boxers set residence = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
+    when 'trainer' then update public.boxers set trainer = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
+    when 'promoter' then update public.boxers set promoter = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
+    when 'manager' then update public.boxers set manager = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
+    when 'training_base' then update public.boxers set training_base = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'weight_class' then update public.boxers set weight_class = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'stance' then update public.boxers set stance = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'height_cm' then update public.boxers set height_cm = nullif(candidate.proposed_value #>> '{}', '')::numeric where internal_id = candidate.fighter_id;
@@ -1338,8 +1353,13 @@ select
   nationality_code,
   birth_date,
   birthplace,
+  residence,
   career_status,
   gym,
+  trainer,
+  promoter,
+  manager,
+  training_base,
   weight_class,
   stance,
   height_cm,
@@ -1457,3 +1477,164 @@ using (public.is_admin()) with check (public.is_admin());
 revoke all on public.bulk_import_runs, public.bulk_import_items from anon;
 grant select, insert, update, delete on public.bulk_import_runs,
   public.bulk_import_items to authenticated;
+
+-- Canonical correction-report projection. boxer_reports is retained for
+-- compatibility with the existing review page.
+create table if not exists public.correction_reports (
+  report_id uuid primary key references public.boxer_reports(report_id) on delete cascade,
+  fighter_id uuid not null references public.boxers(internal_id) on delete cascade,
+  field_name text not null,
+  current_value text not null default '',
+  suggested_value text not null,
+  source_url text not null check (source_url ~* '^https?://'),
+  comment text not null default '',
+  submitted_at timestamptz not null default now(),
+  status text not null default 'pending' check (status in ('pending', 'reviewing', 'fixed', 'rejected')),
+  reviewed_by uuid references auth.users(id) on delete set null,
+  reviewed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists correction_reports_status_order_idx
+  on public.correction_reports (status, submitted_at desc);
+
+create or replace function public.sync_correction_report()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.correction_reports (
+    report_id, fighter_id, field_name, current_value, suggested_value,
+    source_url, comment, submitted_at, status, reviewed_by, reviewed_at
+  ) values (
+    new.report_id, new.fighter_id, new.field_name, new.current_value,
+    new.proposed_value, new.evidence_url, new.comment, new.submitted_at,
+    case when new.status = 'resolved' then 'fixed' else new.status end,
+    new.reviewed_by, new.reviewed_at
+  )
+  on conflict (report_id) do update set
+    current_value = excluded.current_value,
+    suggested_value = excluded.suggested_value,
+    source_url = excluded.source_url,
+    comment = excluded.comment,
+    submitted_at = excluded.submitted_at,
+    status = excluded.status,
+    reviewed_by = excluded.reviewed_by,
+    reviewed_at = excluded.reviewed_at,
+    updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists boxer_reports_sync_correction_report on public.boxer_reports;
+create trigger boxer_reports_sync_correction_report
+after insert or update on public.boxer_reports
+for each row execute function public.sync_correction_report();
+
+insert into public.correction_reports (
+  report_id, fighter_id, field_name, current_value, suggested_value,
+  source_url, comment, submitted_at, status, reviewed_by, reviewed_at
+)
+select report_id, fighter_id, field_name, current_value, proposed_value,
+  evidence_url, comment, submitted_at,
+  case when status = 'resolved' then 'fixed' else status end,
+  reviewed_by, reviewed_at
+from public.boxer_reports
+on conflict (report_id) do nothing;
+
+alter table public.correction_reports enable row level security;
+drop policy if exists "Admins can read correction reports" on public.correction_reports;
+create policy "Admins can read correction reports"
+on public.correction_reports for select to authenticated
+using (public.is_admin());
+drop policy if exists "Admins can update correction reports" on public.correction_reports;
+create policy "Admins can update correction reports"
+on public.correction_reports for update to authenticated
+using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "Admins can delete correction reports" on public.correction_reports;
+create policy "Admins can delete correction reports"
+on public.correction_reports for delete to authenticated
+using (public.is_admin());
+revoke all on public.correction_reports from anon;
+grant select, update, delete on public.correction_reports to authenticated;
+
+-- New clients use the additive RPC name; its body delegates to the
+-- compatibility function whose accepted fields are kept in this schema.
+create or replace function public.submit_boxer_report_v2(
+  p_fighter_id uuid,
+  p_field_name text,
+  p_proposed_value text,
+  p_evidence_url text,
+  p_comment text,
+  p_reporter_hash text,
+  p_server_token text
+)
+returns setof public.boxer_reports
+language sql
+security definer
+set search_path = public
+as $$
+  select * from public.submit_boxer_report(
+    p_fighter_id, p_field_name, p_proposed_value, p_evidence_url,
+    p_comment, p_reporter_hash, p_server_token
+  );
+$$;
+
+revoke all on function public.submit_boxer_report_v2(uuid, text, text, text, text, text, text)
+  from public, anon, authenticated;
+grant execute on function public.submit_boxer_report_v2(uuid, text, text, text, text, text, text)
+  to anon, authenticated;
+
+create or replace function public.review_team_update_candidate(
+  p_candidate_id uuid,
+  p_action text,
+  p_review_note text default null
+)
+returns setof public.update_candidates
+language sql
+security definer
+set search_path = public
+as $$
+  select * from public.review_update_candidate(p_candidate_id, p_action, p_review_note);
+$$;
+
+revoke all on function public.review_team_update_candidate(uuid, text, text) from public, anon, authenticated;
+grant execute on function public.review_team_update_candidate(uuid, text, text) to authenticated;
+
+drop view if exists public.current_fighter_titles;
+create view public.current_fighter_titles
+with (security_invoker = true)
+as
+select tr.fighter_id,
+  string_agg(t.title_name, '・' order by t.organization, t.weight_class, t.title_name) as current_titles
+from public.title_reigns tr
+join public.titles t on t.title_id = tr.title_id
+where tr.status = 'active'
+  and (tr.end_date is null or tr.end_date >= current_date)
+group by tr.fighter_id;
+
+drop view if exists public.current_fighter_rankings;
+create view public.current_fighter_rankings
+with (security_invoker = true)
+as
+select distinct on (r.fighter_id, upper(r.organization))
+  r.fighter_id,
+  upper(r.organization) as organization,
+  r.weight_class,
+  r.ranking,
+  r.ranking_date,
+  r.ranking_month,
+  r.source_name,
+  r.source_url,
+  r.source_date,
+  r.checked_at
+from public.rankings r
+order by r.fighter_id, upper(r.organization),
+  coalesce(r.ranking_date, r.ranking_month) desc nulls last,
+  r.checked_at desc,
+  r.ranking_id desc;
+
+grant select on public.current_fighter_titles, public.current_fighter_rankings to anon, authenticated;

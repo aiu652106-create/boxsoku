@@ -6,13 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex,nofollow" />
     <title>選手DB管理 | ボクシング速報</title>
-    <link rel="stylesheet" href="styles.css?v=20260820-boxer-db2" />
+    <link rel="stylesheet" href="styles.css?v=20260820-boxer-db3" />
     <link rel="icon" data-boxsoku-site-icon="true" type="image/png" href="/assets/boxsoku-icon.png" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="config.js?v=20260813-site-icon-settings1" defer></script>
     <script src="data.js?v=20260814-affiliate-report1" defer></script>
     <script src="site-icon.js?v=20260813-site-icon-settings1" defer></script>
-    <script src="boxer-admin.js?v=20260820-boxer-db2" defer></script>
+    <script src="boxer-admin.js?v=20260820-boxer-db3" defer></script>
   </head>
   <body class="admin-page boxer-admin-page">
     <header class="admin-header">
@@ -52,6 +52,11 @@
           <div class="admin-heading-actions"><a class="admin-new-button" href="/boxers" target="_blank" rel="noopener">公開ページを見る</a><a class="admin-new-button" href="/bulk-boxer-import.html">一括取込</a></div>
         </div>
         <p id="boxer-admin-status" class="admin-settings-message" role="status"></p>
+        <section class="boxer-report-admin-summary" aria-labelledby="boxer-report-admin-heading">
+          <div><span>USER REPORTS</span><h2 id="boxer-report-admin-heading">修正報告</h2><p>公開ページから届いた報告は、確認後に手動で反映します。</p></div>
+          <div id="boxer-report-admin-counts" class="boxer-report-admin-counts"><span>読み込み中…</span></div>
+          <a class="boxer-admin-button" href="update-review.html#user-reports">修正報告を管理</a>
+        </section>
         <div class="boxer-admin-columns">
           <section class="admin-list-panel boxer-admin-list-panel" aria-labelledby="boxer-list-heading">
             <div class="admin-list-heading"><div><span>REGISTERED BOXERS</span><h2 id="boxer-list-heading">登録選手</h2></div><strong id="boxer-count">0名</strong></div>
@@ -79,6 +84,11 @@
                 <label>出身地<input id="boxer-birthplace" /></label>
                 <label>状態<select id="boxer-career-status"><option value="unknown">不明</option><option value="active">現役</option><option value="inactive">活動休止</option><option value="retired">引退</option></select></label>
                 <label>所属ジム<input id="boxer-gym" /></label>
+                <label>居住地<input id="boxer-residence" /></label>
+                <label>トレーナー<input id="boxer-trainer" /></label>
+                <label>プロモーター<input id="boxer-promoter" /></label>
+                <label>マネージャー<input id="boxer-manager" /></label>
+                <label>トレーニング拠点<input id="boxer-training-base" /></label>
                 <label>階級<input id="boxer-weight-class" /></label>
                 <label>構え<input id="boxer-stance" /></label>
                 <label>身長（cm）<input id="boxer-height" type="number" min="0" step="0.1" /></label>

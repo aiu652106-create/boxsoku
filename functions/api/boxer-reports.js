@@ -19,6 +19,11 @@ const REPORT_FIELDS = new Set([
   "birthplace",
   "career_status",
   "gym",
+  "residence",
+  "trainer",
+  "promoter",
+  "manager",
+  "training_base",
   "weight_class",
   "stance",
   "height_cm",
@@ -137,7 +142,7 @@ export async function onRequestPost({ env, request }) {
 
   try {
     const hash = await reporterHash(request, fighterId, env);
-    const response = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/submit_boxer_report`, {
+    const response = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/submit_boxer_report_v2`, {
       method: "POST",
       headers: supabaseHeaders(env),
       body: JSON.stringify({

@@ -8036,11 +8036,24 @@ body.retro-blog .retro-summary {
 
 /* Boxer correction reports stay pending until an administrator reviews them. */
 .boxer-report-section > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
   cursor: pointer;
   color: #191919;
-  font-size: 1.12rem;
-  font-weight: 800;
+  font-size: 1rem;
+  font-weight: 700;
   list-style-position: inside;
+}
+
+.boxer-report-section > summary strong {
+  border: 1px solid #b51f26;
+  padding: 7px 12px;
+  color: #b51f26;
+  font-size: 0.9rem;
+  font-weight: 800;
 }
 
 .boxer-report-section[open] > summary {
@@ -8134,6 +8147,64 @@ body.retro-blog .retro-summary {
   height: 1px;
   overflow: hidden;
   clip: rect(0 0 0 0);
+}
+
+.boxer-report-admin-summary {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.2fr) minmax(260px, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  margin: 0 0 18px;
+  padding: 16px 18px;
+  border: 1px solid #d6d6d6;
+  border-top: 3px solid #b51f26;
+  background: #fff;
+}
+
+.boxer-report-admin-summary > div:first-child span {
+  color: #b51f26;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.boxer-report-admin-summary h2 {
+  margin: 2px 0 4px;
+  font-size: 1.05rem;
+}
+
+.boxer-report-admin-summary p {
+  margin: 0;
+  color: #666;
+  font-size: 0.84rem;
+}
+
+.boxer-report-admin-counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(56px, 1fr));
+  gap: 8px;
+}
+
+.boxer-report-admin-counts span {
+  display: grid;
+  gap: 2px;
+  text-align: center;
+  color: #666;
+  font-size: 0.78rem;
+}
+
+.boxer-report-admin-counts strong {
+  color: #191919;
+  font-size: 1.25rem;
+}
+
+@media (max-width: 720px) {
+  .boxer-report-admin-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .boxer-report-admin-summary > .boxer-admin-button {
+    justify-self: start;
+  }
 }
 
 .review-summary-grid {

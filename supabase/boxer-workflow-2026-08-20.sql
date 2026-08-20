@@ -64,7 +64,7 @@ create table if not exists public.boxer_reports (
   fighter_id uuid not null references public.boxers(internal_id) on delete cascade,
   field_name text not null check (field_name in (
     'name_ja', 'name_kana', 'name_en', 'ring_name', 'sex', 'nationality', 'nationality_code', 'birth_date',
-    'birthplace', 'career_status', 'gym', 'weight_class', 'stance', 'height_cm',
+    'birthplace', 'career_status', 'gym', 'residence', 'trainer', 'promoter', 'manager', 'training_base', 'weight_class', 'stance', 'height_cm',
     'reach_cm', 'pro_debut_date', 'world_champion_experience', 'current_titles',
     'past_major_titles', 'world_title_weight_classes', 'ranking_wba', 'ranking_wbc',
     'ranking_ibf', 'ranking_wbo', 'next_fight', 'next_fight_date', 'next_opponent',
@@ -171,6 +171,11 @@ begin
     when 'birthplace' then select to_jsonb(birthplace) into value from public.boxers where internal_id = p_fighter_id;
     when 'career_status' then select to_jsonb(career_status) into value from public.boxers where internal_id = p_fighter_id;
     when 'gym' then select to_jsonb(gym) into value from public.boxers where internal_id = p_fighter_id;
+    when 'residence' then select to_jsonb(residence) into value from public.boxers where internal_id = p_fighter_id;
+    when 'trainer' then select to_jsonb(trainer) into value from public.boxers where internal_id = p_fighter_id;
+    when 'promoter' then select to_jsonb(promoter) into value from public.boxers where internal_id = p_fighter_id;
+    when 'manager' then select to_jsonb(manager) into value from public.boxers where internal_id = p_fighter_id;
+    when 'training_base' then select to_jsonb(training_base) into value from public.boxers where internal_id = p_fighter_id;
     when 'weight_class' then select to_jsonb(weight_class) into value from public.boxers where internal_id = p_fighter_id;
     when 'stance' then select to_jsonb(stance) into value from public.boxers where internal_id = p_fighter_id;
     when 'height_cm' then select to_jsonb(height_cm) into value from public.boxers where internal_id = p_fighter_id;
@@ -230,7 +235,7 @@ begin
 
   if p_field_name is null or p_field_name not in (
     'name_ja', 'name_kana', 'name_en', 'ring_name', 'sex', 'nationality', 'nationality_code', 'birth_date',
-    'birthplace', 'career_status', 'gym', 'weight_class', 'stance', 'height_cm',
+    'birthplace', 'career_status', 'gym', 'residence', 'trainer', 'promoter', 'manager', 'training_base', 'weight_class', 'stance', 'height_cm',
     'reach_cm', 'pro_debut_date', 'world_champion_experience', 'current_titles',
     'past_major_titles', 'world_title_weight_classes', 'ranking_wba', 'ranking_wbc',
     'ranking_ibf', 'ranking_wbo', 'next_fight', 'next_fight_date', 'next_opponent',
@@ -402,6 +407,11 @@ begin
     when 'birthplace' then update public.boxers set birthplace = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'career_status' then update public.boxers set career_status = candidate.proposed_value #>> '{}' where internal_id = candidate.fighter_id;
     when 'gym' then update public.boxers set gym = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
+    when 'residence' then update public.boxers set residence = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
+    when 'trainer' then update public.boxers set trainer = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
+    when 'promoter' then update public.boxers set promoter = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
+    when 'manager' then update public.boxers set manager = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
+    when 'training_base' then update public.boxers set training_base = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'weight_class' then update public.boxers set weight_class = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'stance' then update public.boxers set stance = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'height_cm' then update public.boxers set height_cm = nullif(candidate.proposed_value #>> '{}', '')::numeric where internal_id = candidate.fighter_id;
