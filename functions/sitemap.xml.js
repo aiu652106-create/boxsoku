@@ -28,6 +28,7 @@ export async function onRequestGet({ env, request }) {
     "/contact"
   ];
   let articles = [];
+  let boxers = [];
 
   if (env.SUPABASE_URL && env.SUPABASE_ANON_KEY) {
     const response = await fetch(
@@ -42,12 +43,30 @@ export async function onRequestGet({ env, request }) {
       }
     );
     if (response.ok) articles = await response.json();
+
+    const boxerResponse = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/boxers?select=slug,updated_at&is_published=eq.true&order=name_ja.asc&limit=1000`,
+      {
+        headers: {
+          apikey: env.SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`
+        }
+      }
+    );
+    if (boxerResponse.ok) boxers = await boxerResponse.json();
   }
 
   const urls = [
     ...staticPages.map(
       (path) => `<url><loc>${escapeXml(siteUrl + (path || "/"))}</loc></url>`
     ),
+    `<url><loc>${escapeXml(`${siteUrl}/boxers`)}</loc></url>`,
+    ...boxers.map((boxer) => {
+      const lastmod = isoDate(boxer.updated_at);
+      return `<url><loc>${escapeXml(
+        `${siteUrl}/boxer/${encodeURIComponent(boxer.slug)}`
+      )}</loc>${lastmod ? `<lastmod>${escapeXml(lastmod)}</lastmod>` : ""}</url>`;
+    }),
     ...articles.map(
       (article) => {
         const lastmod = isoDate(article.updated_at);

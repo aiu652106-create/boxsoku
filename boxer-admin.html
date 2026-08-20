@@ -1,0 +1,122 @@
+<!doctype html>
+<!-- Boxer database administration -->
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>選手DB管理 | ボクシング速報</title>
+    <link rel="stylesheet" href="styles.css?v=20260820-boxer-db1" />
+    <link rel="icon" data-boxsoku-site-icon="true" type="image/png" href="/assets/boxsoku-icon.png" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="config.js?v=20260813-site-icon-settings1" defer></script>
+    <script src="data.js?v=20260814-affiliate-report1" defer></script>
+    <script src="site-icon.js?v=20260813-site-icon-settings1" defer></script>
+    <script src="boxer-admin.js?v=20260820-boxer-db1" defer></script>
+  </head>
+  <body class="admin-page boxer-admin-page">
+    <header class="admin-header">
+      <a class="admin-brand" href="admin.html">
+        <span>速</span>
+        <div><strong>ボクシング速報</strong><small>BOXER DATABASE</small></div>
+      </a>
+      <a class="admin-view-site" href="/boxers" target="_blank" rel="noopener">選手DBを見る</a>
+    </header>
+
+    <section id="boxer-login-panel" class="admin-login-shell">
+      <form id="boxer-login-form" class="admin-login-card">
+        <span>BOXER DATABASE</span>
+        <h1>選手DB管理</h1>
+        <p>登録情報は確認できたものだけ入力してください。不明な項目は空欄で保存できます。</p>
+        <label>メールアドレス<input id="boxer-login-email" type="email" autocomplete="username" required /></label>
+        <label>パスワード<input id="boxer-login-password" type="password" autocomplete="current-password" required /></label>
+        <p id="boxer-login-error" class="form-error" role="alert"></p>
+        <button type="submit">ログイン</button>
+      </form>
+    </section>
+
+    <div id="boxer-dashboard" class="admin-layout boxer-admin-layout" hidden>
+      <aside class="admin-sidebar">
+        <nav>
+          <a href="admin.html">記事管理</a>
+          <a class="is-active" href="boxer-admin.html">選手DB管理</a>
+          <a href="/boxers" target="_blank" rel="noopener">公開選手一覧</a>
+          <button id="boxer-logout-button" type="button">ログアウト</button>
+        </nav>
+      </aside>
+
+      <main class="admin-main boxer-admin-main">
+        <div class="admin-page-heading">
+          <div><span>BOXER DATABASE</span><h1>選手DB管理</h1><p>今回はテスト登録10名だけを管理します。試合DB・興行DBはまだ作成しません。</p></div>
+          <a class="admin-new-button" href="/boxers" target="_blank" rel="noopener">公開ページを見る</a>
+        </div>
+        <p id="boxer-admin-status" class="admin-settings-message" role="status"></p>
+        <div class="boxer-admin-columns">
+          <section class="admin-list-panel boxer-admin-list-panel" aria-labelledby="boxer-list-heading">
+            <div class="admin-list-heading"><div><span>REGISTERED BOXERS</span><h2 id="boxer-list-heading">登録選手</h2></div><strong id="boxer-count">0名</strong></div>
+            <div id="boxer-list" class="boxer-admin-list"></div>
+          </section>
+
+          <section class="admin-list-panel boxer-admin-form-panel" aria-labelledby="boxer-form-heading">
+            <div class="admin-list-heading"><div><span>PROFILE EDITOR</span><h2 id="boxer-form-heading">選手情報</h2></div><button id="boxer-new-button" class="boxer-admin-button" type="button">新規</button></div>
+            <form id="boxer-form" class="boxer-admin-form">
+              <input id="boxer-internal-id" type="hidden" />
+              <fieldset><legend>識別情報</legend><div class="boxer-admin-grid">
+                <label>選手名（日本語）*<input id="boxer-name-ja" required maxlength="80" /></label>
+                <label>slug*<input id="boxer-slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="naoya-inoue" /></label>
+                <label>読み方<input id="boxer-name-kana" /></label>
+                <label>英語表記<input id="boxer-name-en" /></label>
+                <label>リングネーム<input id="boxer-ring-name" /></label>
+                <label>BoxRec ID<input id="boxer-boxrec-id" inputmode="numeric" /></label>
+              </div></fieldset>
+              <fieldset><legend>基本プロフィール</legend><div class="boxer-admin-grid">
+                <label>国籍<input id="boxer-nationality" /></label>
+                <label>生年月日<input id="boxer-birth-date" type="date" /></label>
+                <label>出身地<input id="boxer-birthplace" /></label>
+                <label>状態<select id="boxer-career-status"><option value="unknown">不明</option><option value="active">現役</option><option value="retired">引退</option></select></label>
+                <label>所属ジム<input id="boxer-gym" /></label>
+                <label>階級<input id="boxer-weight-class" /></label>
+                <label>構え<input id="boxer-stance" /></label>
+                <label>身長（cm）<input id="boxer-height" type="number" min="0" step="0.1" /></label>
+                <label>リーチ（cm）<input id="boxer-reach" type="number" min="0" step="0.1" /></label>
+                <label>プロデビュー日<input id="boxer-debut-date" type="date" /></label>
+              </div></fieldset>
+              <fieldset><legend>戦績</legend><div class="boxer-admin-grid">
+                <label>総試合数<input id="boxer-total-fights" type="number" min="0" step="1" /></label>
+                <label>勝<input id="boxer-wins" type="number" min="0" step="1" /></label>
+                <label>敗<input id="boxer-losses" type="number" min="0" step="1" /></label>
+                <label>引き分け<input id="boxer-draws" type="number" min="0" step="1" /></label>
+                <label>無効試合<input id="boxer-no-contests" type="number" min="0" step="1" /></label>
+                <label>KO勝<input id="boxer-ko-wins" type="number" min="0" step="1" /></label>
+              </div><p class="boxer-admin-help">KO率は「KO勝 ÷ 勝利数 × 100」でDBが自動計算します。</p></fieldset>
+              <fieldset><legend>タイトル・ランキング</legend><div class="boxer-admin-grid">
+                <label>世界王者経験<select id="boxer-world-champion"><option value="">不明</option><option value="true">あり</option><option value="false">なし</option></select></label>
+                <label>現在保有タイトル<textarea id="boxer-current-titles" rows="2"></textarea></label>
+                <label>過去の主要タイトル<textarea id="boxer-past-titles" rows="2"></textarea></label>
+                <label>世界王座獲得階級<textarea id="boxer-world-title-classes" rows="2"></textarea></label>
+                <label>WBA順位<input id="boxer-ranking-wba" type="number" min="0" step="1" /></label>
+                <label>WBC順位<input id="boxer-ranking-wbc" type="number" min="0" step="1" /></label>
+                <label>IBF順位<input id="boxer-ranking-ibf" type="number" min="0" step="1" /></label>
+                <label>WBO順位<input id="boxer-ranking-wbo" type="number" min="0" step="1" /></label>
+              </div></fieldset>
+              <fieldset><legend>次戦</legend><div class="boxer-admin-grid">
+                <label>次戦日<input id="boxer-next-date" type="date" /></label>
+                <label>対戦相手<input id="boxer-next-opponent" /></label>
+                <label>会場<input id="boxer-next-venue" /></label>
+                <label>興行名<input id="boxer-next-event" /></label>
+              </div></fieldset>
+              <fieldset><legend>出典・公開状態</legend><div class="boxer-admin-grid">
+                <label>主な出典名*<input id="boxer-source-name" required placeholder="JBC / 公式サイトなど" /></label>
+                <label>主な出典URL*<input id="boxer-source-url" required type="url" placeholder="https://" /></label>
+                <label>確認日時<input id="boxer-source-checked-at" type="datetime-local" /></label>
+                <label class="boxer-admin-check"><input id="boxer-published" type="checkbox" checked /> 公開する</label>
+                <label class="boxer-admin-full">項目別出典（JSON）<textarea id="boxer-field-sources" rows="5" placeholder='{"wins":{"name":"公式戦績","url":"https://..."}}'></textarea></label>
+              </div></fieldset>
+              <div class="boxer-admin-actions"><button class="boxer-admin-button" type="submit">保存</button><button id="boxer-delete-button" class="boxer-admin-button boxer-admin-danger" type="button" disabled>削除</button></div>
+            </form>
+          </section>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

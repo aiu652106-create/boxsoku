@@ -16,6 +16,10 @@
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
 
+/boxer-admin.html
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
 /editor.html
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store

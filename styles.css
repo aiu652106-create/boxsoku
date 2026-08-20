@@ -7298,3 +7298,528 @@ body.retro-blog .retro-summary {
     order: 3 !important;
   }
 }
+
+/* Boxer database: isolated styles so existing article and event layouts remain unchanged. */
+.boxer-db-page {
+  min-height: 100vh;
+}
+
+.boxer-page-container {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 44px 0 72px;
+}
+
+.boxer-page-heading {
+  border-left: 6px solid var(--accent-red, #d71920);
+  padding: 4px 0 4px 18px;
+  margin-bottom: 28px;
+}
+
+.boxer-page-heading > span,
+.boxer-profile-heading > div > span {
+  color: #b58b2a;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.boxer-page-heading h1,
+.boxer-profile-heading h1 {
+  margin: 6px 0 8px;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1.15;
+}
+
+.boxer-page-heading p {
+  margin: 0;
+  color: #5f5f5f;
+}
+
+.boxer-search {
+  margin: 0 0 22px;
+  padding: 20px;
+  border: 1px solid #d9d9d9;
+  border-top: 4px solid var(--accent-red, #d71920);
+  background: #fff;
+}
+
+.boxer-search label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+
+.boxer-search > div {
+  display: flex;
+  gap: 10px;
+}
+
+.boxer-search input {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid #bfbfbf;
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.boxer-search button,
+.boxer-admin-button {
+  border: 0;
+  background: #191919;
+  color: #fff;
+  padding: 11px 20px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.boxer-result-count {
+  margin: 0 0 14px;
+  color: #686868;
+  font-size: 0.9rem;
+}
+
+.boxer-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.boxer-card {
+  min-width: 0;
+  border: 1px solid #d6d6d6;
+  border-top: 4px solid #b51f26;
+  background: #fff;
+  padding: 19px 20px 16px;
+}
+
+.boxer-card-heading,
+.boxer-profile-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.boxer-card h2 {
+  min-width: 0;
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.35;
+}
+
+.boxer-card h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.boxer-card h2 a:hover,
+.boxer-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.boxer-name-en {
+  margin: 4px 0 14px;
+  color: #777;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.boxer-card-facts,
+.boxer-detail-list,
+.boxer-ranking-list {
+  margin: 0;
+}
+
+.boxer-card-facts {
+  display: grid;
+  gap: 8px;
+}
+
+.boxer-card-facts > div,
+.boxer-detail-list .boxer-field,
+.boxer-ranking-list > div {
+  display: grid;
+  grid-template-columns: 9em minmax(0, 1fr);
+  gap: 12px;
+  border-top: 1px solid #ececec;
+  padding-top: 8px;
+}
+
+.boxer-card-facts dt,
+.boxer-detail-list dt,
+.boxer-ranking-list dt {
+  color: #707070;
+  font-size: 0.85rem;
+}
+
+.boxer-card-facts dd,
+.boxer-detail-list dd,
+.boxer-ranking-list dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.boxer-status {
+  display: inline-block;
+  flex: 0 0 auto;
+  border: 1px solid #777;
+  padding: 3px 8px;
+  color: #555;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.boxer-status-active {
+  border-color: #b51f26;
+  color: #b51f26;
+}
+
+.boxer-status-retired {
+  border-color: #666;
+  color: #666;
+}
+
+.boxer-profile-container {
+  max-width: 900px;
+}
+
+.boxer-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+  color: #737373;
+  font-size: 0.88rem;
+}
+
+.boxer-breadcrumb a {
+  color: inherit;
+}
+
+.boxer-profile {
+  border: 1px solid #d2d2d2;
+  background: #fff;
+}
+
+.boxer-profile-heading {
+  align-items: center;
+  border-top: 5px solid #b51f26;
+  padding: 26px 28px 22px;
+}
+
+.boxer-profile-heading h1 {
+  margin-bottom: 4px;
+}
+
+.boxer-profile-heading .boxer-name-en,
+.boxer-profile-heading .boxer-ring-name {
+  margin: 3px 0 0;
+}
+
+.boxer-ring-name {
+  color: #707070;
+  font-size: 0.9rem;
+}
+
+.boxer-record-hero {
+  display: grid;
+  grid-template-columns: 1fr 0.55fr;
+  gap: 1px;
+  background: #d2d2d2;
+  border-top: 1px solid #d2d2d2;
+  border-bottom: 1px solid #d2d2d2;
+}
+
+.boxer-record-hero > div {
+  display: grid;
+  gap: 6px;
+  background: #fafafa;
+  padding: 20px 28px;
+}
+
+.boxer-record-hero span {
+  color: #777;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.boxer-record-hero strong {
+  font-size: clamp(1.25rem, 3vw, 1.8rem);
+  line-height: 1.35;
+}
+
+.boxer-profile-section {
+  padding: 24px 28px;
+  border-bottom: 1px solid #e1e1e1;
+}
+
+.boxer-profile-section h2,
+.boxer-source h2 {
+  margin: 0 0 15px;
+  font-size: 1.15rem;
+}
+
+.boxer-profile-section h2::before,
+.boxer-source h2::before {
+  display: inline-block;
+  width: 4px;
+  height: 1em;
+  margin: 0 8px -2px 0;
+  background: #b51f26;
+  content: "";
+}
+
+.boxer-detail-list {
+  display: grid;
+  gap: 10px;
+}
+
+.boxer-detail-list .boxer-field {
+  padding-top: 10px;
+}
+
+.boxer-detail-list .boxer-field:first-child,
+.boxer-ranking-list > div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.boxer-ranking-list {
+  display: grid;
+  gap: 10px;
+  max-width: 360px;
+}
+
+.boxer-ranking-list dd {
+  font-weight: 800;
+}
+
+.boxer-unknown,
+.site-empty {
+  color: #777;
+}
+
+.boxer-source {
+  padding: 20px 28px 25px;
+  color: #666;
+  font-size: 0.82rem;
+}
+
+.boxer-source p {
+  margin: 5px 0;
+  overflow-wrap: anywhere;
+}
+
+.boxer-source a {
+  color: inherit;
+}
+
+@media (max-width: 720px) {
+  .boxer-page-container {
+    width: min(100% - 24px, 640px);
+    padding: 28px 0 48px;
+  }
+
+  .boxer-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .boxer-search {
+    padding: 16px;
+  }
+
+  .boxer-search > div {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .boxer-profile-heading,
+  .boxer-profile-section,
+  .boxer-source {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .boxer-profile-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .boxer-record-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .boxer-record-hero > div {
+    padding: 16px 18px;
+  }
+
+  .boxer-card-facts > div,
+  .boxer-detail-list .boxer-field,
+  .boxer-ranking-list > div {
+    grid-template-columns: 7.5em minmax(0, 1fr);
+    gap: 8px;
+  }
+}
+
+.boxer-admin-layout {
+  align-items: flex-start;
+}
+
+.boxer-admin-main {
+  min-width: 0;
+}
+
+.boxer-admin-columns {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.35fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.boxer-admin-list-panel,
+.boxer-admin-form-panel {
+  min-width: 0;
+}
+
+.boxer-admin-list {
+  display: grid;
+  gap: 8px;
+}
+
+.boxer-admin-list-item {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  border: 1px solid #dedede;
+  border-left: 4px solid #c5c5c5;
+  background: #fff;
+  padding: 11px 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.boxer-admin-list-item:hover,
+.boxer-admin-list-item.is-active {
+  border-left-color: #b51f26;
+  background: #fff8f8;
+}
+
+.boxer-admin-list-item span,
+.boxer-admin-empty,
+.boxer-admin-help {
+  color: #737373;
+  font-size: 0.82rem;
+}
+
+.boxer-admin-form {
+  display: grid;
+  gap: 16px;
+}
+
+.boxer-admin-form fieldset {
+  min-width: 0;
+  border: 1px solid #dedede;
+  padding: 15px;
+}
+
+.boxer-admin-form legend {
+  padding: 0 6px;
+  color: #9d1d24;
+  font-weight: 800;
+}
+
+.boxer-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+
+.boxer-admin-grid label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  color: #555;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.boxer-admin-grid input,
+.boxer-admin-grid select,
+.boxer-admin-grid textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #c6c6c6;
+  background: #fff;
+  padding: 9px 10px;
+  color: #222;
+  font: inherit;
+  font-weight: 400;
+}
+
+.boxer-admin-grid textarea {
+  resize: vertical;
+}
+
+.boxer-admin-full {
+  grid-column: 1 / -1;
+}
+
+.boxer-admin-check {
+  display: flex !important;
+  grid-template-columns: none !important;
+  align-items: center;
+  align-self: end;
+  min-height: 38px;
+}
+
+.boxer-admin-check input {
+  width: auto;
+}
+
+.boxer-admin-help {
+  margin: 9px 0 0;
+}
+
+.boxer-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.boxer-admin-danger {
+  background: #777;
+}
+
+.boxer-admin-danger:not(:disabled):hover {
+  background: #a41d24;
+}
+
+.boxer-admin-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.boxer-admin-page .admin-settings-message.is-error,
+.boxer-admin-page .form-error {
+  color: #a41d24;
+}
+
+@media (max-width: 900px) {
+  .boxer-admin-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .boxer-admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .boxer-admin-full {
+    grid-column: auto;
+  }
+}
