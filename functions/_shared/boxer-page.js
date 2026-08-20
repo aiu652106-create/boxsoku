@@ -220,6 +220,17 @@ function sourceDisplayName(value) {
   return name.split(/\s*\/\s*/)[0].trim() || "情報源";
 }
 
+function sourceNameIsUnconfirmed(value) {
+  return /確認できず|確認できない|記載なし/.test(String(value || ""));
+}
+
+function preferredSourceName(names) {
+  const candidates = names.filter((name) => !sourceNameIsUnconfirmed(name));
+  return [...(candidates.length ? candidates : names)].sort(
+    (left, right) => left.length - right.length || left.localeCompare(right, "ja")
+  )[0] || "情報源";
+}
+
 function sourceEntries(value) {
   const values = Array.isArray(value) ? value : [value];
   return values
@@ -247,6 +258,7 @@ function buildSourceAudit(boxer) {
     if (!url) return;
     const key = url;
     const sourceName = sourceDisplayName(entry?.name || entry?.source_name);
+    if (sourceNameIsUnconfirmed(sourceName)) return;
     const existing = byUrl.get(key);
     if (existing) {
       if (!existing.purposes.includes(purpose)) existing.purposes.push(purpose);
@@ -293,7 +305,7 @@ function buildSourceAudit(boxer) {
 
   return [...byUrl.values()].map((source) => ({
     ...source,
-    name: source.names.join("・")
+    name: preferredSourceName(source.names)
   }));
 }
 

@@ -263,6 +263,17 @@
     return name.split(/\s*\/\s*/)[0].trim() || "情報源";
   }
 
+  function sourceNameIsUnconfirmed(value) {
+    return /確認できず|確認できない|記載なし/.test(String(value || ""));
+  }
+
+  function preferredSourceName(names) {
+    const candidates = names.filter((name) => !sourceNameIsUnconfirmed(name));
+    return [...(candidates.length ? candidates : names)].sort(
+      (left, right) => left.length - right.length || left.localeCompare(right, "ja")
+    )[0] || "情報源";
+  }
+
   function sourceEntries(value) {
     const values = Array.isArray(value) ? value : [value];
     return values
@@ -302,6 +313,7 @@
       const url = safeSourceUrl(entry?.url || entry?.source_url);
       if (!url) return;
       const sourceName = sourceDisplayName(entry?.name || entry?.source_name);
+      if (sourceNameIsUnconfirmed(sourceName)) return;
       const existing = byUrl.get(url);
       if (existing) {
         if (!existing.purposes.includes(purpose)) existing.purposes.push(purpose);
@@ -338,7 +350,7 @@
     if (status) add(status, "現役・引退状態");
     if (!byUrl.size) add({ name: boxer.source_name, url: boxer.source_url, checked_at: boxer.source_checked_at }, "互換用代表出典");
 
-    return [...byUrl.values()].map((row) => ({ ...row, name: row.names.join("・") }));
+    return [...byUrl.values()].map((row) => ({ ...row, name: preferredSourceName(row.names) }));
   }
 
   function renderSourceAudit(boxer, rows = []) {
