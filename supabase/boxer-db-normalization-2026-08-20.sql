@@ -216,7 +216,6 @@ select distinct on (h.fighter_id)
 from public.fighter_status_history h
 order by
   h.fighter_id,
-  coalesce(h.start_date, h.source_date, h.checked_at::date) desc nulls last,
   h.checked_at desc,
   h.history_id desc;
 
@@ -492,6 +491,38 @@ where tr.fighter_id = b.internal_id
   and t.organization = 'WBO'
   and t.weight_class = 'スーパーフライ級'
   and t.title_type = 'world';
+
+-- Katie Taylor's September 5, 2026 bout is the latest verified status
+-- evidence. Keep older inactive history and append a newer active record.
+insert into public.fighter_status_history (
+  fighter_id,
+  status,
+  start_date,
+  end_date,
+  source_name,
+  source_url,
+  source_date,
+  checked_at
+)
+select
+  b.internal_id,
+  'active',
+  null,
+  null,
+  'Matchroom Boxing公式（2026-08-20再確認）',
+  'https://www.matchroomboxing.com/news/katie-taylor-lands-historic-croke-park-undisputed-world-title-farewell-in-ireland-against-flora-pili-on-saturday-september-5-live-worldwide-on-dazn/',
+  '2026-06-05',
+  now()
+from public.boxers b
+where b.slug = 'katie-taylor'
+  and not exists (
+    select 1
+    from public.fighter_status_history h
+    where h.fighter_id = b.internal_id
+      and h.status = 'active'
+      and h.source_name = 'Matchroom Boxing公式（2026-08-20再確認）'
+      and h.source_date = '2026-06-05'
+  );
 
 -- ---------------------------------------------------------------------------
 -- 3. Generate compatibility cache columns from the canonical tables.
