@@ -9,7 +9,9 @@ const BOXER_SELECT = [
   "ring_name",
   "boxrec_id",
   "boxrec_url",
+  "sex",
   "nationality",
+  "nationality_code",
   "birth_date",
   "birthplace",
   "career_status",
@@ -153,6 +155,13 @@ function recordText(boxer) {
 function careerLabel(value) {
   if (value === "active") return "現役";
   if (value === "retired") return "引退";
+  if (value === "inactive") return "活動休止";
+  return "不明";
+}
+
+function sexLabel(value) {
+  if (value === "male") return "男性";
+  if (value === "female") return "女性";
   return "不明";
 }
 
@@ -284,7 +293,7 @@ function sharedHead({ siteUrl, siteName, title, description, canonical, structur
   <meta name="twitter:image" content="${escapeHtml(defaultImage)}">
   <title>${escapeHtml(title)}</title>
   <script type="application/ld+json">${structuredData}</script>
-  <link rel="stylesheet" href="/styles.css?v=20260820-boxer-db1">
+  <link rel="stylesheet" href="/styles.css?v=20260820-boxer-db2">
   <script src="/config.js?v=20260813-site-icon-settings1" defer></script>
   <script src="/site.js" defer></script>
   <script src="/site-icon.js?v=20260813-site-icon-settings1" defer></script>`;
@@ -317,7 +326,11 @@ function renderFailure(request, error) {
 
 function boxerCard(boxer) {
   const record = hasRecordData(boxer) ? recordText(boxer) : "戦績：不明";
+  const detailUrl = `/boxer/${encodeURIComponent(boxer.slug)}`;
   return `<article class="boxer-card">
+    <a class="boxer-card-link-overlay" href="${detailUrl}" aria-label="${escapeHtml(
+    boxer.name_ja
+  )}の詳細を見る"><span class="sr-only">${escapeHtml(boxer.name_ja)}の詳細を見る</span></a>
     <div class="boxer-card-heading"><span class="boxer-status boxer-status-${escapeHtml(
       boxer.career_status || "unknown"
     )}">${escapeHtml(careerLabel(boxer.career_status))}</span><h2><a href="/boxer/${encodeURIComponent(
@@ -329,6 +342,7 @@ function boxerCard(boxer) {
     )}</dd></div><div><dt>所属ジム</dt><dd>${escapeHtml(
       formatValue(boxer.gym)
     )}</dd></div><div><dt>戦績</dt><dd>${escapeHtml(record)}</dd></div></dl>
+    <a class="boxer-card-detail" href="${detailUrl}">詳細を見る</a>
   </article>`;
 }
 
@@ -354,7 +368,7 @@ export async function renderBoxersPage({ env, request }) {
   const siteName = String(env.SITE_NAME || "ボクシング速報");
   const title = "選手一覧・ボクサー名鑑 | ボクシング速報";
   const description =
-    "日本人ボクサーを中心に、戦績、身長、リーチ、階級、所属ジム、世界ランキング、次戦などを確認できる選手データベースです。";
+    "日本人選手と海外選手の戦績、身長、リーチ、階級、所属ジム、世界ランキング、次戦などを確認できる選手データベースです。";
   const canonical = `${siteUrl}/boxers`;
   const structuredData = escapeJson({
     "@context": "https://schema.org",
@@ -482,8 +496,12 @@ export async function renderBoxerPage({ env, request, params }) {
     : escapeHtml(formatValue(boxer.source_name));
   const boxrecUrl = safeUrl(boxer.boxrec_url);
   const boxrecDetails = boxrecUrl
-    ? `<p>BoxRec：<a href="${escapeHtml(boxrecUrl)}" target="_blank" rel="noopener noreferrer">本人ページを確認</a></p>`
-    : "";
+    ? `<p>BoxRec ID：<strong>${escapeHtml(formatValue(boxer.boxrec_id))}</strong>　<a href="${escapeHtml(
+        boxrecUrl
+      )}" target="_blank" rel="noopener noreferrer">本人ページを確認</a></p>`
+    : boxer.boxrec_id
+      ? `<p>BoxRec ID：<strong>${escapeHtml(boxer.boxrec_id)}</strong></p>`
+      : "<p>BoxRec：不明</p>";
   const html = `<!doctype html><html lang="ja"><head>${sharedHead({
     siteUrl,
     siteName,
@@ -508,7 +526,10 @@ export async function renderBoxerPage({ env, request, params }) {
         <section class="boxer-profile-section" aria-labelledby="basic-heading"><h2 id="basic-heading">プロフィール</h2><dl class="boxer-detail-list">${fieldRow(
     "年齢",
     calculateAge(boxer.birth_date)
-  )}${fieldRow("国籍", boxer.nationality)}${fieldRow("生年月日", formatDate(boxer.birth_date))}${fieldRow(
+  )}${fieldRow("性別", sexLabel(boxer.sex))}${fieldRow("国籍", boxer.nationality)}${fieldRow(
+    "国籍コード",
+    boxer.nationality_code
+  )}${fieldRow("生年月日", formatDate(boxer.birth_date))}${fieldRow(
     "出身地",
     boxer.birthplace
   )}${fieldRow("階級", boxer.weight_class)}${fieldRow("身長", formatNumber(boxer.height_cm, "cm"))}${fieldRow(
@@ -531,10 +552,11 @@ export async function renderBoxerPage({ env, request, params }) {
         <section class="boxer-profile-section" aria-labelledby="next-heading"><h2 id="next-heading">次戦</h2>${nextFightHtml(
     boxer
   )}</section>
-        <section class="boxer-profile-section boxer-report-section" aria-labelledby="report-heading" data-boxer-report data-fighter-id="${escapeHtml(
+        <details class="boxer-profile-section boxer-report-section" data-boxer-report data-fighter-id="${escapeHtml(
     boxer.internal_id
   )}" data-current-values="${escapeHtml(JSON.stringify(reportCurrentValues(boxer)))}">
-          <h2 id="report-heading">情報の誤りを報告</h2>
+          <summary id="report-heading">情報の誤りを報告</summary>
+          <div class="boxer-report-content">
           <p>表示内容に誤りがある場合は、項目と根拠URLを送信してください。すぐには反映されず、管理者が公式情報を確認します。</p>
           <form class="boxer-report-form">
             <label>指摘項目<select name="fieldName" required>${reportFieldOptions(boxer)}</select></label>
@@ -546,7 +568,8 @@ export async function renderBoxerPage({ env, request, params }) {
             <button type="submit">報告を送信</button>
             <p class="boxer-report-status" data-report-status role="status" aria-live="polite"></p>
           </form>
-        </section>
+          </div>
+        </details>
         <footer class="boxer-source"><h2>データ出典</h2><p>${sourceDetails}</p>${boxrecDetails}<p>確認日：${escapeHtml(
     formatCheckedAt(boxer.source_checked_at)
   )}</p></footer>

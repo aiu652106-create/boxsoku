@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex,nofollow" />
     <title>更新確認 | ボクシング速報</title>
-    <link rel="stylesheet" href="styles.css?v=20260820-boxer-workflow1" />
+    <link rel="stylesheet" href="styles.css?v=20260820-boxer-db2" />
     <link rel="icon" data-boxsoku-site-icon="true" type="image/png" href="/assets/boxsoku-icon.png" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="config.js?v=20260813-site-icon-settings1" defer></script>
     <script src="data.js?v=20260820-boxer-workflow1" defer></script>
     <script src="site-icon.js?v=20260813-site-icon-settings1" defer></script>
-    <script src="update-review.js?v=20260820-boxer-workflow1" defer></script>
+    <script src="update-review.js?v=20260820-boxer-db2" defer></script>
   </head>
   <body class="admin-page boxer-admin-page update-review-page">
     <header class="admin-header">
@@ -67,7 +67,7 @@
           <label>情報源<select id="review-source-filter"><option value="all">すべて</option></select></label>
           <label>検索<input id="review-search" type="search" placeholder="選手名・項目・出典" /></label>
           <button id="review-select-all" class="boxer-admin-button" type="button">表示中を全選択</button>
-          <button id="review-copy-button" class="boxer-admin-button" type="button">未確認を一括コピー</button>
+          <button id="review-copy-button" class="boxer-admin-button" type="button">未確認候補を一括コピー</button>
           <button id="review-bulk-approve" class="boxer-admin-button" type="button">選択を一括承認</button>
           <button id="review-bulk-reject" class="boxer-admin-button boxer-admin-danger" type="button">選択を一括却下</button>
           <button id="review-bulk-hold" class="boxer-admin-button" type="button">選択を保留</button>
@@ -80,7 +80,7 @@
         </section>
 
         <section class="review-panel" aria-labelledby="report-heading">
-          <div class="admin-list-heading"><div><span>USER REPORTS</span><h2 id="report-heading">ユーザー修正報告</h2></div><strong id="review-user-report-count">0件</strong></div>
+          <div class="admin-list-heading"><div><span>USER REPORTS</span><h2 id="report-heading">ユーザー修正報告</h2></div><div class="review-report-toolbar"><button id="review-report-select-all" class="boxer-admin-button" type="button">報告を全選択</button><button id="review-copy-open-reports" class="boxer-admin-button" type="button">未対応を一括コピー</button><button id="review-copy-selected-reports" class="boxer-admin-button" type="button">選択した報告をコピー</button><strong id="review-user-report-count">0件</strong></div></div>
           <div id="review-report-list" class="review-report-list"></div>
           <p id="review-report-empty" class="boxer-admin-empty" hidden>ユーザー報告はありません。</p>
         </section>

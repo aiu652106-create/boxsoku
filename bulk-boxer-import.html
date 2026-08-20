@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>データ一括管理 | ボクシング速報</title>
+    <link rel="stylesheet" href="styles.css?v=20260820-boxer-db2" />
+    <link rel="icon" data-boxsoku-site-icon="true" type="image/png" href="/assets/boxsoku-icon.png" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="config.js?v=20260813-site-icon-settings1" defer></script>
+    <script src="data.js?v=20260820-boxer-workflow1" defer></script>
+    <script src="site-icon.js?v=20260813-site-icon-settings1" defer></script>
+    <script src="bulk-boxer-import.js?v=20260820-boxer-db1" defer></script>
+  </head>
+  <body class="admin-page boxer-admin-page bulk-import-page">
+    <header class="admin-header">
+      <a class="admin-brand" href="admin.html">
+        <span>速</span>
+        <div><strong>ボクシング速報</strong><small>DATA IMPORT</small></div>
+      </a>
+      <a class="admin-view-site" href="/boxers" target="_blank" rel="noopener">選手DBを見る</a>
+    </header>
+
+    <section id="bulk-login-panel" class="admin-login-shell">
+      <form id="bulk-login-form" class="admin-login-card">
+        <span>DATA IMPORT</span>
+        <h1>データ一括管理</h1>
+        <p>管理者ログイン後、CSV・JSONをプレビューしてから反映できます。</p>
+        <label>メールアドレス<input id="bulk-login-email" type="email" autocomplete="username" required /></label>
+        <label>パスワード<input id="bulk-login-password" type="password" autocomplete="current-password" required /></label>
+        <p id="bulk-login-error" class="form-error" role="alert"></p>
+        <button type="submit">ログイン</button>
+      </form>
+    </section>
+
+    <div id="bulk-dashboard" class="admin-layout boxer-admin-layout" hidden>
+      <aside class="admin-sidebar">
+        <nav>
+          <a href="admin.html">記事管理</a>
+          <a href="boxer-admin.html">選手DB管理</a>
+          <a class="is-active" href="bulk-boxer-import.html">データ一括管理</a>
+          <a href="update-review.html">更新確認</a>
+          <a href="/boxers" target="_blank" rel="noopener">公開選手一覧</a>
+          <button id="bulk-logout-button" type="button">ログアウト</button>
+        </nav>
+      </aside>
+
+      <main class="admin-main boxer-admin-main bulk-import-main">
+        <div class="admin-page-heading">
+          <div><span>DATA IMPORT</span><h1>データ一括管理</h1><p>プレビューで差分を確認し、明示的に反映するまで本番データは変更しません。</p></div>
+          <div class="admin-heading-actions"><a class="admin-new-button" href="boxer-admin.html">選手DB管理へ戻る</a><a class="admin-new-button" href="update-review.html">更新確認</a></div>
+        </div>
+        <p id="bulk-status" class="admin-settings-message" role="status"></p>
+
+        <section class="admin-list-panel bulk-import-panel" aria-labelledby="bulk-input-heading">
+          <div class="admin-list-heading"><div><span>PREVIEW BEFORE APPLY</span><h2 id="bulk-input-heading">取込データ</h2></div></div>
+          <p class="bulk-import-help">新規・更新・重複・エラー・要確認を判定します。重複・エラー・要確認の行は反映しません。削除はこの画面から行いません。</p>
+          <div class="bulk-import-input-grid">
+            <label>データ種別<select id="bulk-entity"><option value="boxers">fighters（選手）</option><option value="rankings">rankings（ランキング履歴）</option><option value="titles">titles（王座）</option><option value="title_reigns">title_reigns（王座保有履歴）</option><option value="fighter_status_history">fighter_status_history（状態履歴）</option></select></label>
+            <label>CSV / JSONファイル<input id="bulk-file" type="file" accept=".csv,.json,text/csv,application/json" /></label>
+            <label class="bulk-import-full">貼り付け（ファイルより優先）<textarea id="bulk-paste" rows="8" placeholder='JSON配列または1行目を見出しにしたCSVを貼り付け'></textarea></label>
+          </div>
+          <div class="boxer-admin-actions"><button id="bulk-preview-button" class="boxer-admin-button" type="button">プレビューを作成</button><button id="bulk-apply-button" class="boxer-admin-button" type="button" disabled>確認済みの行だけ反映</button></div>
+        </section>
+
+        <section id="bulk-summary-panel" class="admin-list-panel bulk-import-panel" aria-labelledby="bulk-summary-heading" hidden>
+          <div class="admin-list-heading"><div><span>IMPORT SUMMARY</span><h2 id="bulk-summary-heading">プレビュー結果</h2></div><strong id="bulk-import-id"></strong></div>
+          <div id="bulk-summary" class="bulk-import-summary"></div>
+          <p id="bulk-apply-note" class="bulk-import-help"></p>
+          <div class="bulk-import-table-wrap"><table class="bulk-import-table"><thead><tr><th>行</th><th>判定</th><th>識別</th><th>内容</th><th>エラー・確認</th></tr></thead><tbody id="bulk-preview-table"></tbody></table></div>
+        </section>
+
+        <section class="admin-list-panel bulk-import-panel" aria-labelledby="bulk-log-heading">
+          <div class="admin-list-heading"><div><span>IMPORT LOG</span><h2 id="bulk-log-heading">一括処理ログ</h2></div></div>
+          <div id="bulk-log" class="bulk-import-log"><p>ログを読み込んでいます。</p></div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

@@ -6,13 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex,nofollow" />
     <title>選手DB管理 | ボクシング速報</title>
-    <link rel="stylesheet" href="styles.css?v=20260820-boxer-db1" />
+    <link rel="stylesheet" href="styles.css?v=20260820-boxer-db2" />
     <link rel="icon" data-boxsoku-site-icon="true" type="image/png" href="/assets/boxsoku-icon.png" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="config.js?v=20260813-site-icon-settings1" defer></script>
     <script src="data.js?v=20260814-affiliate-report1" defer></script>
     <script src="site-icon.js?v=20260813-site-icon-settings1" defer></script>
-    <script src="boxer-admin.js?v=20260820-boxer-db1" defer></script>
+    <script src="boxer-admin.js?v=20260820-boxer-db2" defer></script>
   </head>
   <body class="admin-page boxer-admin-page">
     <header class="admin-header">
@@ -48,8 +48,8 @@
 
       <main class="admin-main boxer-admin-main">
         <div class="admin-page-heading">
-          <div><span>BOXER DATABASE</span><h1>選手DB管理</h1><p>今回はテスト登録10名だけを管理します。試合DB・興行DBはまだ作成しません。</p></div>
-          <a class="admin-new-button" href="/boxers" target="_blank" rel="noopener">公開ページを見る</a>
+          <div><span>BOXER DATABASE</span><h1>選手DB管理</h1><p>現在はテスト登録16名を管理します。試合DB・興行DBはまだ作成しません。</p></div>
+          <div class="admin-heading-actions"><a class="admin-new-button" href="/boxers" target="_blank" rel="noopener">公開ページを見る</a><a class="admin-new-button" href="/bulk-boxer-import.html">一括取込</a></div>
         </div>
         <p id="boxer-admin-status" class="admin-settings-message" role="status"></p>
         <div class="boxer-admin-columns">
@@ -72,10 +72,12 @@
                 <label>BoxRec URL<input id="boxer-boxrec-url" type="url" placeholder="https://boxrec.com/en/box-pro/..." /></label>
               </div></fieldset>
               <fieldset><legend>基本プロフィール</legend><div class="boxer-admin-grid">
+                <label>性別<select id="boxer-sex"><option value="">不明</option><option value="male">男性</option><option value="female">女性</option><option value="unknown">不明</option></select></label>
                 <label>国籍<input id="boxer-nationality" /></label>
+                <label>国籍コード<input id="boxer-nationality-code" maxlength="3" pattern="[A-Z]{3}" placeholder="JPN / USA / IRL" /></label>
                 <label>生年月日<input id="boxer-birth-date" type="date" /></label>
                 <label>出身地<input id="boxer-birthplace" /></label>
-                <label>状態<select id="boxer-career-status"><option value="unknown">不明</option><option value="active">現役</option><option value="retired">引退</option></select></label>
+                <label>状態<select id="boxer-career-status"><option value="unknown">不明</option><option value="active">現役</option><option value="inactive">活動休止</option><option value="retired">引退</option></select></label>
                 <label>所属ジム<input id="boxer-gym" /></label>
                 <label>階級<input id="boxer-weight-class" /></label>
                 <label>構え<input id="boxer-stance" /></label>

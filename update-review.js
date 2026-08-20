@@ -163,7 +163,7 @@
       const boxer = boxerOf(report);
       const evidence = safeUrl(report.evidence_url);
       return `<article class="review-report-card" data-report-id="${escapeHtml(report.report_id)}">
-        <header><span class="review-badge">${escapeHtml(reportStatusLabels[report.status] || report.status)}</span><time>${escapeHtml(detectedText(report.submitted_at))}</time></header>
+        <header><label class="review-select"><input type="checkbox" data-report-check value="${escapeHtml(report.report_id)}" /><span>選択</span></label><div><span class="review-badge">${escapeHtml(reportStatusLabels[report.status] || report.status)}</span><time>${escapeHtml(detectedText(report.submitted_at))}</time></div></header>
         <h3>${boxer.slug ? `<a href="/boxer/${encodeURIComponent(boxer.slug)}" target="_blank" rel="noopener">${escapeHtml(candidateName(report))}</a>` : escapeHtml(candidateName(report))}</h3>
         <p>指摘項目：${escapeHtml(report.field_name)}</p>
         <dl class="review-value-diff"><div><dt>現在表示</dt><dd>${escapeHtml(report.current_value)}</dd></div><div><dt>変更候補</dt><dd>${escapeHtml(report.proposed_value)}</dd></div></dl>
@@ -172,6 +172,33 @@
         <div class="review-actions"><button type="button" data-report-action="reviewing">確認中</button><button type="button" data-report-action="resolved">修正済み</button><button type="button" data-report-action="rejected" class="review-danger">却下</button></div>
       </article>`;
     }).join("");
+  }
+
+  function reportCopyText(reports) {
+    return reports.map((report) => [
+      `選手：${candidateName(report)}`,
+      `指摘項目：${report.field_name}`,
+      `現在表示：${valueText(report.current_value)}`,
+      `修正候補：${valueText(report.proposed_value)}`,
+      `根拠URL：${report.evidence_url || "不明"}`,
+      `コメント：${report.comment || "なし"}`,
+      `報告状態：${reportStatusLabels[report.status] || report.status}`,
+      `報告日時：${detectedText(report.submitted_at)}`,
+      "-------"
+    ].join("\n")).join("\n");
+  }
+
+  async function copyReports(reports, emptyMessage) {
+    if (!reports.length) {
+      setStatus(emptyMessage, true);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(reportCopyText(reports));
+      setStatus(`${reports.length}件のユーザー報告をクリップボードへコピーしました。`);
+    } catch {
+      setStatus("ユーザー報告をクリップボードへコピーできませんでした。", true);
+    }
   }
 
   async function loadData() {
@@ -259,6 +286,10 @@
     return [...document.querySelectorAll("[data-candidate-check]:checked")].map((input) => input.value);
   }
 
+  function selectedReportIds() {
+    return [...document.querySelectorAll("[data-report-check]:checked")].map((input) => input.value);
+  }
+
   async function showDashboard() {
     byId("review-login-panel").hidden = true;
     byId("review-dashboard").hidden = false;
@@ -305,6 +336,19 @@
       document.querySelectorAll("[data-candidate-check]").forEach((input) => { input.checked = true; });
     });
     byId("review-copy-button").addEventListener("click", copyPending);
+    byId("review-report-select-all").addEventListener("click", () => {
+      document.querySelectorAll("[data-report-check]").forEach((input) => { input.checked = true; });
+    });
+    byId("review-copy-open-reports").addEventListener("click", () => {
+      copyReports(
+        state.reports.filter((report) => ["pending", "reviewing"].includes(report.status)),
+        "未対応のユーザー報告はありません。"
+      );
+    });
+    byId("review-copy-selected-reports").addEventListener("click", () => {
+      const ids = new Set(selectedReportIds());
+      copyReports(state.reports.filter((report) => ids.has(report.report_id)), "ユーザー報告を選択してください。");
+    });
     byId("review-bulk-approve").addEventListener("click", () => reviewMany(selectedIds(), "approved"));
     byId("review-bulk-reject").addEventListener("click", () => reviewMany(selectedIds(), "rejected"));
     byId("review-bulk-hold").addEventListener("click", () => reviewMany(selectedIds(), "needs_review"));

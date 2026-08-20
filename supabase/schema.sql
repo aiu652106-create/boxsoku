@@ -55,10 +55,12 @@ create table if not exists public.boxers (
   ring_name text,
   boxrec_id text,
   boxrec_url text,
+  sex text check (sex is null or sex in ('male', 'female', 'unknown')),
   nationality text,
+  nationality_code text check (nationality_code is null or nationality_code ~ '^[A-Z]{3}$'),
   birth_date date,
   birthplace text,
-  career_status text not null default 'unknown' check (career_status in ('active', 'retired', 'unknown')),
+  career_status text not null default 'unknown' check (career_status in ('active', 'retired', 'inactive', 'unknown')),
   gym text,
   weight_class text,
   stance text,
@@ -693,7 +695,9 @@ create table if not exists public.fighter_status_history (
   status text not null check (status in ('active', 'retired', 'inactive')),
   start_date date,
   end_date date,
+  source_name text not null default '',
   source_url text,
+  source_date date,
   checked_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   check (end_date is null or start_date is null or end_date >= start_date)
@@ -709,6 +713,7 @@ create table if not exists public.rankings (
   ranking_month date,
   source_name text not null default '',
   source_url text not null check (source_url ~* '^https?://'),
+  source_date date,
   checked_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   check (ranking_month is null or ranking_month = date_trunc('month', ranking_month)::date)
@@ -735,6 +740,7 @@ create table if not exists public.title_reigns (
     check (status in ('active', 'lost', 'vacated', 'stripped', 'inactive')),
   source_name text not null default '',
   source_url text not null check (source_url ~* '^https?://'),
+  source_date date,
   checked_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   check (end_date is null or start_date is null or end_date >= start_date)
@@ -744,7 +750,7 @@ create table if not exists public.boxer_reports (
   report_id uuid primary key default gen_random_uuid(),
   fighter_id uuid not null references public.boxers(internal_id) on delete cascade,
   field_name text not null check (field_name in (
-    'name_ja', 'name_kana', 'name_en', 'ring_name', 'nationality', 'birth_date',
+    'name_ja', 'name_kana', 'name_en', 'ring_name', 'sex', 'nationality', 'nationality_code', 'birth_date',
     'birthplace', 'career_status', 'gym', 'weight_class', 'stance', 'height_cm',
     'reach_cm', 'pro_debut_date', 'world_champion_experience', 'current_titles',
     'past_major_titles', 'world_title_weight_classes', 'ranking_wba', 'ranking_wbc',
@@ -845,7 +851,9 @@ begin
     when 'name_kana' then select to_jsonb(name_kana) into value from public.boxers where internal_id = p_fighter_id;
     when 'name_en' then select to_jsonb(name_en) into value from public.boxers where internal_id = p_fighter_id;
     when 'ring_name' then select to_jsonb(ring_name) into value from public.boxers where internal_id = p_fighter_id;
+    when 'sex' then select to_jsonb(sex) into value from public.boxers where internal_id = p_fighter_id;
     when 'nationality' then select to_jsonb(nationality) into value from public.boxers where internal_id = p_fighter_id;
+    when 'nationality_code' then select to_jsonb(nationality_code) into value from public.boxers where internal_id = p_fighter_id;
     when 'birth_date' then select to_jsonb(birth_date) into value from public.boxers where internal_id = p_fighter_id;
     when 'birthplace' then select to_jsonb(birthplace) into value from public.boxers where internal_id = p_fighter_id;
     when 'career_status' then select to_jsonb(career_status) into value from public.boxers where internal_id = p_fighter_id;
@@ -908,7 +916,7 @@ begin
   end if;
 
   if p_field_name is null or p_field_name not in (
-    'name_ja', 'name_kana', 'name_en', 'ring_name', 'nationality', 'birth_date',
+    'name_ja', 'name_kana', 'name_en', 'ring_name', 'sex', 'nationality', 'nationality_code', 'birth_date',
     'birthplace', 'career_status', 'gym', 'weight_class', 'stance', 'height_cm',
     'reach_cm', 'pro_debut_date', 'world_champion_experience', 'current_titles',
     'past_major_titles', 'world_title_weight_classes', 'ranking_wba', 'ranking_wbc',
@@ -1074,7 +1082,9 @@ begin
     when 'name_kana' then update public.boxers set name_kana = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'name_en' then update public.boxers set name_en = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'ring_name' then update public.boxers set ring_name = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
+    when 'sex' then update public.boxers set sex = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'nationality' then update public.boxers set nationality = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
+    when 'nationality_code' then update public.boxers set nationality_code = nullif(upper(candidate.proposed_value #>> '{}'), '') where internal_id = candidate.fighter_id;
     when 'birth_date' then update public.boxers set birth_date = nullif(candidate.proposed_value #>> '{}', '')::date where internal_id = candidate.fighter_id;
     when 'birthplace' then update public.boxers set birthplace = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'career_status' then update public.boxers set career_status = candidate.proposed_value #>> '{}' where internal_id = candidate.fighter_id;
@@ -1298,3 +1308,152 @@ revoke all on function public.review_update_candidate(uuid, text, text)
   from public, anon, authenticated;
 grant execute on function public.review_update_candidate(uuid, text, text)
   to authenticated;
+
+-- Unified fighter compatibility view and bulk-import audit tables. The site
+-- keeps public.boxers as its published snapshot; future fighter/event tables
+-- can reference fighters.fighter_id without duplicating the person record.
+create unique index if not exists boxers_boxrec_id_unique_idx
+  on public.boxers (boxrec_id)
+  where boxrec_id is not null and btrim(boxrec_id) <> '';
+
+create index if not exists boxers_nationality_code_idx
+  on public.boxers (nationality_code, name_ja);
+
+drop view if exists public.fighters;
+create view public.fighters
+with (security_invoker = true)
+as
+select
+  internal_id as fighter_id,
+  internal_id,
+  slug,
+  name_ja,
+  name_kana,
+  name_en,
+  ring_name,
+  boxrec_id,
+  boxrec_url,
+  sex,
+  nationality,
+  nationality_code,
+  birth_date,
+  birthplace,
+  career_status,
+  gym,
+  weight_class,
+  stance,
+  height_cm,
+  reach_cm,
+  pro_debut_date,
+  total_fights,
+  wins,
+  losses,
+  draws,
+  no_contests,
+  ko_wins,
+  ko_rate,
+  world_champion_experience,
+  current_titles,
+  past_major_titles,
+  world_title_weight_classes,
+  ranking_wba,
+  ranking_wbc,
+  ranking_ibf,
+  ranking_wbo,
+  next_fight_date,
+  next_opponent,
+  next_venue,
+  next_event_name,
+  source_name,
+  source_url,
+  source_checked_at,
+  field_sources,
+  is_published,
+  created_at,
+  updated_at
+from public.boxers
+where is_published = true;
+
+grant select on public.fighters to anon, authenticated;
+
+create table if not exists public.bulk_import_runs (
+  import_id uuid primary key default gen_random_uuid(),
+  entity_type text not null check (entity_type in (
+    'boxers', 'rankings', 'titles', 'title_reigns', 'fighter_status_history'
+  )),
+  file_name text not null,
+  file_format text not null check (file_format in ('csv', 'json', 'paste')),
+  row_count integer not null default 0 check (row_count >= 0),
+  new_count integer not null default 0 check (new_count >= 0),
+  update_count integer not null default 0 check (update_count >= 0),
+  duplicate_count integer not null default 0 check (duplicate_count >= 0),
+  error_count integer not null default 0 check (error_count >= 0),
+  review_count integer not null default 0 check (review_count >= 0),
+  status text not null default 'preview'
+    check (status in ('preview', 'applied', 'failed', 'cancelled')),
+  created_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  applied_at timestamptz,
+  error_summary jsonb not null default '[]'::jsonb
+);
+
+create table if not exists public.bulk_import_items (
+  item_id uuid primary key default gen_random_uuid(),
+  import_id uuid not null references public.bulk_import_runs(import_id) on delete cascade,
+  row_number integer not null check (row_number > 0),
+  proposed_record jsonb not null,
+  existing_fighter_id uuid references public.boxers(internal_id) on delete set null,
+  operation text not null check (operation in ('new', 'update', 'duplicate', 'error', 'review')),
+  validation_errors jsonb not null default '[]'::jsonb,
+  status text not null default 'preview'
+    check (status in ('preview', 'applied', 'skipped', 'failed')),
+  applied_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists bulk_import_runs_created_idx
+  on public.bulk_import_runs (created_at desc);
+create index if not exists bulk_import_items_import_idx
+  on public.bulk_import_items (import_id, row_number);
+
+alter table public.bulk_import_runs enable row level security;
+alter table public.bulk_import_items enable row level security;
+
+drop policy if exists "Admins can read bulk import runs" on public.bulk_import_runs;
+create policy "Admins can read bulk import runs"
+on public.bulk_import_runs for select to authenticated
+using (public.is_admin());
+
+drop policy if exists "Admins can insert bulk import runs" on public.bulk_import_runs;
+create policy "Admins can insert bulk import runs"
+on public.bulk_import_runs for insert to authenticated
+with check (public.is_admin());
+
+drop policy if exists "Admins can update bulk import runs" on public.bulk_import_runs;
+create policy "Admins can update bulk import runs"
+on public.bulk_import_runs for update to authenticated
+using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "Admins can delete bulk import runs" on public.bulk_import_runs;
+create policy "Admins can delete bulk import runs"
+on public.bulk_import_runs for delete to authenticated
+using (public.is_admin());
+
+drop policy if exists "Admins can read bulk import items" on public.bulk_import_items;
+create policy "Admins can read bulk import items"
+on public.bulk_import_items for select to authenticated
+using (public.is_admin());
+
+drop policy if exists "Admins can insert bulk import items" on public.bulk_import_items;
+create policy "Admins can insert bulk import items"
+on public.bulk_import_items for insert to authenticated
+with check (public.is_admin());
+
+drop policy if exists "Admins can update bulk import items" on public.bulk_import_items;
+create policy "Admins can update bulk import items"
+on public.bulk_import_items for update to authenticated
+using (public.is_admin()) with check (public.is_admin());
+
+revoke all on public.bulk_import_runs, public.bulk_import_items from anon;
+grant select, insert, update, delete on public.bulk_import_runs,
+  public.bulk_import_items to authenticated;

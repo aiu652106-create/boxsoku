@@ -7,7 +7,9 @@
     "ringName",
     "boxrecId",
     "boxrecUrl",
+    "sex",
     "nationality",
+    "nationalityCode",
     "birthDate",
     "birthplace",
     "careerStatus",
@@ -120,7 +122,9 @@
     setValue("ringName", boxer.ring_name);
     setValue("boxrecId", boxer.boxrec_id);
     setValue("boxrecUrl", boxer.boxrec_url);
+    setValue("sex", boxer.sex);
     setValue("nationality", boxer.nationality);
+    setValue("nationalityCode", boxer.nationality_code);
     setValue("birthDate", boxer.birth_date);
     setValue("birthplace", boxer.birthplace);
     setValue("careerStatus", boxer.career_status);
@@ -175,7 +179,7 @@
           boxer.internal_id === editingId ? " is-active" : ""
         }" data-boxer-id="${escapeHtml(boxer.internal_id)}"><strong>${escapeHtml(
           boxer.name_ja
-        )}</strong><span>${escapeHtml(boxer.career_status === "retired" ? "引退" : boxer.career_status === "active" ? "現役" : "不明")} / ${escapeHtml(
+        )}</strong><span>${escapeHtml(boxer.career_status === "retired" ? "引退" : boxer.career_status === "inactive" ? "活動休止" : boxer.career_status === "active" ? "現役" : "不明")} / ${escapeHtml(
           recordLabel(boxer)
         )}</span></button>`
       )
@@ -227,7 +231,9 @@
       ring_name: nullableValue(valueOf("ringName")),
       boxrec_id: nullableValue(valueOf("boxrecId")),
       boxrec_url: nullableValue(valueOf("boxrecUrl")),
+      sex: nullableValue(valueOf("sex")),
       nationality: nullableValue(valueOf("nationality")),
+      nationality_code: nullableValue(valueOf("nationalityCode"))?.toUpperCase() || null,
       birth_date: nullableValue(valueOf("birthDate")),
       birthplace: nullableValue(valueOf("birthplace")),
       career_status: valueOf("careerStatus").value,

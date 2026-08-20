@@ -8,7 +8,9 @@ create table if not exists public.fighter_status_history (
   status text not null check (status in ('active', 'retired', 'inactive')),
   start_date date,
   end_date date,
+  source_name text not null default '',
   source_url text,
+  source_date date,
   checked_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   check (end_date is null or start_date is null or end_date >= start_date)
@@ -24,6 +26,7 @@ create table if not exists public.rankings (
   ranking_month date,
   source_name text not null default '',
   source_url text not null check (source_url ~* '^https?://'),
+  source_date date,
   checked_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   check (ranking_month is null or ranking_month = date_trunc('month', ranking_month)::date)
@@ -50,6 +53,7 @@ create table if not exists public.title_reigns (
     check (status in ('active', 'lost', 'vacated', 'stripped', 'inactive')),
   source_name text not null default '',
   source_url text not null check (source_url ~* '^https?://'),
+  source_date date,
   checked_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   check (end_date is null or start_date is null or end_date >= start_date)
@@ -59,7 +63,7 @@ create table if not exists public.boxer_reports (
   report_id uuid primary key default gen_random_uuid(),
   fighter_id uuid not null references public.boxers(internal_id) on delete cascade,
   field_name text not null check (field_name in (
-    'name_ja', 'name_kana', 'name_en', 'ring_name', 'nationality', 'birth_date',
+    'name_ja', 'name_kana', 'name_en', 'ring_name', 'sex', 'nationality', 'nationality_code', 'birth_date',
     'birthplace', 'career_status', 'gym', 'weight_class', 'stance', 'height_cm',
     'reach_cm', 'pro_debut_date', 'world_champion_experience', 'current_titles',
     'past_major_titles', 'world_title_weight_classes', 'ranking_wba', 'ranking_wbc',
@@ -160,7 +164,9 @@ begin
     when 'name_kana' then select to_jsonb(name_kana) into value from public.boxers where internal_id = p_fighter_id;
     when 'name_en' then select to_jsonb(name_en) into value from public.boxers where internal_id = p_fighter_id;
     when 'ring_name' then select to_jsonb(ring_name) into value from public.boxers where internal_id = p_fighter_id;
+    when 'sex' then select to_jsonb(sex) into value from public.boxers where internal_id = p_fighter_id;
     when 'nationality' then select to_jsonb(nationality) into value from public.boxers where internal_id = p_fighter_id;
+    when 'nationality_code' then select to_jsonb(nationality_code) into value from public.boxers where internal_id = p_fighter_id;
     when 'birth_date' then select to_jsonb(birth_date) into value from public.boxers where internal_id = p_fighter_id;
     when 'birthplace' then select to_jsonb(birthplace) into value from public.boxers where internal_id = p_fighter_id;
     when 'career_status' then select to_jsonb(career_status) into value from public.boxers where internal_id = p_fighter_id;
@@ -223,7 +229,7 @@ begin
   end if;
 
   if p_field_name is null or p_field_name not in (
-    'name_ja', 'name_kana', 'name_en', 'ring_name', 'nationality', 'birth_date',
+    'name_ja', 'name_kana', 'name_en', 'ring_name', 'sex', 'nationality', 'nationality_code', 'birth_date',
     'birthplace', 'career_status', 'gym', 'weight_class', 'stance', 'height_cm',
     'reach_cm', 'pro_debut_date', 'world_champion_experience', 'current_titles',
     'past_major_titles', 'world_title_weight_classes', 'ranking_wba', 'ranking_wbc',
@@ -389,7 +395,9 @@ begin
     when 'name_kana' then update public.boxers set name_kana = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'name_en' then update public.boxers set name_en = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'ring_name' then update public.boxers set ring_name = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
+    when 'sex' then update public.boxers set sex = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'nationality' then update public.boxers set nationality = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
+    when 'nationality_code' then update public.boxers set nationality_code = nullif(upper(candidate.proposed_value #>> '{}'), '') where internal_id = candidate.fighter_id;
     when 'birth_date' then update public.boxers set birth_date = nullif(candidate.proposed_value #>> '{}', '')::date where internal_id = candidate.fighter_id;
     when 'birthplace' then update public.boxers set birthplace = nullif(candidate.proposed_value #>> '{}', '') where internal_id = candidate.fighter_id;
     when 'career_status' then update public.boxers set career_status = candidate.proposed_value #>> '{}' where internal_id = candidate.fighter_id;
