@@ -65,8 +65,10 @@ function safeUrl(value) {
 
 function formatDate(value) {
   if (!value) return "不明";
-  const date = new Date(`${String(value).slice(0, 10)}T00:00:00+09:00`);
-  return Number.isNaN(date.getTime()) ? "不明" : date.toLocaleDateString("ja-JP");
+  const match = String(value).slice(0, 10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return "不明";
+  const [, year, month, day] = match;
+  return `${year}/${Number(month)}/${Number(day)}`;
 }
 
 function formatCheckedAt(value) {
@@ -95,13 +97,23 @@ function formatPercent(value) {
 
 function calculateAge(value) {
   if (!value) return "不明";
-  const birth = new Date(`${String(value).slice(0, 10)}T00:00:00+09:00`);
-  if (Number.isNaN(birth.getTime())) return "不明";
+  const match = String(value).slice(0, 10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return "不明";
+  const [, year, month, day] = match;
   const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(now).reduce((parts, part) => {
+    if (part.type !== "literal") parts[part.type] = Number(part.value);
+    return parts;
+  }, {});
+  let age = today.year - Number(year);
   const birthdayPassed =
-    now.getMonth() > birth.getMonth() ||
-    (now.getMonth() === birth.getMonth() && now.getDate() >= birth.getDate());
+    today.month > Number(month) ||
+    (today.month === Number(month) && today.day >= Number(day));
   if (!birthdayPassed) age -= 1;
   return age >= 0 ? `${age}歳` : "不明";
 }
