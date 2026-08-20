@@ -71,6 +71,11 @@ as $$
 declare
   transition_date date;
 begin
+  if tg_op = 'UPDATE' and new.status is distinct from old.status then
+    raise exception
+      'Fighter status changes must close the current row and insert a new history row';
+  end if;
+
   if new.end_date is null then
     transition_date := coalesce(new.start_date, current_date);
 
@@ -92,7 +97,7 @@ $$;
 drop trigger if exists fighter_status_history_close_previous_current
   on public.fighter_status_history;
 create trigger fighter_status_history_close_previous_current
-before insert or update of fighter_id, start_date, end_date
+before insert or update of fighter_id, start_date, end_date, status
 on public.fighter_status_history
 for each row execute function public.close_previous_fighter_status();
 
