@@ -6,153 +6,109 @@
 - Resolve ordinary implementation/test failures internally. Do not stop after the first fixable blocker.
 - Never expose, print, commit, or replace secrets/tokens/cookies/`.env` values/API credentials/service-role keys.
 - Do not perform destructive production changes unless explicitly authorized.
-- External fetches must be low-frequency, low-parallel, and necessary only. On 403 / 429 / 503, stop that source immediately; do not retry aggressively.
+- External fetches must be low-frequency, low-parallel, and necessary only. On 403 / 429 / 503, stop that source immediately with zero retry.
+
+## Last audited implementation
+- Implementation commit: `8edaf57812bf85bc958abc297d8bad023ac71638`.
+- Final handoff commit: `2bd6ab47d02f6676c2c81b0ed35633d1dbdd9742`.
+- The architecture fixes are materially improved: scheduled trigger, stable source identity, bout reconciliation, exact request accounting, host validation, no automatic publication, and 403/429/503 zero-retry behavior are present in code.
+- Codex reported the full local Node suite as 12/12 PASS.
+- Production DB migration/write was not authorized.
 
 ## Current task
-- Status: PASS
-- Goal: Repair and complete the boxing event automation introduced by commit `260071e62f7e496b41d7cab554a4c2df88f2bb93`. Code and deterministic tests are complete; production deployment, migrations, DB writes, and event publication were not performed.
+- Status: READY
+- Goal: Close the remaining independent audit blocker: prove that the adapters work against the CURRENT real public source structure before any production migration or event-data write.
 
-## Completed result
-- Commit SHA: `8edaf57` (`fix: complete boxing event automation safeguards`)
-- Scheduler: `.github/workflows/event-sync.yml` runs once daily and supports `workflow_dispatch`; `scripts/event-sync-scheduler.mjs` fails closed when `BOXSOKU_SERVER_TOKEN` is absent and never prints the secret.
-- Source types/sources: Lemino (`streaming`) and DANGAN (`promoter`) use bounded source-specific adapters. Boxing Mobile is represented as a disabled, low-frequency `discovery` source and cannot publish canonical facts.
-- Stable event identity: `boxing_event_sources` maps `(source_key, source_event_key)` to one canonical event. Mutable name/date/venue/card fields are not primary identity; missing stable identity requires review/manual mapping.
-- Bout reconciliation: disappeared or changed bouts become `needs_review`; explicit admin approval marks removed bouts `removed` without DELETE. Public rendering exposes only approved active bouts. Bout order remains null unless explicitly encoded.
-- Request policy: 403/429/503 stop a source with zero retry. Other permitted transient failures have at most one bounded retry, and `external_request_count` records actual outbound attempts.
-- Tests: full Node test suite PASS, 12 passed / 0 failed, including all 15 required deterministic scenarios and static SQL safety checks.
-- Production deploy: none. Production DB changes/migrations: none. Secret exposure: none. Unrelated repositories: untouched.
-- Remaining blocker: none in local code/test scope.
-- Next action: wait for ChatGPT independent audit before any production action.
+## Independent ChatGPT audit blockers
 
-## Historical audit requirements (completed above)
-The requirements below document the audit that was addressed in this work cycle.
+### 1. Existing parser tests are synthetic, not live-source representative
+`tests/event-sources.test.mjs` currently fabricates both of the structures the parser accepts:
+- a made-up `SportsEvent` JSON-LD block; and
+- made-up `data-lemino-event`, `data-dangan-event`, `data-event-id`, `data-event-name`, etc. attributes.
 
-### 1. It is not actually scheduled
-- `README_DEPLOY.md` currently says an external Cron must call `POST /api/event-sync` once per day.
-- That means the feature is an endpoint, not a completed automation.
-- Add an actual repository-controlled daily scheduler. Prefer a minimal GitHub Actions scheduled workflow unless an existing repository-native scheduler is already present and safer.
-- Scheduler must call the existing sync endpoint at most once per day.
-- Secret/token must come only from repository/environment secrets; never commit the value.
-- If the secret is absent, fail closed without attempting the external sync.
-- Keep a manual `workflow_dispatch` trigger for controlled verification if appropriate.
+The current parser only accepts structured JSON-LD events or DOM blocks carrying configured event markers. A deterministic test passing against invented markup does NOT establish that the current Lemino or DANGAN pages actually expose those structures.
 
-### 2. Source coverage is too narrow
-- Current seed config contains only Lemino and DANGAN.
-- This is not enough for a general Japanese boxing event schedule.
-- Add a discovery-source concept separate from an authoritative/official source.
-- The public Boxing Mobile schedule may be used only as a LOW-FREQUENCY DISCOVERY source if it is publicly accessible without bypassing controls. Do not mass crawl it and do not copy article text/images.
-- If Boxing Mobile returns 403/429/503 or otherwise resists automated access, stop and leave it disabled; do not bypass protections.
-- Discovery data alone must never become published canonical facts.
-- For each discovered event, authoritative fields should be verified from an approved official source when available: promoter/organizer/gym/streamer/sanctioning-body/event official page.
-- Make source types explicit, e.g. `discovery` vs `official`/`promoter`/`streaming`.
+Required:
+- Perform at most ONE normal GET to the current configured Lemino source and at most ONE normal GET to the current configured DANGAN source for this validation cycle.
+- Do not crawl child pages in bulk.
+- Inspect the ACTUAL response structure locally.
+- Do not save whole third-party HTML pages to the repository. Create only minimal sanitized fixtures containing the smallest structure necessary to reproduce the real parser behavior.
+- Update the source-specific adapters to match the current real public structure, while remaining fail-closed against ambiguous multi-event association.
+- A live read-only dry-run must parse current source HTML without DB writes and report exact extracted event count, event names/dates, and warnings.
 
-### 3. Current generic fallback parser can combine unrelated data
-- `functions/_shared/event-sources.js` currently has a generic fallback that scans the whole page, takes a date from page text, then chooses a relevant link/title.
-- On a portal/homepage containing multiple events, this can pair the wrong event name/date/venue/link.
-- Remove fail-open whole-page guessing for multi-event/index pages.
-- Parse only data that is structurally associated with the same event: valid JSON-LD event objects, explicit per-event DOM blocks, or a source-specific bounded adapter.
-- If association is ambiguous, produce `needs_review` or no candidate. Never synthesize one event from unrelated page fragments.
-- Lemino and DANGAN must have source-specific adapters/fixtures rather than both blindly using the same generic behavior.
+### 2. DANGAN source is not proven usable
+Current seed config still points DANGAN to:
+`https://danganboxing.com/`
 
-### 4. Event identity is based on mutable fields and can create duplicates
-- Current `canonicalKey()` includes event name/date/venue/promoter/main bout.
-- These fields can legitimately change or become known later, causing the same event to receive a new key and be treated as new.
-- Introduce stable source identity.
-- Preferred design: maintain a source-to-event mapping such as `boxing_event_sources` with unique `(source_key, source_event_key)` and `event_id`, where `source_event_key` comes from a stable official event URL/ID when available.
-- Do not use mutable venue/card/promoter data as the primary identity.
-- If no stable external identity exists, require review/manual matching instead of silently creating a duplicate.
-- Cross-source aliases for the same event must be able to point to one canonical event.
+Public inspection shows the homepage exposes a link to the schedule rather than a clearly usable current event list. The currently discoverable `/schedule-list/` page also appears to return a "page not found" style body / old category archive instead of a reliable current schedule.
 
-### 5. Card removal/update handling can leave stale bouts
-- Current approval logic upserts bouts but does not reconcile bouts that disappeared from a later approved card.
-- Current `needs_review` guard only catches a very large card-count drop; a smaller cancellation/removal can remain silently stale.
-- Any previously-known bout disappearing, fighter pair changing, or explicit card-order change must become `needs_review`.
-- Do not auto-delete historical bout rows.
-- Add a safe status/reconciliation mechanism (for example `active`, `removed`, `cancelled`, `needs_review`) so an explicitly approved removal stops appearing publicly without losing history.
-- Public rendering must show only currently approved active bouts.
-- Never infer cancellation merely because one fetch temporarily omitted a bout.
+Required:
+- Determine, from the current public DANGAN site only, whether there is a stable official URL that actually contains current/upcoming event data suitable for one low-frequency fetch.
+- If such a URL exists, use that exact official URL and add a minimal real-structure fixture/test.
+- If no reliable current DANGAN schedule source exists, disable DANGAN rather than claiming it is an operational source.
+- Never invent a URL and never scrape search-engine cache/results as canonical data.
 
-### 6. 403 / 429 / 503 behavior conflicts with the low-load rule
-- Current sync retries 5xx, including 503, and later treats it as a normal failure/cooldown.
-- Change behavior so 403, 429, and 503 immediately stop that source for the run with zero retry.
-- Do not automatically hammer a stopped source.
-- Other transient errors may have at most one bounded retry only if already allowed by source config.
+### 3. Boxing Mobile discovery is disabled without a documented accessibility check
+The implementation registers Boxing Mobile as `discovery`, but seeds it disabled. That is safe, but it does not solve general event discovery.
 
-### 7. Request accounting is inaccurate
-- `externalRequests` currently reports one request even when the fetch helper actually retries and performs two source requests.
-- Count real outbound attempts exactly.
-- Logs/tests must distinguish source requests from Supabase/internal requests.
-- Completion report must include actual source-request count per source.
+Required:
+- Perform at most ONE normal GET to the configured public Boxing Mobile schedule URL in this validation cycle.
+- If HTTP 403 / 429 / 503 occurs, stop immediately, keep it disabled, record only status/outcome, and do not bypass controls.
+- If it is publicly accessible, implement only a minimal low-frequency discovery adapter for event identity/name/date/link metadata needed to find candidate events. Do not copy article bodies/images.
+- Discovery-only data must remain unable to publish canonical facts without official verification.
 
-### 8. Official-link host validation is incomplete
-- `EVENT_SOURCE_DEFINITIONS` already contains `officialHost`, but current URL selection only checks HTTPS.
-- A candidate marked as an official source must not silently store an arbitrary external link found on the page.
-- Enforce configured approved host(s) for authoritative source URLs.
-- If a link leaves the official host, either classify it separately or reject it for official-source authority.
+### 4. Coverage must be described truthfully
+Do not declare "general Japanese boxing event automation" complete if the only actually working live source is Lemino.
+- Report each source as `operational`, `disabled`, or `blocked` based on CURRENT read-only validation.
+- Do not count a synthetic fixture as an operational source.
+- If source coverage remains narrow, say so explicitly. Do not compensate by adding unverified sources.
 
-### 9. Poster/image handling must remain fail-closed
-- If event poster support is added, only accept a poster candidate explicitly originating from the event/promoter/organizer/streamer official source.
-- Do not scrape/copy images from unrelated media or search results.
-- Store provenance/source URL and require manual approval before public use.
-- Do not auto-download or auto-publish a poster in this task.
-
-### 10. Bout order must never be guessed
-- Keep `bout_number`, main, and semifinal only when explicitly stated by the same authoritative source or structurally encoded for that event.
-- If order is not published yet, leave it unset. Do not infer order from HTML position unless the source-specific adapter proves that position means official bout order.
-
-## Scope protection
-- Do not modify boxer DB/import/boxer-page behavior in this task unless a test failure proves the event automation directly requires it.
-- Do not delete or rewrite existing articles.
-- Do not change existing manual fight cards.
-- Do not change public event data.
-- Do not apply `supabase/event-automation-2026-08-26.sql` to production.
-- Do not deploy Cloudflare Pages/Functions in this run.
+## Production / safety boundary
+- NO Supabase migration.
+- NO production DB insert/update/delete.
+- NO event publication.
+- NO poster/image download or publication.
+- NO boxer DB/import/boxer-page changes.
+- NO article rewrites.
+- NO high-frequency or parallel crawling.
+- NO bypass of robots/access controls/login/paywalls/rate limits.
 - Do not touch Staydesk or the science repository.
+- Do not manually deploy Cloudflare.
+- Because `main` may be connected to an automatic deployment pipeline, do implementation work on a separate branch for this cycle and do NOT merge it into `main` until ChatGPT audit approves it. Updating this handoff on `main` is the only authorized main-branch change for this cycle.
 
-## Required tests
-Add/adjust deterministic tests for at least all of the following:
-1. Multi-event index page cannot cross-pair event A title with event B date/venue.
-2. Lemino adapter and DANGAN adapter parse source-specific fixtures independently.
-3. Stable source event ID/URL maps changed venue/name/card back to the same canonical event.
-4. Same event discovered from two sources can map to one canonical event without duplicate creation.
-5. One bout disappearing from an existing card becomes `needs_review`.
-6. Approved removal/status reconciliation prevents stale bout from public rendering while preserving history.
-7. 403 => zero retry / source stopped.
-8. 429 => zero retry / source stopped.
-9. 503 => zero retry / source stopped.
-10. A retryable allowed transient failure performs no more than one retry and request count is exact.
-11. External off-host link cannot be accepted as an authoritative official source URL.
-12. Missing scheduler secret causes scheduled job to fail closed without calling `/api/event-sync`.
-13. No event candidate is automatically published.
-14. No poster candidate is automatically published.
-15. Unknown bout order remains null/unset.
+## Required verification
+1. Current Lemino source: one-read live structure check + read-only parser dry-run.
+2. Current DANGAN source: one-read live structure/usability check; operational only if genuinely parseable.
+3. Current Boxing Mobile schedule: one-read accessibility check; implement discovery only if accessible without bypass.
+4. Minimal sanitized real-structure fixtures, not fabricated attributes that do not exist on source pages.
+5. Multi-event contamination test still PASS.
+6. Stable source identity test still PASS.
+7. Bout disappearance/reconciliation tests still PASS.
+8. 403/429/503 zero-retry tests still PASS.
+9. Missing scheduler secret fail-closed test still PASS.
+10. Full existing test suite PASS.
+11. Production DB writes/migrations: 0.
+12. Production event publication: 0.
 
-Run the complete existing test suite too, not only new tests.
+## Completion gate
+Do NOT mark PASS merely because unit tests pass. PASS requires:
+- at least one genuinely operational live source validated against its current public HTML;
+- each configured source truthfully classified operational/disabled/blocked;
+- no parser dependence on invented source markup;
+- no production DB/publication action;
+- full tests PASS.
 
-## Completion gates
-All must PASS before declaring completion:
-- Event parser cross-event contamination: 0
-- Duplicate-event scenario from mutable identity: 0 in tests
-- Stale active bout after approved card removal: 0 in tests
-- 403 retry count: 0
-- 429 retry count: 0
-- 503 retry count: 0
-- Real outbound source-request accounting mismatch: 0
-- Off-host authoritative URL acceptance: 0
-- Automatic publication without explicit admin approval: 0
-- Production deploys: 0
-- Production DB writes/migrations: 0
-- Secret exposure: 0
-- Unrelated repository/project changes: 0
-- Full existing test suite: PASS
-
-## Work style
-- Inspect current code first; do not rewrite the entire site.
-- Fix the architecture coherently rather than stacking one-off patches.
-- You may iterate internally as many times as necessary until all gates pass.
-- Do not stop for ordinary code/test failures; repair them yourself.
-- If a genuine external blocker remains (for example a service requires interactive authentication), finish everything else first and report only the single remaining blocker.
-
-## Final handoff record
-- Changed files: `README_DEPLOY.md`, `event-updates.js`, `functions/_shared/event-sources.js`, `functions/api/event-candidates.js`, `functions/api/event-sync.js`, `functions/news/[slug].js`, `supabase/event-automation-2026-08-26.sql`, `.github/workflows/event-sync.yml`, `scripts/event-sync-scheduler.mjs`, and the event automation tests.
-- The completed code and this handoff must be committed and pushed to `main` after local tests pass. Do not deploy production.
+## Final report / handoff update
+When finished, update this file with:
+- Status: PASS / BLOCKED
+- Working branch + commit SHA
+- Lemino: HTTP result, parser event count, event names/dates, operational yes/no
+- DANGAN: HTTP result, actual source URL used, parser event count, operational/disabled/blocked
+- Boxing Mobile: HTTP result only if checked, operational discovery/disabled/blocked
+- Minimal fixtures/tests changed
+- Full test result
+- Production DB migration/write: none
+- Production event publication: none
+- Secret exposure: none
+- Remaining coverage limitation
+- Next action: wait for ChatGPT independent audit; do not merge/deploy
