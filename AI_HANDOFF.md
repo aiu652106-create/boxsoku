@@ -13,7 +13,7 @@
 - Goal: Repair and complete the boxing event automation introduced by commit `260071e62f7e496b41d7cab554a4c2df88f2bb93`. Code and deterministic tests are complete; production deployment, migrations, DB writes, and event publication were not performed.
 
 ## Completed result
-- Commit SHA: recorded in the final implementation commit
+- Commit SHA: `8edaf57` (`fix: complete boxing event automation safeguards`)
 - Scheduler: `.github/workflows/event-sync.yml` runs once daily and supports `workflow_dispatch`; `scripts/event-sync-scheduler.mjs` fails closed when `BOXSOKU_SERVER_TOKEN` is absent and never prints the secret.
 - Source types/sources: Lemino (`streaming`) and DANGAN (`promoter`) use bounded source-specific adapters. Boxing Mobile is represented as a disabled, low-frequency `discovery` source and cannot publish canonical facts.
 - Stable event identity: `boxing_event_sources` maps `(source_key, source_event_key)` to one canonical event. Mutable name/date/venue/card fields are not primary identity; missing stable identity requires review/manual mapping.
