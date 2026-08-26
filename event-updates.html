@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>興行自動更新 | ボクシング速報</title>
+    <link rel="stylesheet" href="styles.css?v=20260826-event-automation1" />
+    <link rel="icon" data-boxsoku-site-icon="true" type="image/png" href="/assets/boxsoku-icon.png" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="config.js?v=20260813-site-icon-settings1" defer></script>
+    <script src="data.js?v=20260814-affiliate-report1" defer></script>
+    <script src="site-icon.js?v=20260813-site-icon-settings1" defer></script>
+    <script src="event-updates.js?v=20260826-event-automation1" defer></script>
+  </head>
+  <body class="admin-page event-updates-page">
+    <header class="admin-header">
+      <a class="admin-brand" href="admin.html">
+        <span>速</span>
+        <div><strong>ボクシング速報</strong><small>EVENT UPDATE</small></div>
+      </a>
+      <a class="admin-view-site" href="admin.html">記事管理へ戻る</a>
+    </header>
+
+    <section id="event-login-panel" class="admin-login-shell">
+      <form id="event-login-form" class="admin-login-card">
+        <span>ADMIN LOGIN</span>
+        <h1>興行自動更新</h1>
+        <p>公式ソースの取得結果を候補として確認します。自動公開は行いません。</p>
+        <label>メールアドレス<input id="event-login-email" type="email" autocomplete="username" required /></label>
+        <label>パスワード<input id="event-login-password" type="password" autocomplete="current-password" required /></label>
+        <p id="event-login-error" class="form-error" role="alert"></p>
+        <button type="submit">ログイン</button>
+      </form>
+    </section>
+
+    <main id="event-dashboard" class="event-dashboard" hidden>
+      <div class="admin-page-heading">
+        <div>
+          <span>EVENT AUTOMATION</span>
+          <h1>興行自動更新</h1>
+          <p>公式ソースを低頻度で確認し、候補を保存します。承認するまで既存記事・公開ページは変更されません。</p>
+        </div>
+        <button id="event-refresh" class="admin-new-button" type="button">再読み込み</button>
+      </div>
+      <p id="event-message" class="admin-settings-message" role="status"></p>
+
+      <section class="admin-list-panel" aria-labelledby="event-sources-heading">
+        <div class="admin-list-heading"><div><span>SOURCES</span><h2 id="event-sources-heading">公式ソース</h2></div><span>1日1回・ソースごとに順番に確認</span></div>
+        <div id="event-source-list" class="event-source-list"></div>
+      </section>
+
+      <section class="admin-list-panel" aria-labelledby="event-candidates-heading">
+        <div class="admin-list-heading"><div><span>CANDIDATES</span><h2 id="event-candidates-heading">更新候補</h2></div><span id="event-candidate-count"></span></div>
+        <div id="event-candidate-list" class="event-candidate-list"></div>
+        <p id="event-candidate-empty" class="admin-empty" hidden>候補はありません。</p>
+      </section>
+
+      <section class="admin-list-panel" aria-labelledby="event-runs-heading">
+        <div class="admin-list-heading"><div><span>RUN LOG</span><h2 id="event-runs-heading">取得ログ</h2></div></div>
+        <div id="event-run-list" class="event-run-list"></div>
+      </section>
+    </main>
+  </body>
+</html>

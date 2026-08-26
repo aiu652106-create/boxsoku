@@ -1000,6 +1000,72 @@ function relatedArticlesHtml(article, articles) {
     .join("")}</ul></section>`;
 }
 
+function eventDetailsHtml(eventBundle) {
+  if (!eventBundle?.event) return "";
+  const event = eventBundle.event;
+  const bouts = Array.isArray(eventBundle.bouts) ? [...eventBundle.bouts] : [];
+  bouts.sort((left, right) => {
+    const leftNumber = Number.isInteger(left.bout_number) ? left.bout_number : 9999;
+    const rightNumber = Number.isInteger(right.bout_number) ? right.bout_number : 9999;
+    return leftNumber - rightNumber || String(left.bout_id).localeCompare(String(right.bout_id));
+  });
+  const sourceUrl = safeHttpsUrl(event.source_url);
+  const services = Array.isArray(event.distribution_services)
+    ? event.distribution_services.filter(Boolean).join("・")
+    : "";
+  const info = [
+    event.event_date ? `開催日：${event.event_date}` : "",
+    event.venue || event.location ? `会場：${event.venue || event.location}` : "",
+    event.start_time ? `開始：${String(event.start_time).slice(0, 5)}` : "",
+    services ? `配信：${services}` : ""
+  ].filter(Boolean);
+  const boutHtml = bouts.length
+    ? `<ol class="event-details-bouts">${bouts
+        .map(
+          (bout) =>
+            `<li>${bout.bout_number ? `<strong>${escapeHtml(bout.bout_number)}試合</strong> ` : ""}${escapeHtml(
+              bout.fighter_a_name || ""
+            )} <span aria-hidden="true">vs</span> ${escapeHtml(bout.fighter_b_name || "")}${
+              bout.weight_class ? ` <small>${escapeHtml(bout.weight_class)}</small>` : ""
+            }</li>`
+        )
+        .join("")}</ol>`
+    : "";
+  return `<section class="event-details" aria-labelledby="event-details-heading"><div class="event-details-heading"><span>VERIFIED EVENT DATA</span><h2 id="event-details-heading">${escapeHtml(
+    event.event_name
+  )}</h2></div>${info.length ? `<p>${info.map((item) => escapeHtml(item)).join("　")}</p>` : ""}${boutHtml}${
+    sourceUrl
+      ? `<p class="event-details-source">公式情報：<a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(
+          event.source_name || "公式ソース"
+        )}</a></p>`
+      : ""
+  }</section>`;
+}
+
+async function publicBoxingEvent(env, eventId) {
+  if (!eventId) return null;
+  try {
+    const eventRows = await supabaseRows(
+      env,
+      `boxing_events?select=event_id,event_name,event_date,venue,location,start_time,broadcast_start_time,distribution_services,source_name,source_url&event_id=eq.${encodeURIComponent(
+        eventId
+      )}&publication_status=eq.published&limit=1`
+    );
+    const event = eventRows[0];
+    if (!event) return null;
+    const bouts = await supabaseRows(
+      env,
+      `boxing_event_bouts?select=bout_id,bout_number,weight_class,fighter_a_name,fighter_b_name&event_id=eq.${encodeURIComponent(
+        event.event_id
+      )}&order=bout_number.asc.nullslast,bout_id.asc`
+    );
+    return { event, bouts };
+  } catch {
+    // The feature is additive; an unrun migration must not break article pages.
+    return null;
+  }
+}
+
 async function supabaseRows(env, query) {
   let response = await fetch(`${env.SUPABASE_URL}/rest/v1/${query}`, {
     headers: {
@@ -1007,8 +1073,10 @@ async function supabaseRows(env, query) {
       Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`
     }
   });
-  if (!response.ok && query.includes("boxrec_url")) {
-    const legacyQuery = query.replace(/(?:%2C|,)boxrec_url/i, "");
+  if (!response.ok && (query.includes("boxrec_url") || query.includes("boxing_event_id"))) {
+    const legacyQuery = query
+      .replace(/(?:%2C|,)boxrec_url/i, "")
+      .replace(/(?:%2C|,)boxing_event_id/i, "");
     response = await fetch(`${env.SUPABASE_URL}/rest/v1/${legacyQuery}`, {
       headers: {
         apikey: env.SUPABASE_ANON_KEY,
@@ -1054,7 +1122,7 @@ export async function onRequestGet(context) {
     ? await hashVisitorToken(visitorToken, visitorIdSalt)
     : "";
   const select = encodeURIComponent(
-    "id,slug,title,summary,body,image_url,boxrec_url,accent,is_advertorial,affiliate_disclosure,affiliate_links,tweets,youtube_urls,instagram_urls,published_at,updated_at"
+    "id,slug,title,summary,body,image_url,boxrec_url,boxing_event_id,accent,is_advertorial,affiliate_disclosure,affiliate_links,tweets,youtube_urls,instagram_urls,published_at,updated_at"
   );
   const [articles, latest, popular] = await Promise.all([
     supabaseRows(
@@ -1086,6 +1154,8 @@ export async function onRequestGet(context) {
       headers: securityHeaders({ "Content-Type": "text/plain; charset=UTF-8" })
     });
   }
+
+  const linkedEvent = await publicBoxingEvent(env, article.boxing_event_id);
 
   const siteUrl = String(env.SITE_URL || new URL(request.url).origin).replace(/\/$/, "");
   const siteName = String(env.SITE_NAME || "ボクシング速報");
@@ -1238,7 +1308,7 @@ export async function onRequestGet(context) {
           summary,
           article.tweets,
           videosHtml(article)
-        )}${embedsHtml(article)}</div>
+        )}${embedsHtml(article)}${eventDetailsHtml(linkedEvent)}</div>
         ${affiliateLinksHtml(article)}
         <aside class="ad-slot" data-ad-slot-name="articleTop" aria-label="広告"></aside>
         ${fightCardsHtml(article)}

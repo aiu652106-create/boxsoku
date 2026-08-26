@@ -26,7 +26,7 @@
   };
   const boxerFields = [
     "slug", "name_ja", "name_kana", "name_en", "ring_name", "boxrec_id", "boxrec_url",
-    "sex", "nationality", "nationality_code", "birth_date", "birthplace",
+    "sex", "boxer_type", "nationality", "nationality_code", "birth_date", "birthplace",
     "gym", "trainer", "promoter", "manager", "training_base",
     "weight_class", "stance", "height_cm", "reach_cm", "pro_debut_date",
     "total_fights", "wins", "losses", "draws", "no_contests", "ko_wins",
@@ -55,6 +55,7 @@
     nameKana: "name_kana",
     nameEn: "name_en",
     ringName: "ring_name",
+    boxerType: "boxer_type",
     nationalityCode: "nationality_code",
     birthDate: "birth_date",
     careerStatus: "career_status",
@@ -102,6 +103,17 @@
     "start_date", "end_date", "source_date"
   ]);
   const dateTimeFields = new Set(["source_checked_at", "checked_at"]);
+  const boxerTypes = new Set(["professional", "amateur"]);
+  const unknownTokens = new Set([
+    "unknown", "n/a", "na", "none", "不明", "未確認", "未調査", "確認中", "情報なし"
+  ]);
+  const professionalRecordFields = [
+    "total_fights", "wins", "losses", "draws", "no_contests", "ko_wins"
+  ];
+  const auditableMajorFields = ["identity", "birth_date", "record", "pro_debut_date"];
+  const identityAuditFields = [
+    "name_ja", "name_en", "sex", "nationality", "birth_date", "weight_class", "boxrec_id"
+  ];
   const officialBoxerSourceFields = new Set([
     "next_fight_date", "next_opponent", "next_venue", "next_event_name",
     "trainer", "promoter", "manager"
@@ -231,7 +243,14 @@
   }
 
   function validDate(value) {
-    return !text(value) || /^\d{4}-\d{2}-\d{2}$/.test(text(value));
+    const raw = text(value);
+    if (!raw) return true;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return false;
+    const [year, month, day] = raw.split("-").map(Number);
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+    return parsed.getUTCFullYear() === year
+      && parsed.getUTCMonth() === month - 1
+      && parsed.getUTCDate() === day;
   }
 
   function validUuid(value) {
@@ -308,10 +327,16 @@
 
   function validateAuditCoverage(row, errors, review) {
     const fields = fieldSourceMap(row);
+    const isAmateur = text(row.boxer_type) === "amateur";
     const required = [
+      ["identity", ["verified"]],
+      ["boxer_type", ["verified"]],
       ["status", ["confirmed"]],
       ["current_titles", ["present", "none", "unresearched"]],
-      ["rankings", ["present", "none", "unresearched"]]
+      ["rankings", ["present", "none", "unresearched"]],
+      ["birth_date", ["verified"]],
+      ["record", isAmateur ? ["not_applicable"] : ["verified"]],
+      ["pro_debut_date", isAmateur ? ["not_applicable"] : ["verified"]]
     ];
     for (const [field, allowedStatuses] of required) {
       const audit = fields[field];
@@ -329,13 +354,19 @@
       if (auditStatus === "unresearched") {
         review.push(`${field}が未調査です。`);
       }
+      if (auditableMajorFields.includes(field) && auditStatus === "none") {
+        review.push(`${field}が確認できないため、公開前に再監査が必要です。`);
+      }
       if (field === "status") {
         if (!["active", "retired", "inactive"].includes(text(audit.value))) {
           errors.push("field_sources.status.valueはactive/retired/inactiveが必要です。");
         }
-        if (text(audit.value) === "retired" && !auditHasSource(audit, (url) => !isBoxRecUrl(url))) {
-          review.push("retired判定がBoxRecのみです。公式・一次情報を再確認してください。");
+        if (!auditHasSource(audit, (url) => !isBoxRecUrl(url))) {
+          review.push("現役・活動休止・引退の判定にはBoxRec以外の公式・一次出典が必要です。");
         }
+      }
+      if (field === "boxer_type" && text(audit.value) !== text(row.boxer_type)) {
+        errors.push("field_sources.boxer_type.valueはrow.boxer_typeと一致させてください。");
       }
       if (["current_titles", "rankings"].includes(field)
         && ["present", "none"].includes(auditStatus)
@@ -344,6 +375,23 @@
       }
       if (auditStatus === "none" && Array.isArray(audit.value) && audit.value.length > 0) {
         errors.push(`field_sources.${field}.audit_status=noneなのにvalueがあります。`);
+      }
+    }
+
+    const identityAudit = fields.identity;
+    const matchedFields = Array.isArray(identityAudit?.matched_fields)
+      ? identityAudit.matched_fields.map((field) => canonicalField(field))
+      : [];
+    for (const field of identityAuditFields) {
+      if (!matchedFields.includes(field)) {
+        errors.push(`field_sources.identity.matched_fieldsに${field}の照合結果が必要です。`);
+      }
+    }
+    if (identityAudit?.value && typeof identityAudit.value === "object" && !Array.isArray(identityAudit.value)) {
+      for (const field of identityAuditFields) {
+        if (text(identityAudit.value[field]) && text(identityAudit.value[field]) !== text(row[field])) {
+          errors.push(`field_sources.identity.value.${field}がrowの値と一致しません。`);
+        }
       }
     }
 
@@ -425,19 +473,74 @@
     const errors = [];
     const review = [];
     if (!text(row.name_ja)) errors.push("name_jaが必要です。");
+    if (!text(row.name_en)) errors.push("name_enが必要です。");
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(text(row.slug))) errors.push("slugの形式が不正です。");
     if (!/^\d+$/.test(text(row.boxrec_id))) errors.push("BoxRec IDが必要です。");
-    if (!/^https:\/\/boxrec\.com\//i.test(text(row.boxrec_url))) errors.push("boxrec_urlはBoxRec本人ページのhttps URLが必要です。");
-    if (!['male', 'female', 'unknown'].includes(text(row.sex))) errors.push("sexはmale/female/unknownのいずれかが必要です。");
+    const boxrecUrlMatch = text(row.boxrec_url).match(/^https:\/\/boxrec\.com\/en\/box-(pro|am)\/(\d+)(?:[/?#].*)?$/i);
+    if (!boxrecUrlMatch) errors.push("boxrec_urlはBoxRec本人ページ（/en/box-pro/または/en/box-am/）のhttps URLが必要です。");
+    if (boxrecUrlMatch && text(row.boxrec_id) !== boxrecUrlMatch[2]) errors.push("boxrec_idとboxrec_urlのIDが一致しません。");
+    if (!['male', 'female'].includes(text(row.sex))) errors.push("sexはmale/femaleのいずれかを明示してください。");
+    if (!boxerTypes.has(text(row.boxer_type))) errors.push("boxer_typeはprofessional/amateurのいずれかを明示してください。");
     if (!/^[A-Z]{3}$/.test(text(row.nationality_code))) errors.push("nationality_codeは3文字の国コードが必要です。");
     if (!validDate(row.birth_date) || !validDate(row.pro_debut_date) || !validDate(row.next_fight_date)) errors.push("日付はYYYY-MM-DDで入力してください。");
+    for (const field of ["nationality", "weight_class", "stance"]) {
+      if (!text(row[field]) || unknownTokens.has(text(row[field]).toLocaleLowerCase("ja-JP"))) {
+        errors.push(`${field}は確認済みの値が必要です。不明・未確認のまま公開できません。`);
+      }
+    }
+    if (!text(row.birth_date) || unknownTokens.has(text(row.birth_date).toLocaleLowerCase("ja-JP"))) {
+      errors.push("birth_dateは確認済みの生年月日が必要です。");
+    }
+    if (text(row.boxer_type) === "professional") {
+      if (boxrecUrlMatch && boxrecUrlMatch[1].toLowerCase() !== "pro") errors.push("professional選手のBoxRec URLはbox-pro本人ページで確認してください。");
+      for (const field of ["birth_date", "pro_debut_date", ...professionalRecordFields]) {
+        if (!text(row[field]) || unknownTokens.has(text(row[field]).toLocaleLowerCase("ja-JP"))) {
+          errors.push(`${field}はプロ選手の公開必須項目です。`);
+        }
+      }
+    } else {
+      if (boxrecUrlMatch && boxrecUrlMatch[1].toLowerCase() !== "am") errors.push("amateur選手のBoxRec URLはbox-am本人ページで確認してください。");
+      if (text(row.pro_debut_date)) errors.push("アマチュア選手にpro_debut_dateは登録できません。");
+      if (professionalRecordFields.some((field) => text(row[field]))) {
+        errors.push("アマチュア戦績をプロ戦績の項目へ登録できません。");
+      }
+    }
+    const fields = fieldSourceMap(row);
+    for (const field of [
+      "name_ja", "name_en", "sex", "boxer_type", "nationality", "weight_class", "stance",
+      "birth_date", "boxrec_id", "boxrec_url"
+    ]) {
+      if (!auditHasSource(fields[field])) errors.push(`field_sources.${field}には項目を裏付ける出典URLが必要です。`);
+    }
+    if (text(row.boxer_type) === "professional" && !auditHasSource(fields.record)) {
+      errors.push("field_sources.recordにはプロ戦績を裏付ける出典URLが必要です。");
+    }
+    if (text(row.boxer_type) === "professional" && !auditHasSource(fields.pro_debut_date)) {
+      errors.push("field_sources.pro_debut_dateにはプロデビュー日を裏付ける出典URLが必要です。");
+    }
     validateCommonSource(row, errors);
     validateOfficialBoxerSources(row, review);
     validateAuditCoverage(row, errors, review);
     numericFields.forEach((field) => {
       if (text(row[field]) !== "" && (!Number.isFinite(Number(row[field])) || Number(row[field]) < 0)) errors.push(`${field}は0以上の数値が必要です。`);
     });
-    if (existing && existing.boxrec_id && text(row.boxrec_id) !== text(existing.boxrec_id)) review.push("既存選手のBoxRec IDと異なります。本人ページを再確認してください。");
+    if (text(row.boxer_type) === "professional" && professionalRecordFields.every((field) => text(row[field]) !== "")) {
+      const total = Number(row.total_fights);
+      const outcomeTotal = Number(row.wins) + Number(row.losses) + Number(row.draws) + Number(row.no_contests);
+      if (total !== outcomeTotal) errors.push("total_fightsはwins/losses/draws/no_contestsの合計と一致させてください。");
+      if (Number(row.ko_wins) > Number(row.wins)) errors.push("ko_winsはwinsを超えられません。");
+    }
+    const identityCorrection = fields.identity?.corrections;
+    const verifiedBoxRecCorrection = Boolean(
+      existing && existing.slug === text(row.slug) &&
+      fields.identity?.audit_status === "verified" &&
+      text(identityCorrection?.previous_boxrec_id) === text(existing.boxrec_id) &&
+      text(fields.identity?.value?.boxrec_id) === text(row.boxrec_id) &&
+      auditHasSource(fields.identity, (url) => !isBoxRecUrl(url))
+    );
+    if (existing && existing.boxrec_id && text(row.boxrec_id) !== text(existing.boxrec_id) && !verifiedBoxRecCorrection) {
+      review.push("既存選手のBoxRec IDと異なります。本人ページを再確認してください。");
+    }
     if (existing && existing.slug !== text(row.slug) && text(row.slug)) review.push("既存選手のslugを変更します。");
     return { errors, review };
   }

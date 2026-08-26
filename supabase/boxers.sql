@@ -13,6 +13,7 @@ create table if not exists public.boxers (
   boxrec_id text,
   boxrec_url text,
   sex text check (sex is null or sex in ('male', 'female', 'unknown')),
+  boxer_type text check (boxer_type is null or boxer_type in ('professional', 'amateur')),
   nationality text,
   nationality_code text check (nationality_code is null or nationality_code ~ '^[A-Z]{3}$'),
   birth_date date,

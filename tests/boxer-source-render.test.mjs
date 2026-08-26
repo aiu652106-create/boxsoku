@@ -29,7 +29,9 @@ const boxer = {
   boxrec_id: "778185",
   boxrec_url: "https://boxrec.com/en/box-pro/778185",
   sex: "female",
-  nationality: "アイルランド",
+  boxer_type: "professional",
+  nationality: "Ireland",
+  nationality_code: "IRL",
   birth_date: "1986-07-02",
   birthplace: null,
   career_status: "active",
@@ -38,8 +40,8 @@ const boxer = {
   promoter: "Matchroom Boxing",
   manager: null,
   training_base: null,
-  weight_class: "女子スーパーライト級",
-  stance: "オーソドックス",
+  weight_class: "Super Light",
+  stance: "orthodox",
   height_cm: null,
   reach_cm: null,
   pro_debut_date: null,
@@ -51,9 +53,9 @@ const boxer = {
   ko_wins: 6,
   ko_rate: 25,
   world_champion_experience: true,
-  current_titles: "IBF女子世界スーパーライト級",
+  current_titles: "IBF Super Lightweight World Championship",
   past_major_titles: null,
-  world_title_weight_classes: "女子ライト級・女子スーパーライト級",
+  world_title_weight_classes: "Light / Super Light",
   ranking_wba: null,
   ranking_wbc: null,
   ranking_ibf: null,
@@ -133,6 +135,12 @@ try {
   assert.match(html, /Matchroom公式/);
   assert.match(html, /現役・引退状態/);
   assert.match(html, /現在保有タイトル/);
+  assert.match(html, /アイルランド/);
+  assert.match(html, /スーパーライト級/);
+  assert.match(html, /オーソドックス/);
+  assert.doesNotMatch(html, />Ireland</);
+  assert.doesNotMatch(html, />Super Light</);
+  assert.doesNotMatch(html, />orthodox</);
   assert.ok(!html.includes("WBC公式 /"));
   const sourceLinks = [...html.matchAll(/class="boxer-source-card"[\s\S]*?href="([^"]+)"/g)].map(
     (match) => match[1]

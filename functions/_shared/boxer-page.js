@@ -10,6 +10,7 @@ const BOXER_SELECT = [
   "boxrec_id",
   "boxrec_url",
   "sex",
+  "boxer_type",
   "nationality",
   "nationality_code",
   "birth_date",
@@ -51,6 +52,8 @@ const BOXER_SELECT = [
   "updated_at"
 ].join(",");
 
+const BOXER_SELECT_LEGACY = BOXER_SELECT.replace(",boxer_type", "");
+
 const escapeHtml = (value = "") =>
   String(value)
     .replaceAll("&", "&amp;")
@@ -90,6 +93,153 @@ function formatValue(value) {
   return value === null || value === undefined || String(value).trim() === ""
     ? "不明"
     : String(value);
+}
+
+function hasValue(value) {
+  return value !== null && value !== undefined && String(value).trim() !== "";
+}
+
+const NATIONALITY_LABELS = Object.freeze({
+  Argentina: "アルゼンチン",
+  ARG: "アルゼンチン",
+  Australia: "オーストラリア",
+  AUS: "オーストラリア",
+  Canada: "カナダ",
+  CAN: "カナダ",
+  Japan: "日本",
+  JPN: "日本",
+  Mexico: "メキシコ",
+  MEX: "メキシコ",
+  Nicaragua: "ニカラグア",
+  NIC: "ニカラグア",
+  Philippines: "フィリピン",
+  PHL: "フィリピン",
+  "Puerto Rico": "プエルトリコ",
+  PRI: "プエルトリコ",
+  Russia: "ロシア",
+  Ukraine: "ウクライナ",
+  UKR: "ウクライナ",
+  "United Kingdom": "イギリス",
+  GBR: "イギリス",
+  Ireland: "アイルランド",
+  USA: "アメリカ",
+  "United States": "アメリカ",
+  KGZ: "キルギス",
+  IRL: "アイルランド",
+  "アメリカ合衆国": "アメリカ"
+});
+
+const WEIGHT_CLASS_LABELS = Object.freeze({
+  Atom: "アトム級",
+  Atomweight: "アトム級",
+  Minimum: "ミニマム級",
+  Minimumweight: "ミニマム級",
+  "Light Minimum": "ミニマム級",
+  "Light Fly": "ライトフライ級",
+  "Light Flyweight": "ライトフライ級",
+  Fly: "フライ級",
+  Flyweight: "フライ級",
+  "Super Fly": "スーパーフライ級",
+  "Super Flyweight": "スーパーフライ級",
+  Bantam: "バンタム級",
+  Bantamweight: "バンタム級",
+  "Super Bantam": "スーパーバンタム級",
+  "Super Bantamweight": "スーパーバンタム級",
+  Feather: "フェザー級",
+  Featherweight: "フェザー級",
+  "Super Feather": "スーパーフェザー級",
+  "Super Featherweight": "スーパーフェザー級",
+  Light: "ライト級",
+  Lightweight: "ライト級",
+  "Super Light": "スーパーライト級",
+  "Super Lightweight": "スーパーライト級",
+  "Junior Welter": "スーパーライト級",
+  "Junior Welterweight": "スーパーライト級",
+  Welter: "ウェルター級",
+  Welterweight: "ウェルター級",
+  "Super Welter": "スーパーウェルター級",
+  "Super Welterweight": "スーパーウェルター級",
+  "Light Middle": "ライトミドル級",
+  "Junior Middle": "スーパーウェルター級",
+  "Junior Middleweight": "スーパーウェルター級",
+  Middle: "ミドル級",
+  Middleweight: "ミドル級",
+  "Super Middle": "スーパーミドル級",
+  "Super Middleweight": "スーパーミドル級",
+  "Light Heavy": "ライトヘビー級",
+  "Light Heavyweight": "ライトヘビー級",
+  Cruiser: "クルーザー級",
+  Cruiserweight: "クルーザー級",
+  Bridger: "ブリッジャー級",
+  Bridgerweight: "ブリッジャー級",
+  Heavy: "ヘビー級",
+  Heavyweight: "ヘビー級"
+});
+
+function mappedLabel(value, labels) {
+  if (value === null || value === undefined) return value;
+  const raw = String(value).trim();
+  if (!raw) return value;
+  const key = Object.keys(labels).find((candidate) => candidate.toLowerCase() === raw.toLowerCase());
+  return labels[raw] || (key ? labels[key] : raw);
+}
+
+function nationalityLabel(value, nationalityCode) {
+  return mappedLabel(value, NATIONALITY_LABELS) || mappedLabel(nationalityCode, NATIONALITY_LABELS);
+}
+
+function weightClassLabel(value) {
+  if (value === null || value === undefined) return value;
+  const raw = String(value).trim();
+  if (!raw) return value;
+  if (WEIGHT_CLASS_LABELS[raw]) return WEIGHT_CLASS_LABELS[raw];
+  let translated = raw;
+  for (const [source, label] of Object.entries(WEIGHT_CLASS_LABELS).sort(([left], [right]) => right.length - left.length)) {
+    translated = translated.replace(new RegExp(`\\b${source.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}\\b`, "gi"), label);
+  }
+  return translated;
+}
+
+function stanceLabel(value) {
+  if (value === null || value === undefined) return value;
+  const raw = String(value).trim();
+  if (/^orthodox$/i.test(raw)) return "オーソドックス";
+  if (/^southpaw$/i.test(raw)) return "サウスポー";
+  if (/^switch$/i.test(raw)) return "スイッチ";
+  return raw;
+}
+
+function titleLabel(value) {
+  if (value === null || value === undefined) return value;
+  const raw = String(value).trim();
+  if (!raw || raw === "なし") return raw;
+  let translated = raw;
+  for (const [source, label] of Object.entries(WEIGHT_CLASS_LABELS).sort(([left], [right]) => right.length - left.length)) {
+    translated = translated.replace(new RegExp(`\\b${source.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}\\b`, "gi"), label);
+  }
+  translated = translated
+    .replace(/\bSuper World Championship\b/gi, "スーパー世界王座")
+    .replace(/\bWorld Championship\b/gi, "世界王座")
+    .replace(/\bChampionship\b/gi, "王座")
+    .replace(/\bJapanese\b/gi, "日本")
+    .replace(/\bAsia Pacific\b/gi, "アジア・パシフィック")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  return translated;
+}
+
+function titleListLabel(value) {
+  if (value === null || value === undefined) return value;
+  return String(value)
+    .split(/([・/、,\n])/)
+    .map((part) => /[・/、,\n]/.test(part) ? part : titleLabel(part))
+    .join("");
+}
+
+function boxerTypeLabel(value) {
+  if (value === "professional") return "プロ";
+  if (value === "amateur") return "アマチュア";
+  return value;
 }
 
 function formatNumber(value, suffix = "") {
@@ -139,6 +289,7 @@ function hasRecordData(boxer) {
 }
 
 function recordText(boxer) {
+  if (boxer.boxer_type === "amateur") return "プロ戦績：該当なし";
   if (!hasRecordData(boxer)) return "戦績：不明";
   const parts = [
     formatNumber(boxer.total_fights, "戦"),
@@ -178,6 +329,7 @@ const SOURCE_FIELD_LABELS = {
   name_ja: "基本プロフィール",
   name_kana: "基本プロフィール",
   name_en: "基本プロフィール",
+  boxer_type: "プロ／アマ区分",
   nationality: "国籍",
   birth_date: "生年月日",
   birthplace: "出身地",
@@ -330,6 +482,7 @@ const REPORT_FIELD_DEFINITIONS = [
   ["name_kana", "読み方"],
   ["name_en", "英語表記"],
   ["ring_name", "リングネーム"],
+  ["boxer_type", "プロ／アマ区分"],
   ["nationality", "国籍"],
   ["birth_date", "生年月日"],
   ["birthplace", "出身地"],
@@ -361,6 +514,12 @@ const REPORT_FIELD_DEFINITIONS = [
 
 function reportCurrentValue(boxer, fieldName) {
   if (fieldName === "career_status") return careerLabel(boxer.career_status);
+  if (fieldName === "boxer_type") return boxerTypeLabel(boxer.boxer_type);
+  if (fieldName === "nationality") return nationalityLabel(boxer.nationality, boxer.nationality_code);
+  if (fieldName === "weight_class") return weightClassLabel(boxer.weight_class);
+  if (fieldName === "stance") return stanceLabel(boxer.stance);
+  if (fieldName === "current_titles" || fieldName === "past_major_titles") return titleListLabel(boxer[fieldName]);
+  if (fieldName === "world_title_weight_classes") return weightClassLabel(boxer[fieldName]);
   if (fieldName === "world_champion_experience") {
     return boxer.world_champion_experience === true
       ? "あり"
@@ -469,17 +628,22 @@ async function derivedBoxerData(env, boxerRows) {
 }
 
 async function getBoxers(env) {
-  const query = `boxers?select=${encodeURIComponent(
-    BOXER_SELECT
-  )}&is_published=eq.true&order=name_ja.asc&limit=1000`;
-  return derivedBoxerData(env, await supabaseRows(env, query));
+  const suffix = "&is_published=eq.true&order=name_ja.asc&limit=1000";
+  try {
+    return derivedBoxerData(env, await supabaseRows(env, `boxers?select=${encodeURIComponent(BOXER_SELECT)}${suffix}`));
+  } catch {
+    return derivedBoxerData(env, await supabaseRows(env, `boxers?select=${encodeURIComponent(BOXER_SELECT_LEGACY)}${suffix}`));
+  }
 }
 
 async function getBoxer(env, slug) {
-  const query = `boxers?select=${encodeURIComponent(
-    BOXER_SELECT
-  )}&slug=eq.${encodeURIComponent(slug)}&is_published=eq.true&limit=1`;
-  const rows = await supabaseRows(env, query);
+  const suffix = `&slug=eq.${encodeURIComponent(slug)}&is_published=eq.true&limit=1`;
+  let rows;
+  try {
+    rows = await supabaseRows(env, `boxers?select=${encodeURIComponent(BOXER_SELECT)}${suffix}`);
+  } catch {
+    rows = await supabaseRows(env, `boxers?select=${encodeURIComponent(BOXER_SELECT_LEGACY)}${suffix}`);
+  }
   return (await derivedBoxerData(env, rows))[0] || null;
 }
 
@@ -548,7 +712,7 @@ function boxerCard(boxer) {
   )}">${escapeHtml(boxer.name_ja)}</a></h2></div>
     ${boxer.name_en ? `<p class="boxer-name-en">${escapeHtml(boxer.name_en)}</p>` : ""}
     <dl class="boxer-card-facts"><div><dt>階級</dt><dd>${escapeHtml(
-      formatValue(boxer.weight_class)
+      weightClassLabel(boxer.weight_class)
     )}</dd></div>${boxer.gym ? `<div><dt>所属ジム</dt><dd>${escapeHtml(
       boxer.gym
     )}</dd></div>` : ""}${boxer.promoter ? `<div><dt>プロモーター</dt><dd>${escapeHtml(
@@ -631,6 +795,10 @@ function fieldRow(label, value, className = "") {
   )}</dd></div>`;
 }
 
+function optionalFieldRow(label, value, className = "") {
+  return hasValue(value) ? fieldRow(label, value, className) : "";
+}
+
 function rankingRows(boxer) {
   const rankings = [
     ["WBA", boxer.ranking_wba],
@@ -639,7 +807,7 @@ function rankingRows(boxer) {
     ["WBO", boxer.ranking_wbo]
   ].filter(([, value]) => value !== null && value !== undefined && value !== "");
   if (!rankings.length) {
-    const hasCurrentWorldTitle = String(boxer.current_titles || "").includes("世界");
+    const hasCurrentWorldTitle = String(titleListLabel(boxer.current_titles) || "").includes("世界");
     return `<p class="boxer-unknown">${
       hasCurrentWorldTitle
         ? "現在世界王者のため通常ランキングは表示していません。"
@@ -692,7 +860,7 @@ export async function renderBoxerPage({ env, request, params }) {
     url: canonical,
     ...(boxer.name_en ? { alternateName: boxer.name_en } : {}),
     ...(boxer.birth_date ? { birthDate: boxer.birth_date } : {}),
-    ...(boxer.nationality ? { nationality: boxer.nationality } : {}),
+    ...(boxer.nationality ? { nationality: nationalityLabel(boxer.nationality, boxer.nationality_code) } : {}),
     ...(boxer.height_cm
       ? { height: { "@type": "QuantitativeValue", value: Number(boxer.height_cm), unitCode: "CMT" } }
       : {})
@@ -737,16 +905,16 @@ export async function renderBoxerPage({ env, request, params }) {
         <section class="boxer-profile-section" aria-labelledby="basic-heading"><h2 id="basic-heading">プロフィール</h2><dl class="boxer-detail-list">${fieldRow(
     "年齢",
     calculateAge(boxer.birth_date)
-  )}${fieldRow("性別", sexLabel(boxer.sex))}${fieldRow("国籍", boxer.nationality)}${fieldRow(
+  )}${fieldRow("性別", sexLabel(boxer.sex))}${fieldRow("国籍", nationalityLabel(boxer.nationality, boxer.nationality_code))}${optionalFieldRow(
     "国籍コード",
     boxer.nationality_code
-  )}${boxrecProfile}${fieldRow("生年月日", formatDate(boxer.birth_date))}${fieldRow(
+  )}${boxrecProfile}${fieldRow("生年月日", formatDate(boxer.birth_date))}${optionalFieldRow(
     "出身地",
     boxer.birthplace
-  )}${fieldRow("階級", boxer.weight_class)}${fieldRow("身長", formatNumber(boxer.height_cm, "cm"))}${fieldRow(
+  )}${hasValue(boxer.boxer_type) ? fieldRow("区分", boxerTypeLabel(boxer.boxer_type)) : ""}${fieldRow("階級", weightClassLabel(boxer.weight_class))}${optionalFieldRow("身長", hasValue(boxer.height_cm) ? formatNumber(boxer.height_cm, "cm") : null)}${optionalFieldRow(
     "リーチ",
-    formatNumber(boxer.reach_cm, "cm")
-  )}${fieldRow("構え", boxer.stance)}${boxer.gym ? fieldRow("所属ジム", boxer.gym) : ""}${fieldRow(
+    hasValue(boxer.reach_cm) ? formatNumber(boxer.reach_cm, "cm") : null
+  )}${fieldRow("構え", stanceLabel(boxer.stance))}${boxer.gym ? fieldRow("所属ジム", boxer.gym) : ""}${fieldRow(
     "プロデビュー",
     formatDate(boxer.pro_debut_date)
   )}</dl></section>
@@ -766,9 +934,9 @@ export async function renderBoxerPage({ env, request, params }) {
         <section class="boxer-profile-section" aria-labelledby="title-heading"><h2 id="title-heading">タイトル</h2><dl class="boxer-detail-list">${fieldRow(
     "世界王者経験",
     titleExperience
-  )}${fieldRow("現在保有タイトル", boxer.current_titles)}${fieldRow("過去の主要タイトル", boxer.past_major_titles)}${fieldRow(
+  )}${fieldRow("現在保有タイトル", titleListLabel(boxer.current_titles))}${fieldRow("過去の主要タイトル", titleListLabel(boxer.past_major_titles))}${fieldRow(
     "世界王座獲得階級",
-    boxer.world_title_weight_classes
+    weightClassLabel(boxer.world_title_weight_classes)
   )}</dl></section>
         <section class="boxer-profile-section" aria-labelledby="ranking-heading"><h2 id="ranking-heading">世界ランキング</h2>${rankingRows(
     boxer

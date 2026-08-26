@@ -1,6 +1,9 @@
 debug.log
 gpu-tweak-osd-registry-backup.reg
 .dev.vars
+.env
+.env.*
+!.env.example
 .wrangler/
 node_modules/
 npm-debug.log*
