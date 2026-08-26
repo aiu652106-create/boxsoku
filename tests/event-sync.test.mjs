@@ -35,7 +35,7 @@ function request(body = {}) {
   });
 }
 
-const sampleHtml = `<title>Phoenix Battle 160</title><p>2026年9月8日 会場：後楽園ホール Lemino</p>`;
+const sampleHtml = `<script type="application/ld+json">{"@type":"SportsEvent","name":"Phoenix Battle 160","url":"https://lemino.docomo.ne.jp/ft/0000002/pxb/160","startDate":"2026-09-08T17:30:00+09:00","location":{"name":"後楽園ホール"}}</script>`;
 const originalFetch = globalThis.fetch;
 try {
   const calls = [];
@@ -66,14 +66,17 @@ try {
       });
     }
     if (String(url).endsWith("/save_event_update_candidate")) {
-      const body = JSON.parse(init.body);
-      assert.equal(body.p_source_key, "lemino");
-      assert.doesNotMatch(JSON.stringify(body), /<script|<iframe/i);
+     const body = JSON.parse(init.body);
+     assert.equal(body.p_source_key, "lemino");
+      assert.equal(body.p_source_event_key, "https://lemino.docomo.ne.jp/ft/0000002/pxb/160");
+     assert.doesNotMatch(JSON.stringify(body), /<script|<iframe/i);
       return new Response("[]", { status: 200 });
     }
-    if (String(url).endsWith("/finish_event_source_run")) {
-      return new Response(JSON.stringify({ outcome: "success" }), { status: 200 });
-    }
+   if (String(url).endsWith("/finish_event_source_run")) {
+      const body = JSON.parse(init.body);
+      assert.equal(body.p_external_request_count, 1);
+     return new Response(JSON.stringify({ outcome: "success" }), { status: 200 });
+   }
     throw new Error(`unexpected URL ${url}`);
   };
   const response = await onRequestPost({ env, request: request({ sourceKey: "lemino" }) });
@@ -138,10 +141,10 @@ try {
     if (value.endsWith("/finish_event_source_run")) return new Response(JSON.stringify({ outcome: "failed" }));
     throw new Error(`unexpected URL ${url}`);
   };
-  const failed = await onRequestPost({ env, request: request({ sourceKey: "lemino" }) });
-  assert.equal(failed.status, 502);
-  assert.equal(serverErrors, 2);
-  assert.equal((await failed.json()).results[0].outcome, "failed");
+ const failed = await onRequestPost({ env, request: request({ sourceKey: "lemino" }) });
+ assert.equal(failed.status, 502);
+  assert.equal(serverErrors, 1);
+  assert.equal((await failed.json()).results[0].outcome, "blocked");
 
   let notModifiedExternal = 0;
   globalThis.fetch = async (url) => {
@@ -166,6 +169,64 @@ try {
   assert.equal(notModified.status, 200);
   assert.equal(notModifiedExternal, 1);
   assert.equal((await notModified.json()).results[0].outcome, "not_modified");
+  let forbiddenExternal = 0;
+  globalThis.fetch = async (url) => {
+    const value = String(url);
+    if (value.endsWith("/list_event_source_configs")) return new Response(JSON.stringify([config]));
+    if (value.endsWith("/begin_event_source_run")) return new Response(JSON.stringify({
+      started: true,
+      run_id: "66666666-6666-4666-8666-666666666666",
+      source_url: config.source_url,
+      adapter_key: "lemino",
+      timeout_ms: 10000,
+      max_retries: 1
+    }));
+    if (value === config.source_url) {
+      forbiddenExternal += 1;
+      return new Response("forbidden", { status: 403 });
+    }
+    if (value.endsWith("/finish_event_source_run")) return new Response(JSON.stringify({ outcome: "blocked" }));
+    throw new Error(`unexpected URL ${url}`);
+  };
+  const forbidden = await onRequestPost({ env, request: request({ sourceKey: "lemino" }) });
+  assert.equal(forbidden.status, 502);
+  assert.equal(forbiddenExternal, 1);
+  assert.equal((await forbidden.json()).results[0].outcome, "blocked");
+
+  let retryableExternal = 0;
+  let retryFinishBody = null;
+  globalThis.fetch = async (url, init = {}) => {
+    const value = String(url);
+    if (value.endsWith("/list_event_source_configs")) return new Response(JSON.stringify([config]));
+    if (value.endsWith("/begin_event_source_run")) return new Response(JSON.stringify({
+      started: true,
+      run_id: "77777777-7777-4777-8777-777777777777",
+      source_url: config.source_url,
+      adapter_key: "lemino",
+      timeout_ms: 10000,
+      max_retries: 1
+    }));
+    if (value === config.source_url) {
+      retryableExternal += 1;
+      if (retryableExternal === 1) return new Response("temporary", { status: 500 });
+      return new Response(sampleHtml, { status: 200, headers: { "content-type": "text/html" } });
+    }
+    if (value.endsWith("/save_event_update_candidate")) return new Response("[]", { status: 200 });
+    if (value.endsWith("/finish_event_source_run")) {
+      retryFinishBody = JSON.parse(init.body);
+      return new Response(JSON.stringify({ outcome: "success" }));
+    }
+    throw new Error(`unexpected URL ${url}`);
+  };
+ const retried = await onRequestPost({ env, request: request({ sourceKey: "lemino" }) });
+ assert.equal(retried.status, 200);
+ assert.equal(retryableExternal, 2);
+  const retriedPayload = await retried.json();
+  assert.equal(retriedPayload.results[0].retryCount, 1);
+  assert.equal(retriedPayload.results[0].externalRequests, 2);
+ assert.equal(retryFinishBody.p_retry_count, 1);
+ assert.equal(retryFinishBody.p_external_request_count, 2);
+
 } finally {
   globalThis.fetch = originalFetch;
 }

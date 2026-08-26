@@ -42,6 +42,8 @@ create table if not exists public.boxing_event_bouts (
   fighter_b_gym text,
   is_main_event boolean not null default false,
   is_semifinal boolean not null default false,
+  status text not null default 'active'
+    check (status in ('active', 'removed', 'cancelled', 'needs_review')),
   normalized_data jsonb not null default '{}'::jsonb,
   source_name text not null default '',
   source_url text not null default '' check (source_url = '' or source_url ~* '^https://'),
@@ -53,7 +55,7 @@ create table if not exists public.boxing_event_bouts (
 create table if not exists public.event_source_configs (
   source_key text primary key check (source_key ~ '^[a-z0-9][a-z0-9-]{1,31}$'),
   display_name text not null,
-  source_kind text not null check (source_kind in ('streaming', 'promoter', 'organizer', 'official')),
+  source_kind text not null check (source_kind in ('streaming', 'promoter', 'organizer', 'official', 'discovery')),
   adapter_key text not null check (adapter_key ~ '^[a-z0-9][a-z0-9-]{1,31}$'),
   source_url text not null check (source_url ~* '^https://'),
   enabled boolean not null default true,
@@ -92,6 +94,7 @@ create table if not exists public.event_fetch_runs (
   extracted_count integer not null default 0 check (extracted_count >= 0),
   updated_count integer not null default 0 check (updated_count >= 0),
   retry_count integer not null default 0 check (retry_count >= 0),
+  external_request_count integer not null default 0 check (external_request_count >= 0),
   error_code text,
   error_message text,
   etag text,
@@ -104,6 +107,7 @@ create table if not exists public.event_update_candidates (
   source_name text not null default '',
   source_url text not null check (source_url ~* '^https://'),
   canonical_key text not null,
+  source_event_key text,
   fingerprint text not null check (fingerprint ~ '^[a-f0-9]{64}$'),
   normalized_data jsonb not null,
   diff jsonb not null default '{}'::jsonb,
@@ -121,6 +125,53 @@ create table if not exists public.event_update_candidates (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (source_key, canonical_key, fingerprint)
+);
+
+alter table public.boxing_event_bouts
+  add column if not exists status text not null default 'active';
+
+alter table public.boxing_event_bouts
+  drop constraint if exists boxing_event_bouts_status_check;
+alter table public.boxing_event_bouts
+  add constraint boxing_event_bouts_status_check
+  check (status in ('active', 'removed', 'cancelled', 'needs_review'));
+
+alter table public.event_fetch_runs
+  add column if not exists external_request_count integer not null default 0;
+
+alter table public.event_fetch_runs
+  drop constraint if exists event_fetch_runs_external_request_count_check;
+alter table public.event_fetch_runs
+  add constraint event_fetch_runs_external_request_count_check
+  check (external_request_count >= 0);
+
+alter table public.event_update_candidates
+  add column if not exists source_event_key text;
+
+alter table public.event_update_candidates
+  drop constraint if exists event_update_candidates_source_key_canonical_key_fingerprint_key;
+alter table public.event_update_candidates
+  drop constraint if exists event_update_candidates_source_event_key_fingerprint_key;
+alter table public.event_update_candidates
+  add constraint event_update_candidates_source_event_key_fingerprint_key
+  unique (source_key, source_event_key, fingerprint);
+
+alter table public.event_source_configs
+  drop constraint if exists event_source_configs_source_kind_check;
+alter table public.event_source_configs
+  add constraint event_source_configs_source_kind_check
+  check (source_kind in ('streaming', 'promoter', 'organizer', 'official', 'discovery'));
+
+create table if not exists public.boxing_event_sources (
+  source_id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references public.boxing_events(event_id) on delete cascade,
+  source_key text not null references public.event_source_configs(source_key) on delete restrict,
+  source_event_key text not null check (char_length(source_event_key) between 1 and 500),
+  source_url text not null check (source_url ~* '^https://'),
+  source_kind text not null check (source_kind in ('streaming', 'promoter', 'organizer', 'official', 'discovery')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (source_key, source_event_key)
 );
 
 alter table public.articles
@@ -149,6 +200,10 @@ create index if not exists boxing_events_article_idx
   on public.boxing_events (article_id);
 create index if not exists boxing_event_bouts_event_order_idx
   on public.boxing_event_bouts (event_id, bout_number nulls last, bout_id);
+create index if not exists boxing_event_sources_event_idx
+  on public.boxing_event_sources (event_id, source_key);
+create index if not exists boxing_event_sources_identity_idx
+  on public.boxing_event_sources (source_key, source_event_key);
 create index if not exists event_fetch_runs_source_time_idx
   on public.event_fetch_runs (source_key, fetched_at desc);
 create index if not exists event_update_candidates_status_time_idx
@@ -164,6 +219,11 @@ for each row execute function public.set_updated_at();
 drop trigger if exists boxing_event_bouts_set_updated_at on public.boxing_event_bouts;
 create trigger boxing_event_bouts_set_updated_at
 before update on public.boxing_event_bouts
+for each row execute function public.set_updated_at();
+
+drop trigger if exists boxing_event_sources_set_updated_at on public.boxing_event_sources;
+create trigger boxing_event_sources_set_updated_at
+before update on public.boxing_event_sources
 for each row execute function public.set_updated_at();
 
 drop trigger if exists event_source_configs_set_updated_at on public.event_source_configs;
@@ -182,22 +242,42 @@ insert into public.event_source_configs (
 )
 values
   (
-    'lemino', 'Lemino BOXING公式', 'streaming', 'lemino',
-    'https://lemino.docomo.ne.jp/ft/0000002/portal/',
-    'daily', 1800, 1, 10000
-  ),
-  (
+   'lemino', 'Lemino BOXING公式', 'streaming', 'lemino',
+   'https://lemino.docomo.ne.jp/ft/0000002/portal/',
+   'daily', 1800, 1, 10000
+ ),
+ (
     'dangan', 'DANGAN公式', 'promoter', 'dangan',
     'https://danganboxing.com/',
     'daily', 1800, 1, 10000
   )
 on conflict (source_key) do nothing;
 
+insert into public.event_source_configs (
+  source_key, display_name, source_kind, adapter_key, source_url,
+  cadence, cooldown_seconds, max_retries, timeout_ms, enabled, state
+) values (
+  'boxing-mobile', 'Boxing Mobile（発見用）', 'discovery', 'boxing-mobile',
+  'https://boxmob.jp/sp/schedule.html', 'monthly', 604800, 0, 10000, false, 'disabled'
+)
+on conflict (source_key) do update set
+  display_name = excluded.display_name,
+  source_kind = excluded.source_kind,
+  adapter_key = excluded.adapter_key,
+  source_url = excluded.source_url,
+  cadence = excluded.cadence,
+  cooldown_seconds = excluded.cooldown_seconds,
+  max_retries = excluded.max_retries,
+  timeout_ms = excluded.timeout_ms,
+  enabled = false,
+  state = 'disabled';
+
 alter table public.boxing_events enable row level security;
 alter table public.boxing_event_bouts enable row level security;
 alter table public.event_source_configs enable row level security;
 alter table public.event_fetch_runs enable row level security;
 alter table public.event_update_candidates enable row level security;
+alter table public.boxing_event_sources enable row level security;
 
 drop policy if exists "Public can view published boxing events" on public.boxing_events;
 create policy "Public can view published boxing events"
@@ -222,6 +302,7 @@ using (
     select 1 from public.boxing_events e
     where e.event_id = boxing_event_bouts.event_id
       and e.publication_status = 'published'
+      and boxing_event_bouts.status = 'active'
   )
 );
 
@@ -250,13 +331,18 @@ create policy "Admins can read event candidates"
 on public.event_update_candidates for select to authenticated
 using ((select public.is_admin()));
 
+drop policy if exists "Admins can read event sources" on public.boxing_event_sources;
+create policy "Admins can read event sources"
+on public.boxing_event_sources for select to authenticated
+using ((select public.is_admin()));
+
 revoke all on public.boxing_events, public.boxing_event_bouts,
   public.event_source_configs, public.event_fetch_runs,
-  public.event_update_candidates from anon;
+  public.event_update_candidates, public.boxing_event_sources from anon;
 grant select on public.boxing_events, public.boxing_event_bouts to anon;
 grant select, update on public.boxing_events, public.boxing_event_bouts to authenticated;
 grant select on public.event_source_configs, public.event_fetch_runs,
-  public.event_update_candidates to authenticated;
+  public.event_update_candidates, public.boxing_event_sources to authenticated;
 
 create or replace function public.list_event_source_configs(p_server_token text)
 returns setof public.event_source_configs
@@ -355,6 +441,7 @@ begin
     'run_id', new_run_id,
     'source_key', cfg.source_key,
     'source_name', cfg.display_name,
+    'source_kind', cfg.source_kind,
     'source_url', cfg.source_url,
     'adapter_key', cfg.adapter_key,
     'timeout_ms', cfg.timeout_ms,
@@ -371,10 +458,63 @@ revoke all on function public.begin_event_source_run(text, timestamptz, text, bo
 grant execute on function public.begin_event_source_run(text, timestamptz, text, boolean)
   to anon, authenticated;
 
+create or replace function public.event_card_needs_review(
+  p_old_bouts jsonb,
+  p_new_bouts jsonb
+)
+returns boolean
+language sql
+immutable
+as $$
+with old_rows as (
+  select value as bout
+  from jsonb_array_elements(
+    case
+      when jsonb_typeof(coalesce(p_old_bouts, '[]'::jsonb)) = 'array' then p_old_bouts
+      else '[]'::jsonb
+    end
+  )
+),
+new_rows as (
+  select value as bout
+  from jsonb_array_elements(
+    case
+      when jsonb_typeof(coalesce(p_new_bouts, '[]'::jsonb)) = 'array' then p_new_bouts
+      else '[]'::jsonb
+    end
+  )
+)
+select exists (
+  select 1
+  from old_rows old_row
+  where not exists (
+    select 1
+    from new_rows new_row
+    where coalesce(new_row.bout->>'bout_key', '') = coalesce(old_row.bout->>'bout_key', '')
+      and coalesce(new_row.bout->>'fighter_a_name', '') = coalesce(old_row.bout->>'fighter_a_name', '')
+      and coalesce(new_row.bout->>'fighter_b_name', '') = coalesce(old_row.bout->>'fighter_b_name', '')
+  )
+) or exists (
+  select 1
+  from old_rows old_row
+  join new_rows new_row
+    on coalesce(new_row.bout->>'bout_key', '') = coalesce(old_row.bout->>'bout_key', '')
+  where nullif(old_row.bout->>'bout_number', '') is not null
+    and nullif(new_row.bout->>'bout_number', '') is not null
+    and old_row.bout->>'bout_number' <> new_row.bout->>'bout_number'
+);
+$$;
+
+revoke all on function public.event_card_needs_review(jsonb, jsonb)
+  from public, anon, authenticated;
+
+drop function if exists public.save_event_update_candidate(text, text, jsonb, jsonb, jsonb, timestamptz, text);
+
 create or replace function public.save_event_update_candidate(
   p_source_key text,
   p_canonical_key text,
   p_normalized_data jsonb,
+  p_source_event_key text default null,
   p_diff jsonb default '{}'::jsonb,
   p_validation_errors jsonb default '[]'::jsonb,
   p_fetched_at timestamptz default now(),
@@ -392,9 +532,8 @@ declare
   candidate_status text;
   candidate_fingerprint text;
   candidate_id_value uuid;
-  old_bout_count integer;
-  new_bout_count integer;
   computed_diff jsonb;
+  source_event_key_value text;
 begin
   if not public.is_server_request(p_server_token) then
     raise exception 'not authorized';
@@ -415,18 +554,26 @@ begin
     raise exception 'source not found';
   end if;
 
-  select * into old_event
-  from public.boxing_events
-  where canonical_key = trim(p_canonical_key);
+  source_event_key_value := nullif(trim(coalesce(
+    p_source_event_key,
+    p_normalized_data->>'source_event_key'
+  )), '');
 
-  new_bout_count := jsonb_array_length(coalesce(p_normalized_data->'bouts', '[]'::jsonb));
-  old_bout_count := case
-    when old_event.event_id is null then 0
-    else jsonb_array_length(coalesce(old_event.normalized_data->'bouts', '[]'::jsonb))
-  end;
+  if source_event_key_value is not null then
+    select e.* into old_event
+    from public.boxing_event_sources source_map
+    join public.boxing_events e on e.event_id = source_map.event_id
+    where source_map.source_key = cfg.source_key
+      and source_map.source_event_key = source_event_key_value
+    for update;
+  end if;
 
   if jsonb_array_length(coalesce(p_validation_errors, '[]'::jsonb)) > 0
-     or (old_bout_count >= 4 and new_bout_count * 2 < old_bout_count) then
+     or source_event_key_value is null
+     or (old_event.event_id is not null and public.event_card_needs_review(
+       old_event.normalized_data->'bouts',
+       p_normalized_data->'bouts'
+     )) then
     candidate_operation := 'needs_review';
     candidate_status := 'needs_review';
   elsif old_event.event_id is null then
@@ -473,21 +620,22 @@ begin
   );
 
   insert into public.event_update_candidates (
-    source_key, source_name, source_url, canonical_key, fingerprint,
-    normalized_data, diff, validation_errors, operation,
+  source_key, source_name, source_url, canonical_key, source_event_key, fingerprint,
+  normalized_data, diff, validation_errors, operation,
     matched_event_id, matched_article_id, status,
     discovered_at, last_seen_at
   ) values (
-    cfg.source_key, cfg.display_name, cfg.source_url, trim(p_canonical_key),
-    candidate_fingerprint, p_normalized_data, coalesce(computed_diff, '{}'::jsonb),
-    coalesce(p_validation_errors, '[]'::jsonb), candidate_operation,
+   cfg.source_key, cfg.display_name, cfg.source_url, trim(p_canonical_key),
+    source_event_key_value, candidate_fingerprint, p_normalized_data, coalesce(computed_diff, '{}'::jsonb),
+   coalesce(p_validation_errors, '[]'::jsonb), candidate_operation,
     old_event.event_id, old_event.article_id, candidate_status,
     coalesce(p_fetched_at, now()), coalesce(p_fetched_at, now())
   )
-  on conflict (source_key, canonical_key, fingerprint) do update set
-    source_name = excluded.source_name,
-    source_url = excluded.source_url,
-    normalized_data = excluded.normalized_data,
+  on conflict (source_key, source_event_key, fingerprint) do update set
+   source_name = excluded.source_name,
+   source_url = excluded.source_url,
+    source_event_key = excluded.source_event_key,
+   normalized_data = excluded.normalized_data,
     diff = excluded.diff,
     validation_errors = excluded.validation_errors,
     operation = excluded.operation,
@@ -508,10 +656,12 @@ begin
 end;
 $$;
 
-revoke all on function public.save_event_update_candidate(text, text, jsonb, jsonb, jsonb, timestamptz, text)
-  from public, anon, authenticated;
-grant execute on function public.save_event_update_candidate(text, text, jsonb, jsonb, jsonb, timestamptz, text)
+revoke all on function public.save_event_update_candidate(text, text, jsonb, text, jsonb, jsonb, timestamptz, text)
+ from public, anon, authenticated;
+grant execute on function public.save_event_update_candidate(text, text, jsonb, text, jsonb, jsonb, timestamptz, text)
   to anon, authenticated;
+
+drop function if exists public.finish_event_source_run(uuid, integer, text, integer, integer, integer, text, text, text, text, timestamptz, text);
 
 create or replace function public.finish_event_source_run(
   p_run_id uuid,
@@ -520,6 +670,7 @@ create or replace function public.finish_event_source_run(
   p_extracted_count integer default 0,
   p_updated_count integer default 0,
   p_retry_count integer default 0,
+  p_external_request_count integer default 0,
   p_error_code text default null,
   p_error_message text default null,
   p_etag text default null,
@@ -527,6 +678,7 @@ create or replace function public.finish_event_source_run(
   p_now timestamptz default now(),
   p_server_token text default null
 )
+
 returns jsonb
 language plpgsql
 security definer
@@ -565,7 +717,7 @@ begin
     next_state := 'healthy';
     next_run := p_now + case when cfg.cadence = 'monthly'
       then interval '30 days' else interval '1 day' end;
-  elsif p_http_status in (403, 429) or p_outcome = 'blocked' then
+  elsif p_http_status in (403, 429, 503) or p_outcome = 'blocked' then
     next_failures := cfg.consecutive_failures + 1;
     next_state := 'stopped';
     next_run := null;
@@ -589,6 +741,7 @@ begin
       extracted_count = greatest(0, coalesce(p_extracted_count, 0)),
       updated_count = greatest(0, coalesce(p_updated_count, 0)),
       retry_count = greatest(0, coalesce(p_retry_count, 0)),
+      external_request_count = greatest(0, coalesce(p_external_request_count, 0)),
       error_code = nullif(trim(coalesce(p_error_code, '')), ''),
       error_message = nullif(trim(coalesce(p_error_message, '')), ''),
       etag = nullif(trim(coalesce(p_etag, '')), ''),
@@ -621,16 +774,19 @@ begin
 end;
 $$;
 
-revoke all on function public.finish_event_source_run(uuid, integer, text, integer, integer, integer, text, text, text, text, timestamptz, text)
-  from public, anon, authenticated;
-grant execute on function public.finish_event_source_run(uuid, integer, text, integer, integer, integer, text, text, text, text, timestamptz, text)
+revoke all on function public.finish_event_source_run(uuid, integer, text, integer, integer, integer, integer, text, text, text, text, timestamptz, text)
+ from public, anon, authenticated;
+grant execute on function public.finish_event_source_run(uuid, integer, text, integer, integer, integer, integer, text, text, text, text, timestamptz, text)
   to anon, authenticated;
+
+drop function if exists public.review_event_update_candidate(uuid, text, uuid, text);
 
 create or replace function public.review_event_update_candidate(
   p_candidate_id uuid,
   p_action text,
   p_article_id uuid default null,
-  p_review_note text default null
+  p_review_note text default null,
+  p_event_id uuid default null
 )
 returns setof public.event_update_candidates
 language plpgsql
@@ -641,6 +797,7 @@ declare
   candidate public.event_update_candidates;
   event_row public.boxing_events;
   article_row public.articles;
+  source_cfg public.event_source_configs;
   event_data jsonb;
   bout_data jsonb;
   event_id_value uuid;
@@ -652,7 +809,7 @@ begin
     raise exception 'not authorized';
   end if;
 
-  if p_action not in ('approved', 'published', 'rejected', 'needs_review') then
+  if p_action not in ('approved', 'published', 'approved_removal', 'rejected', 'needs_review') then
     raise exception 'invalid review action';
   end if;
 
@@ -664,8 +821,29 @@ begin
     raise exception 'candidate not found';
   end if;
 
+  select * into source_cfg
+  from public.event_source_configs
+  where source_key = candidate.source_key;
+  if not found then
+    raise exception 'source not found';
+  end if;
+
   if candidate.status not in ('pending', 'needs_review') then
     raise exception 'candidate already reviewed';
+  end if;
+
+  if p_action = 'published' and source_cfg.source_kind = 'discovery' then
+    raise exception 'discovery candidates cannot be published automatically';
+  end if;
+
+  if source_cfg.source_kind = 'discovery'
+     and p_event_id is null
+     and candidate.matched_event_id is null then
+    raise exception 'discovery candidates require manual event mapping';
+  end if;
+
+  if candidate.operation = 'needs_review' and p_action <> 'approved_removal' then
+    raise exception 'candidate requires explicit removal/reconciliation approval';
   end if;
 
   if p_action in ('rejected', 'needs_review') then
@@ -681,7 +859,12 @@ begin
     return;
   end if;
 
-  if jsonb_array_length(coalesce(candidate.validation_errors, '[]'::jsonb)) > 0 then
+  if jsonb_array_length(coalesce(candidate.validation_errors, '[]'::jsonb)) > 0
+     and not (
+       p_action = 'approved_removal'
+       and p_event_id is not null
+       and candidate.validation_errors <@ '["source_event_identity_missing"]'::jsonb
+     ) then
     raise exception 'candidate has validation errors';
   end if;
 
@@ -712,16 +895,19 @@ begin
     end if;
   end if;
 
-  select * into event_row
-  from public.boxing_events
-  where canonical_key = candidate.canonical_key
-  for update;
+  event_id_value := coalesce(p_event_id, candidate.matched_event_id);
+  if event_id_value is not null then
+    select * into event_row
+    from public.boxing_events
+    where event_id = event_id_value
+    for update;
+    if not found then
+      raise exception 'event not found';
+    end if;
 
-  if found then
     if event_row.manual_lock then
       raise exception 'event is manually locked';
     end if;
-    event_id_value := event_row.event_id;
     event_status := case when is_publish then 'published' else event_row.publication_status end;
     update public.boxing_events
     set event_name = coalesce(nullif(trim(event_data->>'event_name'), ''), event_name),
@@ -746,6 +932,9 @@ begin
         publication_status = event_status
     where event_id = event_id_value;
   else
+    if p_action = 'approved_removal' then
+      raise exception 'approved removal requires an existing event';
+    end if;
     if is_publish and event_article_id is null then
       raise exception 'new published event requires an article';
     end if;
@@ -772,13 +961,39 @@ begin
     ) returning event_id into event_id_value;
   end if;
 
+  if p_action = 'approved_removal' then
+    update public.boxing_event_bouts existing_bout
+    set status = 'removed'
+    where existing_bout.event_id = event_id_value
+      and existing_bout.status = 'active'
+      and not exists (
+        select 1
+        from jsonb_array_elements(coalesce(event_data->'bouts', '[]'::jsonb)) incoming_bout
+        where trim(incoming_bout->>'bout_key') = existing_bout.bout_key
+      );
+  end if;
+
+  if nullif(trim(candidate.source_event_key), '') is not null then
+    insert into public.boxing_event_sources (
+      event_id, source_key, source_event_key, source_url, source_kind
+    ) values (
+      event_id_value, candidate.source_key, trim(candidate.source_event_key),
+      candidate.source_url, source_cfg.source_kind
+    )
+    on conflict (source_key, source_event_key) do update set
+      event_id = excluded.event_id,
+      source_url = excluded.source_url,
+      source_kind = excluded.source_kind,
+      updated_at = now();
+  end if;
+
   for bout_data in select value from jsonb_array_elements(coalesce(event_data->'bouts', '[]'::jsonb))
   loop
     insert into public.boxing_event_bouts (
       event_id, bout_key, bout_number, bout_label, weight_class, rounds,
       title_name, fighter_a_name, fighter_a_gym, fighter_b_name,
       fighter_b_gym, is_main_event, is_semifinal, normalized_data,
-      source_name, source_url
+      source_name, source_url, status
     ) values (
       event_id_value,
       trim(bout_data->>'bout_key'),
@@ -793,7 +1008,7 @@ begin
       nullif(trim(bout_data->>'fighter_b_gym'), ''),
       coalesce((bout_data->>'is_main_event')::boolean, false),
       coalesce((bout_data->>'is_semifinal')::boolean, false),
-      bout_data, candidate.source_name, candidate.source_url
+      bout_data, candidate.source_name, candidate.source_url, 'active'
     )
     on conflict (event_id, bout_key) do update set
       bout_number = coalesce(excluded.bout_number, public.boxing_event_bouts.bout_number),
@@ -809,7 +1024,8 @@ begin
       is_semifinal = excluded.is_semifinal or public.boxing_event_bouts.is_semifinal,
       normalized_data = excluded.normalized_data,
       source_name = excluded.source_name,
-      source_url = excluded.source_url;
+      source_url = excluded.source_url,
+      status = 'active';
   end loop;
 
   update public.articles
@@ -830,10 +1046,10 @@ begin
 end;
 $$;
 
-revoke all on function public.review_event_update_candidate(uuid, text, uuid, text)
-  from public, anon, authenticated;
-grant execute on function public.review_event_update_candidate(uuid, text, uuid, text)
-  to authenticated;
+revoke all on function public.review_event_update_candidate(uuid, text, uuid, text, uuid)
+ from public, anon, authenticated;
+grant execute on function public.review_event_update_candidate(uuid, text, uuid, text, uuid)
+ to authenticated;
 
 -- Explicitly keep the canonical source of truth separate from the old article
 -- body/fight-card snapshot. No automatic article publication is performed.

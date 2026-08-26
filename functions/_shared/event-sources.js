@@ -4,11 +4,21 @@ const MAX_BOUTS = 40;
 export const EVENT_SOURCE_DEFINITIONS = Object.freeze({
   lemino: Object.freeze({
     sourceName: "Lemino BOXING公式",
-    officialHost: "lemino.docomo.ne.jp"
+    sourceKind: "streaming",
+    officialHosts: ["lemino.docomo.ne.jp"],
+    eventMarkers: ["data-lemino-event", "data-event-id"]
   }),
   dangan: Object.freeze({
     sourceName: "DANGAN公式",
-    officialHost: "danganboxing.com"
+    sourceKind: "promoter",
+    officialHosts: ["danganboxing.com"],
+    eventMarkers: ["data-dangan-event", "data-event-id"]
+  }),
+  "boxing-mobile": Object.freeze({
+    sourceName: "Boxing Mobile（発見用）",
+    sourceKind: "discovery",
+    officialHosts: ["boxmob.jp"],
+    eventMarkers: ["data-boxing-mobile-event", "data-event-id"]
   })
 });
 
@@ -71,6 +81,29 @@ export function safeHttpsUrl(value) {
   } catch {
     return "";
   }
+}
+
+function hostMatches(hostname, allowedHost) {
+  const host = String(hostname || "").toLowerCase().replace(/^www\./, "");
+  const allowed = String(allowedHost || "").toLowerCase().replace(/^www\./, "");
+  return Boolean(allowed) && (host === allowed || host.endsWith(`.${allowed}`));
+}
+
+export function isApprovedSourceUrl(sourceKey, value) {
+  const safe = safeHttpsUrl(value);
+  if (!safe) return false;
+  const definition = EVENT_SOURCE_DEFINITIONS[String(sourceKey || "").toLowerCase()];
+  if (!definition) return false;
+  try {
+    const url = new URL(safe);
+    return definition.officialHosts.some((host) => hostMatches(url.hostname, host));
+  } catch {
+    return false;
+  }
+}
+
+function approvedSourceUrl(sourceKey, value) {
+  return isApprovedSourceUrl(sourceKey, value) ? safeHttpsUrl(value) : "";
 }
 
 function normalizeIdentityPart(value) {
@@ -153,42 +186,6 @@ function attributeValue(attributes, name) {
   return String(attributes || "").match(pattern)?.[2] || "";
 }
 
-function metaValue(html, key) {
-  const pattern = /<meta\b([^>]+)>/gi;
-  for (const match of String(html || "").matchAll(pattern)) {
-    const attrs = match[1] || "";
-    const name = attributeValue(attrs, "name") || attributeValue(attrs, "property");
-    if (name.toLowerCase() === key.toLowerCase()) {
-      return cleanText(attributeValue(attrs, "content"));
-    }
-  }
-  return "";
-}
-
-function pageTitle(html) {
-  return cleanText(String(html || "").match(/<title\b[^>]*>([\s\S]*?)<\/title\s*>/i)?.[1] || "");
-}
-
-function visibleText(html) {
-  return stripHtml(html).slice(0, 20000);
-}
-
-function officialLinks(html, sourceUrl) {
-  const links = [];
-  const pattern = /<a\b([^>]+)>([\s\S]*?)<\/a\s*>/gi;
-  for (const match of String(html || "").matchAll(pattern)) {
-    let href = "";
-    try {
-      href = safeHttpsUrl(new URL(attributeValue(match[1], "href"), sourceUrl).href);
-    } catch {
-      href = "";
-    }
-    const text = cleanText(match[2]);
-    if (href && text) links.push({ href, text });
-  }
-  return links.slice(0, 200);
-}
-
 function eventType(value) {
   const types = Array.isArray(value) ? value : [value];
   return types.some((type) => /event|sports?event/i.test(String(type || "")));
@@ -222,7 +219,7 @@ function participantName(value) {
   return cleanText(objectValue(value, ["name", "alternateName"]), 80);
 }
 
-function explicitBout(raw, index, pageText) {
+function explicitBout(raw) {
   if (!raw || typeof raw !== "object") return null;
   const competitors = Array.isArray(raw.competitor)
     ? raw.competitor
@@ -265,7 +262,7 @@ function explicitBout(raw, index, pageText) {
   };
 }
 
-function eventFromJsonLd(node, sourceKey, sourceUrl, pageText) {
+function eventFromJsonLd(node, sourceKey, sourceUrl) {
   if (!eventType(node["@type"])) return null;
   const location = objectValue(node.location, ["name"]);
   const organizer = objectValue(node.organizer, ["name"]);
@@ -274,60 +271,171 @@ function eventFromJsonLd(node, sourceKey, sourceUrl, pageText) {
   if (!name) return null;
   const bouts = [];
   const subEvents = Array.isArray(node.subEvent) ? node.subEvent : node.subEvent ? [node.subEvent] : [];
-  subEvents.forEach((item, index) => {
-    const bout = explicitBout(item, index, pageText);
+  subEvents.forEach((item) => {
+    const bout = explicitBout(item);
     if (bout) bouts.push(bout);
   });
   const description = cleanText(node.description, 300);
-  const sourceText = `${name} ${description} ${pageText}`;
+  const eventUrl = approvedSourceUrl(sourceKey, objectValue(node, ["url", "@id"]));
+  const identifier = cleanText(objectValue(node, ["identifier"]), 180);
   return {
     event_name: name,
-    event_date: parseDate(startDate) || parseDate(sourceText),
-    venue: cleanText(location, 100) || extractVenue(sourceText),
+    event_date: parseDate(startDate),
+    venue: cleanText(location, 100),
     location: cleanText(objectValue(node.location?.address, ["addressLocality", "streetAddress"]), 100),
     start_time: parseTime(startDate),
     broadcast_start_time: "",
-    distribution_services: servicesFromText(sourceText, sourceKey),
+    distribution_services: servicesFromText(`${name} ${description}`, sourceKey),
     organizer: cleanText(organizer, 100),
-    promoter: extractPromoter(sourceText),
+    promoter: extractPromoter(`${name} ${description}`),
     bouts,
     source_name: EVENT_SOURCE_DEFINITIONS[sourceKey]?.sourceName || sourceKey,
-    source_url: sourceUrl
+    source_url: sourceUrl,
+    source_event_key: eventUrl || (identifier ? `id:${identifier}` : ""),
+    source_event_url: eventUrl
   };
 }
 
-function fallbackEvent(sourceKey, sourceUrl, html, pageText, links) {
-  const title = metaValue(html, "og:title") || pageTitle(html) || pageText.slice(0, 180);
-  const date = parseDate(pageText);
-  if (!title || !date) return null;
-  const relevantLink = links.find((link) =>
-    /ボクシング|boxing|phoenix|dangan|興行|世界戦/i.test(`${link.text} ${link.href}`)
+function dataAttribute(attributes, name) {
+  return attributeValue(attributes, name);
+}
+
+function elementDataValue(block, name) {
+  const attribute = dataAttribute(block, name);
+  if (attribute) return attribute;
+  const pattern = new RegExp(
+    `<([a-z0-9]+)\\b[^>]*${name}\\s*=\\s*(["'])([\\s\\S]*?)\\2[^>]*>([\\s\\S]*?)<\\/\\1\\s*>`,
+    "i"
   );
-  const eventName = cleanText(
-    relevantLink?.text || title.replace(/\s*[|｜].*$/, ""),
+  return pattern.exec(block)?.[4] || "";
+}
+
+function eventBlocks(html, markers = []) {
+  const blocks = [];
+  const opening = /<(article|section|li|div)\b([^>]*)>/gi;
+  for (const match of String(html || "").matchAll(opening)) {
+    const attributes = match[2] || "";
+    if (!markers.some((marker) => new RegExp(`(?:^|\\s)${marker}\\s*=`, "i").test(attributes))) {
+      continue;
+    }
+    const tag = match[1];
+    const closing = new RegExp(`<\\/${tag}\\s*>`, "ig");
+    closing.lastIndex = match.index + match[0].length;
+    const end = closing.exec(String(html || ""));
+    if (!end) continue;
+    blocks.push({
+      attributes,
+      html: String(html || "").slice(match.index, end.index + end[0].length)
+    });
+  }
+  return blocks;
+}
+
+function boutBlocks(block) {
+  const matches = [];
+  const opening = /<(article|section|li|div)\b([^>]*data-bout(?:-[a-z-]+)?\s*=|[^>]*data-bout\b[^>]*)>/gi;
+  for (const match of String(block || "").matchAll(opening)) {
+    const tag = match[1];
+    const closing = new RegExp(`<\\/${tag}\\s*>`, "ig");
+    closing.lastIndex = match.index + match[0].length;
+    const end = closing.exec(String(block || ""));
+    if (end) matches.push(String(block || "").slice(match.index, end.index + end[0].length));
+  }
+  return matches;
+}
+
+function boutFromHtml(block) {
+  const fighterA = cleanText(
+    dataAttribute(block, "data-fighter-a") || elementDataValue(block, "data-fighter-a"),
+    80
+  );
+  const fighterB = cleanText(
+    dataAttribute(block, "data-fighter-b") || elementDataValue(block, "data-fighter-b"),
+    80
+  );
+  if (!fighterA || !fighterB) return null;
+  const label = cleanText(
+    dataAttribute(block, "data-bout-label") || elementDataValue(block, "data-bout-label"),
+    120
+  );
+  const numberValue = dataAttribute(block, "data-bout-number");
+  const numberMatch = String(numberValue || label).match(/(?:第\s*)?(\d+)(?:\s*試合)?/);
+  const boutNumber = numberMatch ? Number(numberMatch[1]) : null;
+  return {
+    bout_key: cleanText(
+      dataAttribute(block, "data-bout-key") || `bout-${normalizeIdentityPart(fighterA)}-vs-${normalizeIdentityPart(fighterB)}`,
+      300
+    ),
+    bout_number: Number.isInteger(boutNumber) && boutNumber > 0 ? boutNumber : null,
+    bout_label: label,
+    weight_class: cleanText(dataAttribute(block, "data-weight-class"), 80),
+    rounds: Number.isInteger(Number(dataAttribute(block, "data-rounds")))
+      ? Number(dataAttribute(block, "data-rounds"))
+      : null,
+    title_name: cleanText(dataAttribute(block, "data-title-name"), 120),
+    fighter_a_name: fighterA,
+    fighter_a_gym: cleanText(dataAttribute(block, "data-fighter-a-gym"), 100),
+    fighter_b_name: fighterB,
+    fighter_b_gym: cleanText(dataAttribute(block, "data-fighter-b-gym"), 100),
+    is_main_event: dataAttribute(block, "data-main-event") === "true" || /メイン|main\s*event/i.test(label),
+    is_semifinal: dataAttribute(block, "data-semifinal") === "true" || /セミ|semi\s*final/i.test(label),
+    normalized_data: {}
+  };
+}
+
+function eventFromHtmlBlock(sourceKey, sourceUrl, block) {
+  const blockText = stripHtml(block.html);
+  const eventUrl = approvedSourceUrl(
+    sourceKey,
+    dataAttribute(block.attributes, "data-event-url") || elementDataValue(block.html, "data-event-url")
+  );
+  const eventId = cleanText(
+    dataAttribute(block.attributes, "data-source-event-key") ||
+      dataAttribute(block.attributes, "data-event-key") ||
+      dataAttribute(block.attributes, "data-event-id"),
     180
   );
-  if (!eventName) return null;
+  const name = cleanText(
+    dataAttribute(block.attributes, "data-event-name") ||
+      dataAttribute(block.attributes, "data-name") ||
+      elementDataValue(block.html, "data-event-name") ||
+      block.html.match(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]\s*>/i)?.[1],
+    180
+  );
+  if (!name) return null;
+  const bouts = boutBlocks(block.html).map(boutFromHtml).filter(Boolean);
   return {
-    event_name: eventName,
-    event_date: date,
-    venue: extractVenue(pageText),
-    location: "",
-    start_time: parseTime(pageText.match(/(?:開始|試合開始|配信開始)\s*[:：]?\s*[^|｜、,。]{1,20}/)?.[0] || ""),
-    broadcast_start_time: "",
-    distribution_services: servicesFromText(pageText, sourceKey),
-    organizer: "",
-    promoter: "",
-    bouts: [],
+    event_name: name,
+    event_date: parseDate(
+      dataAttribute(block.attributes, "data-event-date") ||
+        dataAttribute(block.attributes, "data-date") ||
+        blockText
+    ),
+    venue: cleanText(
+      dataAttribute(block.attributes, "data-venue") || extractVenue(blockText),
+      100
+    ),
+    location: cleanText(dataAttribute(block.attributes, "data-location"), 100),
+    start_time: parseTime(
+      dataAttribute(block.attributes, "data-start-time") ||
+        blockText.match(/(?:開始|試合開始|配信開始)\s*[:：]?\s*[^|｜、,。]{1,20}/)?.[0] || ""
+    ),
+    broadcast_start_time: parseTime(dataAttribute(block.attributes, "data-broadcast-start-time")),
+    distribution_services: servicesFromText(blockText, sourceKey),
+    organizer: cleanText(dataAttribute(block.attributes, "data-organizer"), 100),
+    promoter: cleanText(dataAttribute(block.attributes, "data-promoter"), 100),
+    bouts,
     source_name: EVENT_SOURCE_DEFINITIONS[sourceKey]?.sourceName || sourceKey,
-    source_url: relevantLink?.href || sourceUrl
+    source_url: sourceUrl,
+    source_event_key: eventUrl || (eventId ? `id:${eventId}` : ""),
+    source_event_url: eventUrl
   };
 }
 
 function uniqueEvents(events) {
   const seen = new Set();
   return events.filter((event) => {
-    const key = `${event.event_name}|${event.event_date}|${event.venue}|${event.source_url}`;
+    const key = event.source_event_key || `${event.event_name}|${event.event_date}|${event.venue}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -335,18 +443,17 @@ function uniqueEvents(events) {
 }
 
 export function canonicalKey(event) {
-  const mainBout = (Array.isArray(event?.bouts) ? event.bouts : [])
-    .find((bout) => bout?.is_main_event) || event?.bouts?.[0];
-  const boutPart = mainBout
-    ? `${mainBout.fighter_a_name}-vs-${mainBout.fighter_b_name}`
-    : "no-main-card";
+  const sourceKey = normalizeIdentityPart(event?.source_key || event?.source_name || "unknown-source");
+  const sourceEventKey = event?.source_event_key || event?.source_event_url;
+  if (sourceKey && sourceEventKey) {
+    return ("source|" + sourceKey + "|" + normalizeIdentityPart(sourceEventKey)).slice(0, 500);
+  }
   return [
-    "event",
-    normalizeIdentityPart(event?.event_name),
+    "review",
+    sourceKey,
+    normalizeIdentityPart(event?.event_name || "unnamed-event"),
     String(event?.event_date || "undated"),
-    normalizeIdentityPart(event?.venue || event?.location || "no-venue"),
-    normalizeIdentityPart(event?.promoter || event?.organizer || "no-organizer"),
-    normalizeIdentityPart(boutPart)
+    normalizeIdentityPart(event?.venue || event?.location || "no-venue")
   ].join("|").slice(0, 500);
 }
 
@@ -389,6 +496,9 @@ function cleanBout(bout) {
 
 export function normalizeEvent(raw, { sourceKey, sourceUrl, fetchedAt } = {}) {
   const source = safeHttpsUrl(sourceUrl);
+  const normalizedSourceKey = String(sourceKey || raw?.source_key || "").trim().toLowerCase();
+  const eventUrl = approvedSourceUrl(normalizedSourceKey, raw?.source_event_url);
+  const eventKey = cleanText(raw?.source_event_key || eventUrl, 500);
   const event = {
     event_name: cleanText(raw?.event_name || raw?.name, 180),
     event_date: parseDate(raw?.event_date || raw?.eventDate || raw?.startDate),
@@ -407,8 +517,12 @@ export function normalizeEvent(raw, { sourceKey, sourceUrl, fetchedAt } = {}) {
       .slice(0, MAX_BOUTS)
       .map(cleanBout)
       .filter(Boolean),
-    source_name: EVENT_SOURCE_DEFINITIONS[sourceKey]?.sourceName || cleanText(raw?.source_name, 100) || sourceKey,
-    source_url: source
+    source_name: EVENT_SOURCE_DEFINITIONS[normalizedSourceKey]?.sourceName || cleanText(raw?.source_name, 100) || normalizedSourceKey,
+    source_kind: EVENT_SOURCE_DEFINITIONS[normalizedSourceKey]?.sourceKind || cleanText(raw?.source_kind, 40) || "official",
+   source_url: source,
+    source_key: normalizedSourceKey,
+    source_event_key: eventKey,
+    source_event_url: eventUrl
   };
   event.canonical_key = canonicalKey(event);
   return event;
@@ -418,7 +532,15 @@ export function validateEvent(event) {
   const errors = [];
   if (!event?.event_name || event.event_name.length < 3) errors.push("event_name_missing");
   if (!event?.event_date) errors.push("event_date_missing");
-  if (!event?.source_url || !safeHttpsUrl(event.source_url)) errors.push("source_url_invalid");
+  if (!event?.source_url || !isApprovedSourceUrl(event?.source_key, event.source_url)) errors.push("source_url_invalid");
+  if (!event?.source_event_key) errors.push("source_event_identity_missing");
+  if (event?.source_event_url && !isApprovedSourceUrl(event?.source_key, event.source_event_url)) {
+    errors.push("source_event_url_invalid");
+  }
+  const identity = String(event?.source_event_key || "");
+  if ((identity.startsWith("http://") || identity.startsWith("https://")) && !isApprovedSourceUrl(event?.source_key, identity)) {
+    errors.push("source_event_identity_invalid");
+  }
   if (
     !event?.venue &&
     !event?.location &&
@@ -467,16 +589,17 @@ export function diffEvent(previous, next) {
   return diff;
 }
 
-export function parseSourceHtml(sourceKey, html, { sourceUrl, fetchedAt } = {}) {
+function parseStructuredSourceHtml(sourceKey, html, { sourceUrl, fetchedAt } = {}) {
   const safeSourceUrl = safeHttpsUrl(sourceUrl);
-  const pageText = visibleText(html);
-  const links = officialLinks(html, safeSourceUrl || "https://example.invalid/");
+  const definition = EVENT_SOURCE_DEFINITIONS[sourceKey];
   const jsonEvents = parseJsonLd(html)
     .filter((node) => eventType(node["@type"]))
-    .map((node) => eventFromJsonLd(node, sourceKey, safeSourceUrl, pageText))
+    .map((node) => eventFromJsonLd(node, sourceKey, safeSourceUrl))
     .filter(Boolean);
-  const fallback = fallbackEvent(sourceKey, safeSourceUrl, html, pageText, links);
-  const rawEvents = uniqueEvents([...jsonEvents, ...(fallback ? [fallback] : [])]);
+  const domEvents = eventBlocks(html, definition?.eventMarkers || [])
+    .map((block) => eventFromHtmlBlock(sourceKey, safeSourceUrl, block))
+    .filter(Boolean);
+  const rawEvents = uniqueEvents([...jsonEvents, ...domEvents]);
   const events = rawEvents.map((raw) => {
     const normalized = normalizeEvent(raw, { sourceKey, sourceUrl: safeSourceUrl, fetchedAt });
     return { event: normalized, validationErrors: validateEvent(normalized) };
@@ -484,18 +607,42 @@ export function parseSourceHtml(sourceKey, html, { sourceUrl, fetchedAt } = {}) 
   return {
     events,
     extractedCount: events.length,
-    parserWarnings: safeSourceUrl ? [] : ["source_url_invalid"]
+    parserWarnings: [
+      ...(safeSourceUrl ? [] : ["source_url_invalid"]),
+      ...(events.length ? [] : ["no_structured_event_data"])
+    ]
   };
+}
+
+export function parseLeminoHtml(sourceKey, html, options = {}) {
+  return parseStructuredSourceHtml("lemino", html, options);
+}
+
+export function parseDanganHtml(sourceKey, html, options = {}) {
+  return parseStructuredSourceHtml("dangan", html, options);
+}
+
+export function parseBoxingMobileHtml(sourceKey, html, options = {}) {
+  return parseStructuredSourceHtml("boxing-mobile", html, options);
+}
+
+export function parseSourceHtml(sourceKey, html, options = {}) {
+  const adapter = getEventSourceAdapter(sourceKey);
+  return adapter ? adapter.parse(sourceKey, html, options) : parseStructuredSourceHtml(sourceKey, html, options);
 }
 
 export const EVENT_SOURCE_ADAPTERS = Object.freeze({
   lemino: Object.freeze({
     key: "lemino",
-    parse: parseSourceHtml
+    parse: parseLeminoHtml
   }),
   dangan: Object.freeze({
     key: "dangan",
-    parse: parseSourceHtml
+    parse: parseDanganHtml
+  }),
+  "boxing-mobile": Object.freeze({
+    key: "boxing-mobile",
+    parse: parseBoxingMobileHtml
   })
 });
 

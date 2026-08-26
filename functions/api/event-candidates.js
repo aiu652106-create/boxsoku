@@ -91,23 +91,26 @@ export async function onRequestPost({ env, request }) {
   const candidateId = String(input.candidateId || "");
   const action = String(input.action || "");
   const articleId = input.articleId ? String(input.articleId) : null;
+  const eventId = input.eventId ? String(input.eventId) : null;
   const reviewNote = String(input.reviewNote || "").trim().slice(0, 1000);
   if (
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(candidateId) ||
-    !["approved", "published", "rejected", "needs_review"].includes(action) ||
-    (articleId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(articleId))
+   !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(candidateId) ||
+   !["approved", "published", "approved_removal", "rejected", "needs_review"].includes(action) ||
+    (articleId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(articleId)) ||
+    (eventId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(eventId))
   ) {
     return jsonResponse({ ok: false, message: "候補操作の内容が正しくありません。" }, 422);
   }
   try {
     const result = await callReviewRpc(
       env,
-      {
+     {
         p_candidate_id: candidateId,
         p_action: action,
         p_article_id: articleId,
+       p_event_id: eventId,
         p_review_note: reviewNote || null
-      },
+     },
       authorization.token
     );
     return jsonResponse({ ok: true, candidate: result });

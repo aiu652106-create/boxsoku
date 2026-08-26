@@ -9,11 +9,23 @@
 - External fetches must be low-frequency, low-parallel, and necessary only. On 403 / 429 / 503, stop that source immediately; do not retry aggressively.
 
 ## Current task
-- Status: READY
-- Goal: Repair and complete the boxing event automation introduced by commit `260071e62f7e496b41d7cab554a4c2df88f2bb93` so it is safe, accurate, and genuinely automated. This task is code/test only. Do NOT deploy, run production migrations, write production DB data, or publish event data in this run.
+- Status: PASS
+- Goal: Repair and complete the boxing event automation introduced by commit `260071e62f7e496b41d7cab554a4c2df88f2bb93`. Code and deterministic tests are complete; production deployment, migrations, DB writes, and event publication were not performed.
 
-## Independent ChatGPT audit: current blockers
-The current implementation is NOT approved for production yet. Fix all items below in one internal work cycle.
+## Completed result
+- Commit SHA: recorded in the final implementation commit
+- Scheduler: `.github/workflows/event-sync.yml` runs once daily and supports `workflow_dispatch`; `scripts/event-sync-scheduler.mjs` fails closed when `BOXSOKU_SERVER_TOKEN` is absent and never prints the secret.
+- Source types/sources: Lemino (`streaming`) and DANGAN (`promoter`) use bounded source-specific adapters. Boxing Mobile is represented as a disabled, low-frequency `discovery` source and cannot publish canonical facts.
+- Stable event identity: `boxing_event_sources` maps `(source_key, source_event_key)` to one canonical event. Mutable name/date/venue/card fields are not primary identity; missing stable identity requires review/manual mapping.
+- Bout reconciliation: disappeared or changed bouts become `needs_review`; explicit admin approval marks removed bouts `removed` without DELETE. Public rendering exposes only approved active bouts. Bout order remains null unless explicitly encoded.
+- Request policy: 403/429/503 stop a source with zero retry. Other permitted transient failures have at most one bounded retry, and `external_request_count` records actual outbound attempts.
+- Tests: full Node test suite PASS, 12 passed / 0 failed, including all 15 required deterministic scenarios and static SQL safety checks.
+- Production deploy: none. Production DB changes/migrations: none. Secret exposure: none. Unrelated repositories: untouched.
+- Remaining blocker: none in local code/test scope.
+- Next action: wait for ChatGPT independent audit before any production action.
+
+## Historical audit requirements (completed above)
+The requirements below document the audit that was addressed in this work cycle.
 
 ### 1. It is not actually scheduled
 - `README_DEPLOY.md` currently says an external Cron must call `POST /api/event-sync` once per day.
@@ -141,21 +153,6 @@ All must PASS before declaring completion:
 - Do not stop for ordinary code/test failures; repair them yourself.
 - If a genuine external blocker remains (for example a service requires interactive authentication), finish everything else first and report only the single remaining blocker.
 
-## Final report / handoff update
-When finished, replace the task/result sections in this file with a compact result containing:
-- Status: PASS / BLOCKED
-- Commit SHA
-- Changed files
-- Scheduler implementation
-- Source types/sources implemented
-- Stable event identity approach
-- Bout removal/reconciliation approach
-- Exact tests run and results
-- Exact source-request limit/retry behavior
-- Production deploy: none
-- Production DB changes: none
-- Secret exposure: none
-- Remaining blocker, if any
-- Next action: wait for ChatGPT independent audit
-
-Commit and push the completed code + updated `AI_HANDOFF.md` to `main` only after all local tests pass. Do not deploy production.
+## Final handoff record
+- Changed files: `README_DEPLOY.md`, `event-updates.js`, `functions/_shared/event-sources.js`, `functions/api/event-candidates.js`, `functions/api/event-sync.js`, `functions/news/[slug].js`, `supabase/event-automation-2026-08-26.sql`, `.github/workflows/event-sync.yml`, `scripts/event-sync-scheduler.mjs`, and the event automation tests.
+- The completed code and this handoff must be committed and pushed to `main` after local tests pass. Do not deploy production.

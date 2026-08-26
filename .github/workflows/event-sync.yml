@@ -1,0 +1,26 @@
+name: Daily boxing event sync
+
+on:
+  schedule:
+    - cron: "17 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: boxsoku-event-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      BOXSOKU_SERVER_TOKEN: ${{ secrets.BOXSOKU_SERVER_TOKEN }}
+      BOXSOKU_EVENT_SYNC_URL: https://boxsoku.com/api/event-sync
+    steps:
+      - name: Check out scheduler
+        uses: actions/checkout@v4
+      - name: Trigger event sync
+        run: node scripts/event-sync-scheduler.mjs

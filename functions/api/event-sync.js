@@ -1,4 +1,4 @@
-import { getEventSourceAdapter } from "../_shared/event-sources.js";
+import { getEventSourceAdapter, isApprovedSourceUrl } from "../_shared/event-sources.js";
 import {
   authorizeEventRequest,
   configuredEventAutomation,
@@ -65,6 +65,7 @@ async function fetchWithTimeout(url, options, timeoutMs) {
 
 async function fetchSource(config, begin, env) {
   let retryCount = 0;
+  let externalRequests = 0;
   let lastError = null;
   for (let attempt = 0; attempt <= Number(begin.max_retries || 0); attempt += 1) {
     try {
@@ -73,17 +74,21 @@ async function fetchSource(config, begin, env) {
       };
       if (begin.last_etag) headers["If-None-Match"] = begin.last_etag;
       if (begin.last_modified) headers["If-Modified-Since"] = begin.last_modified;
+      externalRequests += 1;
       const response = await fetchWithTimeout(
         begin.source_url,
         { method: "GET", headers, redirect: "follow" },
         Math.min(30000, Math.max(1000, Number(begin.timeout_ms || config.timeout_ms || 10000)))
       );
+      if ([403, 429, 503].includes(response.status)) {
+        return { response, retryCount, externalRequests };
+      }
       if (response.status >= 500 && response.status <= 599 && attempt < Number(begin.max_retries || 0)) {
         retryCount += 1;
         await delay(100);
         continue;
       }
-      return { response, retryCount };
+      return { response, retryCount, externalRequests };
     } catch (error) {
       lastError = error;
       if (attempt >= Number(begin.max_retries || 0)) break;
@@ -93,13 +98,14 @@ async function fetchSource(config, begin, env) {
   }
   const error = lastError || new Error("source request failed");
   error.retryCount = retryCount;
+  error.externalRequests = externalRequests;
   throw error;
 }
 
-function responseIsSafe(response, requestedUrl) {
+function responseIsSafe(response, requestedUrl, sourceKey) {
   try {
     const finalUrl = new URL(response.url || requestedUrl);
-    return finalUrl.protocol === "https:";
+    return isApprovedSourceUrl(sourceKey, finalUrl.href);
   } catch {
     return false;
   }
@@ -123,6 +129,7 @@ async function finishRun(env, begin, accessToken, values) {
       p_extracted_count: values.extractedCount || 0,
       p_updated_count: values.updatedCount || 0,
       p_retry_count: values.retryCount || 0,
+      p_external_request_count: values.externalRequests || 0,
       p_error_code: values.errorCode || null,
       p_error_message: values.errorMessage || null,
       p_etag: values.etag || null,
@@ -171,6 +178,7 @@ async function syncOneSource(config, env, accessToken, authorizationKind) {
       httpStatus: null,
       outcome: "failed",
       retryCount: error.retryCount || Number(begin.max_retries || 0),
+      externalRequests: error.externalRequests || 0,
       errorCode: detail.code,
       errorMessage: detail.message
     });
@@ -178,7 +186,7 @@ async function syncOneSource(config, env, accessToken, authorizationKind) {
       sourceKey: config.source_key,
       started: true,
       outcome: "failed",
-      externalRequests: 1,
+      externalRequests: error.externalRequests || 0,
       candidates: 0,
       error: detail
     };
@@ -191,7 +199,7 @@ async function syncOneSource(config, env, accessToken, authorizationKind) {
     started: true,
     httpStatus: response.status,
     retryCount: fetched.retryCount,
-    externalRequests: 1,
+    externalRequests: fetched.externalRequests,
     candidates: 0
   };
 
@@ -206,12 +214,17 @@ async function syncOneSource(config, env, accessToken, authorizationKind) {
     return { ...common, outcome: "not_modified" };
   }
 
-  if (response.status === 403 || response.status === 429) {
+  if ([403, 429, 503].includes(response.status)) {
     await finishRun(env, begin, accessToken, {
       ...common,
       outcome: "blocked",
       errorCode: `http_${response.status}`,
-      errorMessage: response.status === 429 ? "source rate limited; automation stopped" : "source denied automation",
+      errorMessage:
+        response.status === 429
+          ? "source rate limited; automation stopped"
+          : response.status === 503
+            ? "source unavailable; automation stopped"
+            : "source denied automation",
       etag: headers.get("etag"),
       lastModified: headers.get("last-modified")
     });
@@ -222,8 +235,8 @@ async function syncOneSource(config, env, accessToken, authorizationKind) {
     };
   }
 
-  if (!responseIsSafe(response, begin.source_url)) {
-    const error = { code: "unsafe_redirect", message: "source redirected to a non-HTTPS URL" };
+  if (!responseIsSafe(response, begin.source_url, config.source_key)) {
+    const error = { code: "unsafe_redirect", message: "source redirected off the approved HTTPS host" };
     await finishRun(env, begin, accessToken, {
       ...common,
       outcome: "failed",
@@ -308,6 +321,7 @@ async function syncOneSource(config, env, accessToken, authorizationKind) {
         {
           p_source_key: config.source_key,
           p_canonical_key: item.event.canonical_key,
+          p_source_event_key: item.event.source_event_key || null,
           p_normalized_data: item.event,
           p_diff: {},
           p_validation_errors: item.validationErrors || [],

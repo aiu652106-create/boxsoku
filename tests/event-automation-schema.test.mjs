@@ -10,7 +10,8 @@ for (const table of [
   "boxing_event_bouts",
   "event_source_configs",
   "event_fetch_runs",
-  "event_update_candidates"
+  "event_update_candidates",
+  "boxing_event_sources"
 ]) {
   assert.match(sql, new RegExp(`create table if not exists public\\.${table}`));
   assert.match(sql, new RegExp(`alter table public\\.${table} enable row level security`));
@@ -20,12 +21,24 @@ for (const functionName of [
   "begin_event_source_run",
   "save_event_update_candidate",
   "finish_event_source_run",
-  "review_event_update_candidate"
+  "review_event_update_candidate",
+  "event_card_needs_review"
 ]) {
   assert.match(sql, new RegExp(`create or replace function public\\.${functionName}`));
 }
 assert.match(sql, /add column if not exists boxing_event_id uuid/);
 assert.match(sql, /source_key, display_name, source_kind, adapter_key, source_url/);
+assert.match(sql, /source_kind in \('streaming', 'promoter', 'organizer', 'official', 'discovery'\)/);
+assert.match(sql, /external_request_count integer/);
+assert.match(sql, /source_event_key text/);
+assert.match(sql, /status in \('active', 'removed', 'cancelled', 'needs_review'\)/);
+assert.match(sql, /event_card_needs_review/);
+assert.match(sql, /approved_removal/);
+assert.match(sql, /p_event_id uuid/);
+assert.match(sql, /discovery candidates cannot be published automatically/);
+assert.match(sql, /status = 'removed'/);
+assert.match(sql, /status = 'active'/);
+assert.match(sql, /boxing_event_sources/);
 assert.match(sql, /'https:\/\/lemino\.docomo\.ne\.jp\/ft\/0000002\/portal\//);
 assert.match(sql, /'https:\/\/danganboxing\.com\//);
 assert.doesNotMatch(sql, /raw_html|raw_html_body|<script/i);

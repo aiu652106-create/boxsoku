@@ -51,13 +51,24 @@ try {
       source_name: "Lemino BOXING公式",
       source_url: "https://lemino.docomo.ne.jp/ft/0000002/pxb/"
     }]));
-    if (value.includes("boxing_event_bouts?")) return new Response(JSON.stringify([{
-      bout_id: "33333333-3333-4333-8333-333333333333",
-      bout_number: 1,
-      weight_class: "ライト級",
-      fighter_a_name: "選手A",
-      fighter_b_name: "選手B"
-    }]));
+    if (value.includes("boxing_event_bouts?")) {
+      assert.match(value, /status=eq\.active/);
+      return new Response(JSON.stringify([{
+        bout_id: "33333333-3333-4333-8333-333333333333",
+        bout_number: 1,
+        weight_class: "ライト級",
+        fighter_a_name: "選手A",
+        fighter_b_name: "選手B",
+        status: "active"
+      }, {
+        bout_id: "44444444-4444-4444-8444-444444444444",
+        bout_number: 2,
+        weight_class: "フェザー級",
+        fighter_a_name: "削除済み選手C",
+        fighter_b_name: "削除済み選手D",
+        status: "removed"
+      }]));
+    }
     throw new Error(`unexpected URL: ${value}`);
   };
   const request = new Request("https://boxsoku.com/news/phoenix-battle-160", {
@@ -72,8 +83,9 @@ try {
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /VERIFIED EVENT DATA/);
-  assert.match(html, /Phoenix Battle 160/);
-  assert.match(html, /選手A/);
+ assert.match(html, /Phoenix Battle 160/);
+ assert.match(html, /選手A/);
+  assert.doesNotMatch(html, /削除済み選手C|削除済み選手D/);
 } finally {
   globalThis.fetch = originalFetch;
 }

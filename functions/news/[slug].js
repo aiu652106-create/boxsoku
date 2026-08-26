@@ -1053,13 +1053,13 @@ async function publicBoxingEvent(env, eventId) {
     );
     const event = eventRows[0];
     if (!event) return null;
-    const bouts = await supabaseRows(
-      env,
-      `boxing_event_bouts?select=bout_id,bout_number,weight_class,fighter_a_name,fighter_b_name&event_id=eq.${encodeURIComponent(
-        event.event_id
-      )}&order=bout_number.asc.nullslast,bout_id.asc`
-    );
-    return { event, bouts };
+   const bouts = await supabaseRows(
+     env,
+      `boxing_event_bouts?select=bout_id,bout_number,weight_class,fighter_a_name,fighter_b_name,status&event_id=eq.${encodeURIComponent(
+       event.event_id
+      )}&status=eq.active&order=bout_number.asc.nullslast,bout_id.asc`
+   );
+    return { event, bouts: Array.isArray(bouts) ? bouts.filter((bout) => bout.status === "active") : [] };
   } catch {
     // The feature is additive; an unrun migration must not break article pages.
     return null;

@@ -117,21 +117,30 @@
       select.setAttribute("aria-label", "反映する記事");
       articleOptions(select, candidate.matched_article_id || "");
       controls.appendChild(select);
+      const eventInput = document.createElement("input");
+      eventInput.type = "text";
+      eventInput.inputMode = "text";
+      eventInput.autocomplete = "off";
+      eventInput.placeholder = "既存イベントID（任意）";
+      eventInput.setAttribute("aria-label", "既存イベントID（任意）");
+      eventInput.value = candidate.matched_event_id || "";
+      controls.appendChild(eventInput);
       [
         ["approved", "承認（保存）"],
         ["published", "承認して公開"],
+        ["approved_removal", "要確認を承認（反映）"],
         ["needs_review", "要確認"],
         ["rejected", "却下"]
       ].forEach(([action, label]) => {
         const button = document.createElement("button");
         button.type = "button";
-        button.textContent = label;
-        button.className = action === "rejected" ? "is-danger" : "";
-        button.disabled = action === "published" && !select.value;
+       button.textContent = label;
+       button.className = action === "rejected" ? "is-danger" : "";
+       button.disabled = action === "published" && !select.value;
         select.addEventListener("change", () => {
           button.disabled = action === "published" && !select.value;
         });
-        button.addEventListener("click", () => reviewCandidate(candidate.candidate_id, action, select.value, button));
+       button.addEventListener("click", () => reviewCandidate(candidate.candidate_id, action, select.value, eventInput.value, button));
         controls.appendChild(button);
       });
       card.appendChild(controls);
@@ -199,14 +208,14 @@
     }
   }
 
-  async function reviewCandidate(candidateId, action, articleId, button) {
+  async function reviewCandidate(candidateId, action, articleId, eventId, button) {
     button.disabled = true;
     setMessage("候補を処理中…");
     try {
       await api("/api/event-candidates", {
-        method: "POST",
-        body: JSON.stringify({ candidateId, action, articleId: articleId || null })
-      });
+       method: "POST",
+        body: JSON.stringify({ candidateId, action, articleId: articleId || null, eventId: eventId || null })
+     });
       setMessage("候補を処理しました。");
       await refresh();
     } catch (error) {
