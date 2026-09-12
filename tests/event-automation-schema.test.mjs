@@ -39,8 +39,11 @@ assert.match(sql, /discovery candidates cannot be published automatically/);
 assert.match(sql, /status = 'removed'/);
 assert.match(sql, /status = 'active'/);
 assert.match(sql, /boxing_event_sources/);
-assert.match(sql, /'https:\/\/lemino\.docomo\.ne\.jp\/ft\/0000002\/portal\//);
+assert.match(sql, /'https:\/\/lemino\.docomo\.ne\.jp\/ft\/0000002\/pxb\//);
 assert.match(sql, /'https:\/\/danganboxing\.com\//);
+assert.match(sql, /'lemino'[\s\S]*?'daily', 1800, 0, 10000, false, 'disabled'/);
+assert.match(sql, /'dangan'[\s\S]*?'daily', 1800, 0, 10000, false, 'disabled'/);
+assert.match(sql, /on conflict \(source_key\) do update set[\s\S]*?enabled = false[\s\S]*?state = 'disabled'/);
 assert.doesNotMatch(sql, /raw_html|raw_html_body|<script/i);
 assert.doesNotMatch(sql, /delete\s+from\s+public\.(boxing_events|boxing_event_bouts|event_update_candidates)/i);
 

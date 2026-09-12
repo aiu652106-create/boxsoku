@@ -1,114 +1,54 @@
 # AI_HANDOFF
 
 ## Operating rules
-- Codex: read this file before starting work and update it before finishing.
-- ChatGPT: review repository state/diffs/tests directly; do not make the user relay long reports.
-- Resolve ordinary implementation/test failures internally. Do not stop after the first fixable blocker.
-- Never expose, print, commit, or replace secrets/tokens/cookies/`.env` values/API credentials/service-role keys.
-- Do not perform destructive production changes unless explicitly authorized.
-- External fetches must be low-frequency, low-parallel, and necessary only. On 403 / 429 / 503, stop that source immediately with zero retry.
+- Read this file before starting and update it before finishing.
+- Do not expose credentials, tokens, cookies or local personal filesystem paths.
+- Low-frequency source reads only. Stop on 403/429/503 without retry.
+- Work remains on a review branch. No merge/main implementation push, production deployment, DB migration, article publication or existing article overwrite was performed or authorized for this cycle.
 
-## Last audited implementation
-- Implementation commit: `8edaf57812bf85bc958abc297d8bad023ac71638`.
-- Final handoff commit: `2bd6ab47d02f6676c2c81b0ed35633d1dbdd9742`.
-- The architecture fixes are materially improved: scheduled trigger, stable source identity, bout reconciliation, exact request accounting, host validation, no automatic publication, and 403/429/503 zero-retry behavior are present in code.
-- Codex reported the full local Node suite as 12/12 PASS.
-- Production DB migration/write was not authorized.
+## Current result (2026-09-12)
+- Status: PASS for local official-card collection and AI-writing preparation; production activation pending.
+- Branch: codex/live-source-validation-20260827
+- Implementation commit: see the commit introducing this handoff result.
+- Latest user scope: automatically collect fight cards, then make those facts available to AI to write one event-schedule article per show.
+- This implements evidence preparation plus a factual draft scaffold. It does not invoke an LLM or claim that scaffold is AI-authored prose.
 
-## Current task
-- Status: READY
-- Goal: Close the remaining independent audit blocker: prove that the adapters work against the CURRENT real public source structure before any production migration or event-data write.
+## Live source findings
+- Normal reads were sequential and cached outside the repository for reuse.
+- Lemino portal: HTTP 200, 1 request; observed link to /ft/0000002/pxb/.
+- Lemino /pxb/: HTTP 200, 1 request; 2 events, 12 bouts:
+  - PHOENIX BATTLE 160, 2026-09-08, Korakuen Hall, 6 bouts. Past event excluded from new draft generation.
+  - PHOENIX BATTLE 161, 2026-09-21, Tama Mirai Messe, 6 bouts. One upcoming writing packet.
+- Operational card coverage: Lemino PHOENIX BATTLE only. Not all domestic boxing.
+- DANGAN homepage: HTTP 200, 1 request; current schedule section empty. Disabled; no guessed URL or child crawl.
+- Boxing Mobile public schedule: HTTP 200, 1 request; 36 metadata-only discovery entries. Parser retains month/day separately and does not infer year, cards or bout order. Remains disabled pending official verification.
+- Total source requests this cycle: 4. All subsequent parser/CLI dry-runs used cached responses, external requests 0. No images downloaded.
+- Minimal sanitized real-structure excerpts in tests/fixtures; whole source pages were not committed.
 
-## Independent ChatGPT audit blockers
+## Implementation
+- event-real-html.js parses balanced event/card boundaries using the observed pxb_inner / pxb_date / match_list / match_title / name structure.
+- Preserves official fragment IDs (#pb160/#pb161), explicit bout numbers, names in Japanese, weight, rounds, title label, date, venue and broadcast time.
+- Ambiguous card rows produce review errors. No array-position guesses, no country-to-gym guesses.
+- scripts/collect-event-cards.mjs: one source request, no retries or DB operations, JSON evidence packets and upcoming event draft scaffolds.
+- .github/workflows/event-card-packets.yml: daily 09:47 JST plus manual dispatch; uploads writing artifacts with seven-day retention. Scheduling activates only after later approved default-branch integration.
+- functions/api/event-writing.js: admin-authenticated read-only candidate-to-writing packet endpoint.
+- event-updates.js: inspect/copy AI instructions and evidence; explicit new draft save for eligible candidates via existing article save API. Stable candidate-based slug prevents duplicate creation. No existing article update or automatic publishing.
+- Packet includes source URL, checked_at, data, blockers, writing instructions and publication checks. Past/rejected/stale/review/discovery-only candidates cannot prepare a draft.
+- BoxRec identity URLs, approved event image and owner's verified affiliate links remain required checks; no invented IDs, remote image embedding, generated images or blanket PR disclosure.
+- Read auth accepts browser same-origin GET only with same-origin Fetch Metadata and matching Referer when Origin is absent. Writes still require matching Origin and admin authentication.
+- Existing SQL file only changes seeds to the verified Lemino /pxb/ URL, retaining disabled state until production setup. No migration applied.
 
-### 1. Existing parser tests are synthetic, not live-source representative
-`tests/event-sources.test.mjs` currently fabricates both of the structures the parser accepts:
-- a made-up `SportsEvent` JSON-LD block; and
-- made-up `data-lemino-event`, `data-dangan-event`, `data-event-id`, `data-event-name`, etc. attributes.
+## Verification
+- Full Node suite: 14 test files PASS, 0 failures.
+- Real minimal HTML tests: two-event separation, explicit order, no order inference, malformed card review, comment exclusion, discovery year unknown.
+- Packet tests: past/discovery rejection, draft-only, no affiliate/image fabrication, proper event scope.
+- Endpoint tests: authenticated GET works without Origin; cross-origin request denied; write without Origin denied; all backend operations are reads.
+- Collector tests: cached parse performs 0 fetches; 403/429/503 exactly one attempt then blocked.
+- Cached full-page dry-run: 2 events / 12 bouts / 1 upcoming packet / 0 DB writes.
+- No production UI smoke test or production article save was run. Local automated tests do not imply deployed operation.
 
-The current parser only accepts structured JSON-LD events or DOM blocks carrying configured event markers. A deterministic test passing against invented markup does NOT establish that the current Lemino or DANGAN pages actually expose those structures.
-
-Required:
-- Perform at most ONE normal GET to the current configured Lemino source and at most ONE normal GET to the current configured DANGAN source for this validation cycle.
-- Do not crawl child pages in bulk.
-- Inspect the ACTUAL response structure locally.
-- Do not save whole third-party HTML pages to the repository. Create only minimal sanitized fixtures containing the smallest structure necessary to reproduce the real parser behavior.
-- Update the source-specific adapters to match the current real public structure, while remaining fail-closed against ambiguous multi-event association.
-- A live read-only dry-run must parse current source HTML without DB writes and report exact extracted event count, event names/dates, and warnings.
-
-### 2. DANGAN source is not proven usable
-Current seed config still points DANGAN to:
-`https://danganboxing.com/`
-
-Public inspection shows the homepage exposes a link to the schedule rather than a clearly usable current event list. The currently discoverable `/schedule-list/` page also appears to return a "page not found" style body / old category archive instead of a reliable current schedule.
-
-Required:
-- Determine, from the current public DANGAN site only, whether there is a stable official URL that actually contains current/upcoming event data suitable for one low-frequency fetch.
-- If such a URL exists, use that exact official URL and add a minimal real-structure fixture/test.
-- If no reliable current DANGAN schedule source exists, disable DANGAN rather than claiming it is an operational source.
-- Never invent a URL and never scrape search-engine cache/results as canonical data.
-
-### 3. Boxing Mobile discovery is disabled without a documented accessibility check
-The implementation registers Boxing Mobile as `discovery`, but seeds it disabled. That is safe, but it does not solve general event discovery.
-
-Required:
-- Perform at most ONE normal GET to the configured public Boxing Mobile schedule URL in this validation cycle.
-- If HTTP 403 / 429 / 503 occurs, stop immediately, keep it disabled, record only status/outcome, and do not bypass controls.
-- If it is publicly accessible, implement only a minimal low-frequency discovery adapter for event identity/name/date/link metadata needed to find candidate events. Do not copy article bodies/images.
-- Discovery-only data must remain unable to publish canonical facts without official verification.
-
-### 4. Coverage must be described truthfully
-Do not declare "general Japanese boxing event automation" complete if the only actually working live source is Lemino.
-- Report each source as `operational`, `disabled`, or `blocked` based on CURRENT read-only validation.
-- Do not count a synthetic fixture as an operational source.
-- If source coverage remains narrow, say so explicitly. Do not compensate by adding unverified sources.
-
-## Production / safety boundary
-- NO Supabase migration.
-- NO production DB insert/update/delete.
-- NO event publication.
-- NO poster/image download or publication.
-- NO boxer DB/import/boxer-page changes.
-- NO article rewrites.
-- NO high-frequency or parallel crawling.
-- NO bypass of robots/access controls/login/paywalls/rate limits.
-- Do not touch Staydesk or the science repository.
-- Do not manually deploy Cloudflare.
-- Because `main` may be connected to an automatic deployment pipeline, do implementation work on a separate branch for this cycle and do NOT merge it into `main` until ChatGPT audit approves it. Updating this handoff on `main` is the only authorized main-branch change for this cycle.
-
-## Required verification
-1. Current Lemino source: one-read live structure check + read-only parser dry-run.
-2. Current DANGAN source: one-read live structure/usability check; operational only if genuinely parseable.
-3. Current Boxing Mobile schedule: one-read accessibility check; implement discovery only if accessible without bypass.
-4. Minimal sanitized real-structure fixtures, not fabricated attributes that do not exist on source pages.
-5. Multi-event contamination test still PASS.
-6. Stable source identity test still PASS.
-7. Bout disappearance/reconciliation tests still PASS.
-8. 403/429/503 zero-retry tests still PASS.
-9. Missing scheduler secret fail-closed test still PASS.
-10. Full existing test suite PASS.
-11. Production DB writes/migrations: 0.
-12. Production event publication: 0.
-
-## Completion gate
-Do NOT mark PASS merely because unit tests pass. PASS requires:
-- at least one genuinely operational live source validated against its current public HTML;
-- each configured source truthfully classified operational/disabled/blocked;
-- no parser dependence on invented source markup;
-- no production DB/publication action;
-- full tests PASS.
-
-## Final report / handoff update
-When finished, update this file with:
-- Status: PASS / BLOCKED
-- Working branch + commit SHA
-- Lemino: HTTP result, parser event count, event names/dates, operational yes/no
-- DANGAN: HTTP result, actual source URL used, parser event count, operational/disabled/blocked
-- Boxing Mobile: HTTP result only if checked, operational discovery/disabled/blocked
-- Minimal fixtures/tests changed
-- Full test result
-- Production DB migration/write: none
-- Production event publication: none
-- Secret exposure: none
-- Remaining coverage limitation
-- Next action: wait for ChatGPT independent audit; do not merge/deploy
+## Next action
+- Independently audit this branch and diff.
+- Do not represent daily collection as currently running: workflow and UI are not deployed.
+- After explicit production approval, integrate the branch, configure/apply the event migration as needed, activate only verified sources, and verify the first scheduled artifact and admin draft flow.
+- AI can already consume local event-card-output/event-writing-packets.json. This output folder is ignored by git.

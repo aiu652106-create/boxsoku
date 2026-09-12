@@ -7,3 +7,4 @@ gpu-tweak-osd-registry-backup.reg
 .wrangler/
 node_modules/
 npm-debug.log*
+event-card-output/

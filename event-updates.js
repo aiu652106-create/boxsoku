@@ -110,6 +110,42 @@
     detail.appendChild(pre);
     card.appendChild(detail);
 
+    const writingButton = appendText(card, 'button', 'AI執筆データ・下書き原稿を作成');
+    writingButton.type = 'button';
+    writingButton.addEventListener('click', async () => {
+      writingButton.disabled = true;
+      try {
+        const { packet } = await api(`/api/event-writing?candidateId=${encodeURIComponent(candidate.candidate_id)}`);
+        const preview = document.createElement('textarea');
+        preview.rows = 16;
+        preview.style.width = '100%';
+        preview.readOnly = true;
+        preview.setAttribute('aria-label', 'AI執筆用データ');
+        preview.value = packet.writer_instructions + '\n\n' + JSON.stringify(packet, null, 2);
+        card.appendChild(preview);
+        const copy = appendText(card, 'button', 'AIへ渡すデータをコピー');
+        copy.type = 'button';
+        copy.addEventListener('click', async () => {
+          try { await navigator.clipboard.writeText(preview.value); setMessage('コピーしました。'); }
+          catch { preview.focus(); preview.select(); setMessage('選択したデータをコピーしてください。'); }
+        });
+        if (packet.can_prepare_draft) {
+          const save = appendText(card, 'button', '原稿のひな形を新規下書き保存');
+          save.type = 'button';
+          save.addEventListener('click', async () => {
+            save.disabled = true;
+            try {
+              const slug = `event-candidate-${candidate.candidate_id}`;
+              if (state.articles.some(a => a.slug === slug)) throw new Error('この候補の下書きは作成済みです。記事一覧で確認してください。');
+              const saved = await window.BoxingData.saveArticle({ ...packet.draft, slug });
+              state.articles.push(saved);
+              setMessage('新規下書きを保存しました。AIで本文を整え、BoxRec・公式画像・配信リンクを確認してください。');
+            } catch (error) { setMessage(error.message, true); save.disabled = false; }
+          });
+        } else appendText(card, 'p', `下書き作成前の要確認：${packet.blockers.join('、')}`);
+      } catch (error) { setMessage(error.message, true); writingButton.disabled = false; }
+    });
+
     if (["pending", "needs_review"].includes(candidate.status)) {
       const controls = document.createElement("div");
       controls.className = "event-candidate-controls";

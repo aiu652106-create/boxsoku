@@ -28,7 +28,14 @@ function bearerToken(request) {
 
 function sameOrigin(request) {
   const origin = request.headers.get("Origin");
-  return Boolean(origin) && origin === new URL(request.url).origin;
+  const target = new URL(request.url).origin;
+  if (origin) return origin === target;
+  // Same-origin browser GETs omit Origin. Keep write operations on the strict path.
+  if (request.method === 'GET' && request.headers.get('Sec-Fetch-Site') === 'same-origin') {
+    try { return new URL(request.headers.get('Referer')).origin === target; }
+    catch { return false; }
+  }
+  return false;
 }
 
 export function hasServerToken(request, env) {

@@ -1,3 +1,4 @@
+import { leminoFightCards, boxingMobileDiscovery } from './event-real-html.js';
 const MAX_FIELD_LENGTH = 180;
 const MAX_BOUTS = 40;
 
@@ -525,11 +526,14 @@ export function normalizeEvent(raw, { sourceKey, sourceUrl, fetchedAt } = {}) {
     source_event_url: eventUrl
   };
   event.canonical_key = canonicalKey(event);
+  if (raw?.discovery_date_label) event.discovery_date_label = cleanText(raw.discovery_date_label, 20);
+  if (raw?.extraction_warnings?.length) event.extraction_warnings = raw.extraction_warnings.map(v => cleanText(v, 100));
   return event;
 }
 
 export function validateEvent(event) {
   const errors = [];
+  errors.push(...(event?.extraction_warnings || []));
   if (!event?.event_name || event.event_name.length < 3) errors.push("event_name_missing");
   if (!event?.event_date) errors.push("event_date_missing");
   if (!event?.source_url || !isApprovedSourceUrl(event?.source_key, event.source_url)) errors.push("source_url_invalid");
@@ -615,6 +619,8 @@ function parseStructuredSourceHtml(sourceKey, html, { sourceUrl, fetchedAt } = {
 }
 
 export function parseLeminoHtml(sourceKey, html, options = {}) {
+  const raw = leminoFightCards(html, options.sourceUrl);
+  if (raw.length) return realResult('lemino', raw, options);
   return parseStructuredSourceHtml("lemino", html, options);
 }
 
@@ -623,7 +629,17 @@ export function parseDanganHtml(sourceKey, html, options = {}) {
 }
 
 export function parseBoxingMobileHtml(sourceKey, html, options = {}) {
+  const raw = boxingMobileDiscovery(html, options.sourceUrl);
+  if (raw.length) return realResult('boxing-mobile', raw, options);
   return parseStructuredSourceHtml("boxing-mobile", html, options);
+}
+
+function realResult(sourceKey, raw, options) {
+  const events = raw.map(value => {
+    const event = normalizeEvent(value, { ...options, sourceKey });
+    return { event, validationErrors: validateEvent(event) };
+  });
+  return { events, extractedCount: events.length, parserWarnings: [...new Set(events.flatMap(v => v.validationErrors))] };
 }
 
 export function parseSourceHtml(sourceKey, html, options = {}) {

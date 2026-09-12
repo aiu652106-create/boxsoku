@@ -238,20 +238,24 @@ for each row execute function public.set_updated_at();
 
 insert into public.event_source_configs (
   source_key, display_name, source_kind, adapter_key, source_url,
-  cadence, cooldown_seconds, max_retries, timeout_ms
+  cadence, cooldown_seconds, max_retries, timeout_ms, enabled, state
 )
 values
   (
    'lemino', 'Lemino BOXING公式', 'streaming', 'lemino',
-   'https://lemino.docomo.ne.jp/ft/0000002/portal/',
-   'daily', 1800, 1, 10000
+   'https://lemino.docomo.ne.jp/ft/0000002/pxb/',
+   'daily', 1800, 0, 10000, false, 'disabled'
  ),
  (
     'dangan', 'DANGAN公式', 'promoter', 'dangan',
     'https://danganboxing.com/',
-    'daily', 1800, 1, 10000
+    'daily', 1800, 0, 10000, false, 'disabled'
   )
-on conflict (source_key) do nothing;
+on conflict (source_key) do update set
+  source_url = excluded.source_url,
+  enabled = false,
+  state = 'disabled',
+  max_retries = 0;
 
 insert into public.event_source_configs (
   source_key, display_name, source_kind, adapter_key, source_url,
