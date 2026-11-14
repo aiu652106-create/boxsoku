@@ -452,12 +452,12 @@ export async function renderListingPage(context, pageKey = "home") {
   <link rel="stylesheet" href="/styles.css?v=20260814-tablet-fix8">
   <link rel="stylesheet" href="/viewing-guide.css?v=20261115">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <script src="/config.js?v=20260814-owner-affiliates1" defer></script>
-  <script src="/site.js" defer></script>
+  <script src="/config.js?v=20261115-private-contact1" defer></script>
+  <script src="/site.js?v=20261115-private-contact1" defer></script>
   <script src="/data.js?v=20260813-x-quote-embed1" defer></script>
   <script src="/sidebar.js?v=20260804-content-polish" defer></script>
-  <script src="/app.js?v=20260817-event-date-sort1" defer></script>
-  <script src="/site-events.js?v=20260817-owner-traffic-exclusion2" defer></script>
+  <script src="/app.js?v=20261115-viewing-guide1" defer></script>
+  <script src="/site-events.js?v=20261115-path-only" defer></script>
   <script src="/ads.js" defer></script>
 </head>
 <body class="retro-blog">

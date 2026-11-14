@@ -3,7 +3,7 @@
 ## Current revenue-flow work (2026-11-15)
 - User authorized changes to make the boxing site easier to monetize, with no disclosure of personal information.
 - Branch: `codex/revenue-viewing-guide-20261115`, based on fresh GitHub main `eb1815d`.
-- Status: implementation and automated/read-only HTTP verification complete; visual verification BLOCKED.
+- Status: implementation, automated/read-only HTTP checks and Chrome visual/navigation checks PASS; release verification pending.
 - Added a shared viewing guide, an evergreen `/watch` route, an upcoming-event hub, and separate past-event archives. News is excluded from service schedule feeds. Existing feed order is preserved within each date group.
 - SSR listings are no longer replaced by a second client fetch with inconsistent filters.
 - Viewing guides distinguish event start from broadcast start. Subscription CTAs are not added for explicitly free or past events. Missing facts are not invented.
@@ -12,9 +12,12 @@
 - Removed hard-coded public mailbox values from configuration, structured data and contact/about pages. Contact guidance now directs article corrections to existing comments and explicitly warns that comments may be public; there is no private contact inbox in this change.
 - Click telemetry strips query strings/fragments on both client and server, and accepts only known public content routes. No new analytics identifier or database table was added.
 - Local Node suite: 13 test files PASS, zero failures. Read-only preview against published article data: 9 routes HTTP 200; no email addresses or local filesystem paths in their HTML.
-- Computer Use stopped because it could not confidently determine the Chrome URL. No further UI inputs were issued. PC/tablet/mobile visual review and real browser affiliate navigation are NOT verified.
+- Chrome extension access recovered in the next user turn. Desktop schedule and viewing guide at 768px/390px were visually inspected. The viewing guide has no horizontal overflow at either width. Width emulation is not a physical touch-device test; existing pointer-dependent desktop/tablet CSS was preserved.
+- Actual clicks reached Lemino Premium (desktop and 390px), Amazon Prime and WOWOW official landing pages. Existing owner affiliate links were retained; no signup or purchase was submitted.
+- Removed redundant empty sections when a verified announcement is already displayed, placed the action immediately after viewing terms, and grouped year-less WOWOW dates only when month/day agree with the explicitly dated article slug.
+- Versioned changed public scripts and added revalidation headers so an older client script cannot undo the server-rendered date groups.
 - Production DB writes, migrations, article edits, social posts and production deployment: none.
-- Next: inspect the preview at desktop, 768px and 390px; verify affiliate navigation. Do not report the public site as changed before deployment and production verification.
+- Next: release the checked code and verify production URLs. Do not report deployment success before the production marker and real pages are confirmed.
 
 ## Earlier event-source audit handoff (historical)
 

@@ -40,12 +40,17 @@ function field(body, labels) {
 
 export function viewingFacts(article, event = null) {
   const body = digits(article?.body).replace(/\r\n?/g, "\n");
-  const dateText = field(body, "開催日|日程|放送日|配信日");
+  const dateText = field(body, "開催日|日程|放送日|配信日|放送日時");
   const match = dateText.match(/^(20\d{2})年\s*(\d{1,2})月\s*(\d{1,2})日/);
   const storedDate = String(event?.event_date || "");
+  const slugDate = String(article?.slug || "").match(/-(20\d{2})-(\d{2})-(\d{2})$/);
+  const broadcastDate = dateText.match(/^(\d{1,2})月\s*(\d{1,2})日/);
+  const verifiedBroadcastDate = /WOWOW|エキサイトマッチ/i.test(article?.title || "") && slugDate && broadcastDate &&
+    Number(slugDate[2]) === Number(broadcastDate[1]) && Number(slugDate[3]) === Number(broadcastDate[2])
+      ? validDay(...slugDate.slice(1).map(Number)) : "";
   const date = /^20\d{2}-\d{2}-\d{2}$/.test(storedDate)
     ? validDay(...storedDate.split("-").map(Number))
-    : match ? validDay(...match.slice(1).map(Number)) : "";
+    : match ? validDay(...match.slice(1).map(Number)) : verifiedBroadcastDate;
   const distribution = field(body, "配信|放送|ネット配信|放送・配信");
   const serviceSource = `${distribution}\n${list(event?.distribution_services).join(" ")}\n${/WOWOW|エキサイトマッチ/i.test(article?.title || "") ? "WOWOW" : ""}`;
   const services = [];
@@ -125,14 +130,15 @@ export function officialAnnouncementsHtml(now = new Date(), service = "") {
     `<article class="watch-announcement" id="${item.id}"><p class="watch-eyebrow">公式発表済みの配信</p><h3>${escape(item.name)}</h3>
     <p><time datetime="${item.date}">${item.date.replaceAll("-", "/")}</time>／開演 ${escape(item.start)}</p>
     <p>${escape(item.venue)}</p><p>${escape(item.terms)}</p>
-    <p class="watch-note">開演はメインの開始時刻ではありません。配信開始・見逃し期間・変更情報は公式発表をご確認ください。</p>
     <div class="watch-actions"><a class="watch-button" href="${streamingLinks[item.service]}" rel="sponsored nofollow noopener noreferrer" data-boxsoku-affiliate-service="${item.service}" data-boxsoku-affiliate-placement="official-viewing-guide">Leminoの視聴条件を確認（PR）</a>
     <a href="${item.source}" rel="noopener noreferrer" class="watch-text-link">公式の大会情報</a></div>
+    <p class="watch-note">開演はメインの開始時刻ではありません。配信開始・見逃し期間・変更情報は公式発表をご確認ください。</p>
     <p class="watch-note">情報確認：${item.checked.replaceAll("-", "/")}。最新の対象プラン・配信状況は公式ページでご確認ください。</p></article>`
   ).join("");
 }
 
 export function watchHubHtml(articles, now = new Date(), service = "") {
+  const announcements = officialAnnouncementsHtml(now, service);
   const upcoming = scheduleGroups(articles.filter((article) => !isNews(article)), now).upcoming
     .sort((a, b) => viewingFacts(a).date.localeCompare(viewingFacts(b).date)).slice(0, 4);
   return `<section class="watch-hub" aria-label="これからの観戦案内"><h2>これからの観戦案内</h2>
@@ -140,14 +146,14 @@ export function watchHubHtml(articles, now = new Date(), service = "") {
     ${upcoming.length ? `<ul class="watch-upcoming">${upcoming.map((article) => {
       const facts = viewingFacts(article);
       return `<li><time datetime="${facts.date}">${facts.date.slice(5).replace("-", "/")}</time><a href="/news/${encodeURIComponent(article.slug)}">${escape(article.title)}</a><small>${escape(facts.distribution || "配信情報は記事で確認")}</small></li>`;
-    }).join("")}</ul>` : '<p class="watch-note">今後の興行記事は確認できた情報から順次掲載します。</p>'}
-    ${officialAnnouncementsHtml(now, service)}
+    }).join("")}</ul>` : announcements ? "" : '<p class="watch-note">今後の予定は確認できた情報から順次掲載します。</p>'}
+    ${announcements}
     <nav class="watch-links" aria-label="観戦情報を探す"><a href="/schedule">興行日程</a><a href="/boxing-broadcast">放送・配信</a><a href="/watch">視聴方法ガイド</a></nav></section>`;
 }
 
 export function groupedScheduleHtml(articles, renderCard, now = new Date()) {
   const groups = scheduleGroups(articles, now);
-  return `<section class="watch-list-section"><h2>今後の開催・放送</h2>${groups.upcoming.length ? groups.upcoming.map(renderCard).join("") : '<p class="site-empty">公開済みの記事に今後の予定はありません。確認できた情報から順次更新します。</p>'}</section>
+  return `${groups.upcoming.length ? `<section class="watch-list-section"><h2>今後の開催・放送</h2>${groups.upcoming.map(renderCard).join("")}</section>` : ""}
     ${groups.undated.length ? `<section class="watch-list-section"><h2>日程の詳細は記事で確認</h2>${groups.undated.map(renderCard).join("")}</section>` : ""}
     ${groups.past.length ? `<details class="watch-archive"><summary>過去の興行・放送の記事（${groups.past.length}件）</summary>${groups.past.map(renderCard).join("")}</details>` : ""}`;
 }

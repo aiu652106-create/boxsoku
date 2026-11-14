@@ -33,3 +33,15 @@
 
 /styles.css
   Cache-Control: no-cache, must-revalidate
+
+/config.js
+  Cache-Control: no-cache, must-revalidate
+
+/site.js
+  Cache-Control: no-cache, must-revalidate
+
+/site-events.js
+  Cache-Control: no-cache, must-revalidate
+
+/app.js
+  Cache-Control: no-cache, must-revalidate

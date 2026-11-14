@@ -16,6 +16,8 @@ assert.equal(viewingFacts(article).date, "2026-11-26");
 assert.equal(viewingFacts(article).broadcastStart, "15:00");
 assert.equal(viewingFacts({ ...article, body: "開催日：2026年2月30日" }).date, "");
 assert.equal(viewingFacts({ ...article, body: "2026年11月26日と報道されている" }).date, "");
+assert.equal(viewingFacts({ ...article, title: "WOWOWエキサイトマッチ", slug: "wowow-boxing-2026-09-12", body: "放送日時：9月12日（土）午後10時30分" }).date, "2026-09-12");
+assert.equal(viewingFacts({ ...article, title: "WOWOWエキサイトマッチ", slug: "wowow-boxing-2026-09-12", body: "放送日時：9月7日（月）午後9時" }).date, "");
 const old = { ...article, slug: "past-event", body: "開催日：2026年9月21日\n配信：Lemino" };
 const undated = { ...article, slug: "undated-event", body: "開催日は未発表" };
 const groups = scheduleGroups([article, old, undated], now);

@@ -169,7 +169,7 @@ assert.ok(renderedAffiliateAnchors.every((tag) => !tag.includes('target="_blank"
 assert.match(html, /"@type":"Article"/);
 assert.match(
   html,
-  /<script src="\/site-events\.js\?v=20260817-owner-traffic-exclusion2" defer><\/script>/
+  /<script src="\/site-events\.js\?v=20261115-path-only" defer><\/script>/
 );
 assert.match(html, /"@type":"BreadcrumbList"/);
 assert.match(html, /"@type":"SportsEvent"/);
@@ -532,11 +532,11 @@ assert.ok(listingAffiliateAnchors.length > 0);
 assert.ok(listingAffiliateAnchors.every((tag) => !tag.includes('target="_blank"')));
 assert.match(
   listingHtml,
-  /<script src="\/site-events\.js\?v=20260817-owner-traffic-exclusion2" defer><\/script>/
+  /<script src="\/site-events\.js\?v=20261115-path-only" defer><\/script>/
 );
 assert.match(
   listingHtml,
-  /<script src="\/app\.js\?v=20260817-event-date-sort1" defer><\/script>/
+  /<script src="\/app\.js\?v=20261115-viewing-guide1" defer><\/script>/
 );
 assert.ok(!listingHtml.includes("記事を読み込んでいます"));
 
