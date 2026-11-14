@@ -21,26 +21,9 @@ const { onRequestGet, onRequestHead } = await import(
 );
 fs.unlinkSync(temporaryModule);
 
-const listingSource = fs.readFileSync(
-  path.join(projectRoot, "functions", "_shared", "listing-page.js"),
-  "utf8"
-);
-const temporaryListingModule = path.join(
-  os.tmpdir(),
-  `boxsoku-listing-function-${Date.now()}.mjs`
-);
-const temporarySecurityModule = path.join(os.tmpdir(), "security.js");
-const securitySource = fs.readFileSync(
-  path.join(projectRoot, "functions", "_shared", "security.js"),
-  "utf8"
-);
-fs.writeFileSync(temporarySecurityModule, securitySource, "utf8");
-fs.writeFileSync(temporaryListingModule, listingSource, "utf8");
 const { renderListingPage } = await import(
-  pathToFileURL(temporaryListingModule).href
+  pathToFileURL(path.join(projectRoot, "functions", "_shared", "listing-page.js")).href
 );
-fs.unlinkSync(temporaryListingModule);
-fs.unlinkSync(temporarySecurityModule);
 
 const article = {
   id: "article-1",

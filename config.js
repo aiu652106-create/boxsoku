@@ -3,7 +3,6 @@ window.BOXING_CONFIG = {
     name: "ボクシング速報",
     tagline: "ボクシングの試合予定・配信情報・ニュースをわかりやすく紹介",
     url: "https://boxsoku.com",
-    contactEmail: "bokusoku446@gmail.com",
     iconUrl: "/assets/boxsoku-icon.png"
   },
   supabase: {

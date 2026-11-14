@@ -39,8 +39,7 @@ values ('管理者ユーザーのUUID', '管理者メールアドレス');
 site: {
   name: "サイト名",
   tagline: "サイト説明",
-  url: "https://boxsoku.com",
-  contactEmail: "連絡先メール"
+  url: "https://boxsoku.com"
 },
 supabase: {
   url: "https://mowosdkvlrrrrevgrqkw.supabase.co",
@@ -113,7 +112,7 @@ Supabase Authenticationで作成したメールアドレスとパスワードを
 
 1. 独自記事を十分に公開します。
 2. `about.html`、`privacy.html`、`disclaimer.html`、`contact.html`を確認します。
-3. `config.js`の連絡先やサイトURLを実値へ変更します。
+3. `config.js`のサイトURLを確認します。個人の連絡先は公開設定へ追加しません。
 
 承認後:
 

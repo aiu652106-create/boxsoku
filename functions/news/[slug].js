@@ -1,5 +1,6 @@
 import "../../affiliate-products.js";
 import { securityHeaders } from "../_shared/security.js";
+import { viewingGuideHtml } from "../../viewing-guide.js";
 
 const escapeHtml = (value = "") =>
   String(value)
@@ -1192,8 +1193,7 @@ export async function onRequestGet(context) {
         "@type": "Organization",
         "@id": organizationId,
         name: siteName,
-        url: siteUrl,
-        email: "bokusoku446@gmail.com"
+        url: siteUrl
       },
       {
         "@type": isNewsArticle(article) ? "NewsArticle" : "Article",
@@ -1256,6 +1256,7 @@ export async function onRequestGet(context) {
   <script async data-boxing-adsense="true" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5867435180256987" crossorigin="anonymous"></script>
   <script type="application/ld+json">${structuredData}</script>
    <link rel="stylesheet" href="/styles.css?v=20260814-tablet-fix8">
+  <link rel="stylesheet" href="/viewing-guide.css?v=20261115">
   <script src="/config.js?v=20260814-owner-affiliates1" defer></script>
   <script src="/site.js" defer></script>
   <script src="/comments.js" defer></script>
@@ -1301,6 +1302,7 @@ export async function onRequestGet(context) {
             : ""
         }
         ${disclosure}
+        ${viewingGuideHtml(article, linkedEvent?.event)}
         ${wowowTextAffiliate}
         <div class="retro-detail-body">${articleBodyHtml(
           article.body,

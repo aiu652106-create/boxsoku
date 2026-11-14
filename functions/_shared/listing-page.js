@@ -1,4 +1,5 @@
 import { securityHeaders } from "./security.js";
+import { groupedScheduleHtml, watchHubHtml, isNews } from "../../viewing-guide.js";
 
 const amazonAffiliateUrl = "https://amzn.to/4qhu5Mj";
 const leminoAffiliateUrl =
@@ -119,11 +120,11 @@ function articleCategoryText(article) {
 function matchesPageCategory(article, category) {
   if (category === "lemino") {
     const source = `${article?.title || ""}\n${article?.summary || ""}\n${article?.body || ""}`;
-    return /Lemino/i.test(source);
+    return !isNews(article) && /Lemino/i.test(source);
   }
   if (category === "broadcast") {
     const source = `${article?.title || ""}\n${article?.summary || ""}\n${article?.body || ""}`;
-    return /Lemino|WOWOW|エキサイトマッチ|U-NEXT|Prime Video|Amazon|配信|放送/i.test(
+    return !isNews(article) && /Lemino|WOWOW|エキサイトマッチ|U-NEXT|Prime Video|Amazon|配信|放送/i.test(
       source
     );
   }
@@ -400,8 +401,7 @@ export async function renderListingPage(context, pageKey = "home") {
         "@type": "Organization",
         "@id": `${siteUrl}/#organization`,
         name: siteName,
-        url: siteUrl,
-        email: "bokusoku446@gmail.com"
+        url: siteUrl
       },
       {
         "@type": "WebSite",
@@ -423,8 +423,9 @@ export async function renderListingPage(context, pageKey = "home") {
     ]
   }).replaceAll("<", "\\u003c");
 
+  const schedulePage = ["schedule", "broadcast", "lemino", "wowow"].includes(pageKey);
   const cards = visibleArticles.length
-    ? visibleArticles.map(articleCardHtml).join("")
+    ? schedulePage ? groupedScheduleHtml(visibleArticles, articleCardHtml) : visibleArticles.map(articleCardHtml).join("")
     : '<p class="site-empty">公開中の記事はまだありません。</p>';
   const html = `<!doctype html>
 <html lang="ja">
@@ -449,6 +450,7 @@ export async function renderListingPage(context, pageKey = "home") {
   <script async data-boxing-adsense="true" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5867435180256987" crossorigin="anonymous"></script>
   <script type="application/ld+json">${structuredData}</script>
   <link rel="stylesheet" href="/styles.css?v=20260814-tablet-fix8">
+  <link rel="stylesheet" href="/viewing-guide.css?v=20261115">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/config.js?v=20260814-owner-affiliates1" defer></script>
   <script src="/site.js" defer></script>
@@ -475,7 +477,7 @@ export async function renderListingPage(context, pageKey = "home") {
       page.heading
     )}</h1><p class="feed-intro">${escapeHtml(
       page.intro
-    )}</p><aside class="ad-slot home-top-ad" data-ad-slot-name="homeTop" aria-label="広告"></aside><div id="article-feed" aria-live="polite">${cards}</div></main>
+    )}</p>${pageKey !== "news" ? watchHubHtml(filteredArticles, new Date(), ["lemino", "wowow"].includes(pageKey) ? pageKey : "") : ""}<aside class="ad-slot home-top-ad" data-ad-slot-name="homeTop" aria-label="広告"></aside><div id="article-feed" aria-live="polite" data-server-rendered="true">${cards}</div></main>
     <aside class="retro-sidebar retro-sidebar-latest" aria-labelledby="latest-heading"><section class="retro-sidebar-panel"><h2 id="latest-heading">最新記事</h2><ul id="latest-articles" class="retro-sidebar-list">${sidebarHtml(
       latest
     )}</ul><aside class="ad-slot sidebar-ad" data-ad-slot-name="sidebar" aria-label="広告"></aside></section></aside>

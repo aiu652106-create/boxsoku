@@ -50,11 +50,14 @@ function cleanSlug(value) {
 }
 
 function cleanPagePath(value) {
-  const path = String(value || "").trim();
+  const path = String(value || "").trim().split(/[?#]/, 1)[0];
   if (!path.startsWith("/") || path.startsWith("//") || path.length > 300) {
     return "";
   }
-  return path.replace(/[\u0000-\u001f\u007f]/g, "");
+  // Only public content routes belong in revenue analytics. Never persist an
+  // arbitrary URL, search term, email address, admin path or file-system path.
+  return /^\/(?:news\/[a-z0-9]+(?:-[a-z0-9]+)*\/?|(?:schedule|boxing-broadcast|lemino-boxing|wowow-excite-match|watch)\/?)?$/.test(path)
+    ? path : "";
 }
 
 function cleanKey(value, maximumLength) {

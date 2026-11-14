@@ -22,6 +22,7 @@ export async function onRequestGet({ env, request }) {
     "/boxing-broadcast",
     "/boxing-news",
     "/wowow-excite-match",
+    "/watch",
     "/about",
     "/privacy",
     "/disclaimer",

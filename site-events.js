@@ -31,7 +31,7 @@
 
       const payload = {
         articleSlug: articleSlug(),
-        pagePath: `${window.location.pathname}${window.location.search}`.slice(0, 300),
+        pagePath: window.location.pathname.slice(0, 300),
         service: link.dataset.boxsokuAffiliateService || "",
         placement: link.dataset.boxsokuAffiliatePlacement || "",
         item: link.dataset.boxsokuAffiliateItem || ""

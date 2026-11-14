@@ -10,14 +10,6 @@
     element.textContent = site.tagline || "";
   });
 
-  document.querySelectorAll("[data-site-email]").forEach((element) => {
-    const email = site.contactEmail || "";
-    element.textContent = email;
-    if (element.tagName === "A") {
-      element.href = `mailto:${email}`;
-    }
-  });
-
   document.querySelectorAll("[data-current-year]").forEach((element) => {
     element.textContent = String(new Date().getFullYear());
   });

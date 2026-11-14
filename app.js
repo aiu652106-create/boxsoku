@@ -238,6 +238,9 @@ function createArticle(article) {
 }
 
 async function initialize() {
+  // The server already rendered published data and date groups. Do not replace
+  // it with a second client fetch or a different category/date interpretation.
+  if (feed?.dataset.serverRendered === "true") return;
   try {
     const articles = await window.BoxingData.getArticles();
     const requestedCategory = new URLSearchParams(window.location.search).get("category");

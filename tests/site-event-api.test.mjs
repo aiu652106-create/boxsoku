@@ -64,6 +64,7 @@ try {
     );
     const body = JSON.parse(init.body);
     assert.equal(body.p_article_slug, payload.articleSlug);
+    assert.equal(body.p_page_path, payload.pagePath);
     assert.equal(body.p_service, "lemino");
     assert.equal(body.p_placement, "article-bottom-banner");
     assert.match(body.p_visitor_hash, /^[a-f0-9]{64}$/);
@@ -76,13 +77,25 @@ try {
   assert.match(valid.headers.get("Set-Cookie") || "", /^boxsoku_visitor=/);
   assert.equal(fetchCalls, 1);
 
+  const invalidPath = await onRequestPost({ env, request: request({
+    ...payload, pagePath: "/admin/private-account"
+  }) });
+  assert.equal(invalidPath.status, 422);
+  assert.equal(fetchCalls, 1);
+
+  const queryPrivacy = await onRequestPost({ env, request: request({
+    ...payload, pagePath: `${payload.pagePath}?email=private%40example.invalid#private`
+  }) });
+  assert.equal(queryPrivacy.status, 201);
+  assert.equal(fetchCalls, 2);
+
   const verification = await onRequestPost({
     env,
     request: request(payload, { query: "?boxsoku_verify=1" })
   });
   assert.equal(verification.status, 200);
   assert.deepEqual(await verification.json(), { ok: true, recorded: false });
-  assert.equal(fetchCalls, 1);
+  assert.equal(fetchCalls, 2);
 
   const ownerExcluded = await onRequestPost({
     env,
@@ -92,7 +105,7 @@ try {
   });
   assert.equal(ownerExcluded.status, 200);
   assert.deepEqual(await ownerExcluded.json(), { ok: true, recorded: false });
-  assert.equal(fetchCalls, 1);
+  assert.equal(fetchCalls, 2);
 } finally {
   globalThis.fetch = originalFetch;
 }
