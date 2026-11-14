@@ -3,7 +3,8 @@
 ## Current revenue-flow work (2026-11-15)
 - User authorized changes to make the boxing site easier to monetize, with no disclosure of personal information.
 - Branch: `codex/revenue-viewing-guide-20261115`, based on fresh GitHub main `eb1815d`.
-- Status: implementation, automated/read-only HTTP checks and Chrome visual/navigation checks PASS; release verification pending.
+- Status: implementation, automated/read-only HTTP checks, Chrome visual/navigation checks and production URL verification PASS.
+- Release: `2478821d3958d58f70c5b9a0d4889b30b184d0cb` was pushed to main without force. Production `/schedule` serves the `20261115-viewing-guide1` script marker; `/watch` serves the new guide and the verified November 26 announcement.
 - Added a shared viewing guide, an evergreen `/watch` route, an upcoming-event hub, and separate past-event archives. News is excluded from service schedule feeds. Existing feed order is preserved within each date group.
 - SSR listings are no longer replaced by a second client fetch with inconsistent filters.
 - Viewing guides distinguish event start from broadcast start. Subscription CTAs are not added for explicitly free or past events. Missing facts are not invented.
@@ -16,8 +17,10 @@
 - Actual clicks reached Lemino Premium (desktop and 390px), Amazon Prime and WOWOW official landing pages. Existing owner affiliate links were retained; no signup or purchase was submitted.
 - Removed redundant empty sections when a verified announcement is already displayed, placed the action immediately after viewing terms, and grouped year-less WOWOW dates only when month/day agree with the explicitly dated article slug.
 - Versioned changed public scripts and added revalidation headers so an older client script cannot undo the server-rendered date groups.
-- Production DB writes, migrations, article edits, social posts and production deployment: none.
-- Next: release the checked code and verify production URLs. Do not report deployment success before the production marker and real pages are confirmed.
+- Production Chrome checks: desktop `/schedule` retains the existing layout; `/watch` is readable at 390px and 768px with document scroll width equal to client width. Actual production affiliate clicks reached the official Lemino Premium, Amazon Prime and WOWOW application landing pages; no signup or purchase was submitted. Affiliate attribution/conversion is not independently verified by reaching a landing page.
+- Public `/config.js` no longer contains the removed mailbox. Screenshot evidence was saved outside the repository; no owner identifiers or local filesystem paths were added to public content.
+- Production DB writes, migrations, article edits and social posts: none. The existing deployment pipeline published the checked code; production HTML/script markers and real browser pages were confirmed rather than inferred from the push.
+- Work complete for this revenue-flow scope. No boxer import, event-source rollout, new private contact backend or revenue/conversion guarantee was added. Upcoming article coverage still depends on separately verified event data; do not present the UI changes as audience acquisition or confirmed earnings.
 
 ## Earlier event-source audit handoff (historical)
 
